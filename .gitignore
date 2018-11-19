@@ -1,0 +1,20 @@
+# CMake
+/build
+
+# ANTLR build
+/dist
+.antlr
+
+# MS Office
+~*
+
+# Mac
+.DS_Store
+
+# VSCode
+/.vscode
+
+# CLion
+cmake-build-*
+.idea
+*.tokens
