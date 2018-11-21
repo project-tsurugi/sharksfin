@@ -3,7 +3,6 @@ file(GLOB TEST_SOURCES
 )
 
 register_tests(
-    TARGET sharksfin
+    TARGET sharksfin-interface
     SOURCES ${TEST_SOURCES}
-    DEPENDS sharksfin-interface
 )
