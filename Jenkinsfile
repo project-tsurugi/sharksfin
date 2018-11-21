@@ -45,7 +45,7 @@ pipeline {
                 sh '''
                     cd build
                     make doxygen > doxygen.log 2>&1
-                    zip -q -r shakujo-doxygen doxygen/html
+                    zip -q -r sharksfin-doxygen doxygen/html
                 '''
             }
         }
@@ -57,9 +57,9 @@ pipeline {
                 sh '''
                     cd build
                     mkdir gcovr-xml gcovr-html
-                    gcovr -j ${BUILD_PARALLEL_NUM} -r .. --xml ${GCOVR_COMMON_OPTION} -o gcovr-xml/shakujo-gcovr.xml
-                    gcovr -j ${BUILD_PARALLEL_NUM} -r .. --html --html-details --html-title "shakujo coverage" ${GCOVR_COMMON_OPTION} -o gcovr-html/shakujo-gcovr.html
-                    zip -q -r shakujo-coverage-report gcovr-html
+                    gcovr -j ${BUILD_PARALLEL_NUM} -r .. --xml ${GCOVR_COMMON_OPTION} -o gcovr-xml/sharksfin-gcovr.xml
+                    gcovr -j ${BUILD_PARALLEL_NUM} -r .. --html --html-details --html-title "sharksfin coverage" ${GCOVR_COMMON_OPTION} -o gcovr-html/sharksfin-gcovr.html
+                    zip -q -r sharksfin-coverage-report gcovr-html
                 '''
             }
         }
@@ -75,9 +75,9 @@ pipeline {
                 sh '''
                     cd build
                     cp ../cmake/CMakeGraphVizOptions.cmake .
-                    cmake --graphviz=dependency-graph/shakujo-front.dot ..
+                    cmake --graphviz=dependency-graph/sharksfin.dot ..
                     cd dependency-graph
-                    dot -T png shakujo-front.dot -o shakujo-front.png
+                    dot -T png sharksfin.dot -o sharksfin.png
                 '''
             }
         }
@@ -94,8 +94,8 @@ pipeline {
             warnings parserConfigurations: [
                 [parserName: 'Doxygen', pattern: 'build/doxygen.log'],
             ]
-            cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'build/gcovr-xml/shakujo-gcovr.xml', failNoReports: false, failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, zoomCoverageChart: false
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'build/shakujo-coverage-report.zip, build/shakujo-doxygen.zip, build/clang-tidy-fix.yaml, build/dependency-graph/shakujo-front.png', onlyIfSuccessful: true
+            cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'build/gcovr-xml/sharksfin-gcovr.xml', failNoReports: false, failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, zoomCoverageChart: false
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'build/sharksfin-coverage-report.zip, build/sharksfin-doxygen.zip, build/clang-tidy-fix.yaml, build/dependency-graph/sharksfin.png', onlyIfSuccessful: true
             updateUpsourceBuildStatus()
             notifySlack('shakujo-dev')
         }
