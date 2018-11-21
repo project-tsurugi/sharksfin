@@ -5,7 +5,7 @@ project(sharksfin
     DESCRIPTION "Sharksfin - low-level header only library"
     LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
