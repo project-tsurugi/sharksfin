@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_DATABASE_H_
-#define SHARKSFIN_DATABASE_H_
+#ifndef SHARKSFIN_API_H_
+#define SHARKSFIN_API_H_
 
 #include <cstdint>
 #include <type_traits>
@@ -262,4 +262,4 @@ extern "C" StatusCode iterator_dispose(
 
 }  // namespace sharksfin
 
-#endif  // SHARKSFIN_DATABASE_H_
+#endif  // SHARKSFIN_API_H_
