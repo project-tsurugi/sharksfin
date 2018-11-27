@@ -45,9 +45,9 @@ using IteratorHandle = std::add_pointer_t<void>;
 namespace DatabaseCreate {
 
 /**
- * @brief flags of database_create().
+ * @brief the mode of database_create().
  */
-enum Flag : std::uint32_t {
+enum Mode : std::uint32_t {
 
     /**
      * @brief creates a new database if the target database does not exist.
@@ -66,12 +66,13 @@ enum Flag : std::uint32_t {
  * The created handle must be disposed by database_dispose().
  * @param db [OUT] the output target of database handle
  * @param config the database configuration command
+ * @param mode the database creation mode
  * @return the operation status
  */
 extern "C" StatusCode database_create(
         DatabaseHandle* db,
         char const* config,
-        DatabaseCreate::Flag flags);
+        DatabaseCreate::Mode mode);
 
 /**
  * @brief disposes the database handle.
@@ -203,9 +204,9 @@ extern "C" StatusCode content_scan_prefix(
  * The returned iterator is still available even if database content was changed.
  * @param transaction the current transaction handle
  * @param begin_key the content key of beginning position
- * @param begin_include whether or not beginning position is exclusive
+ * @param begin_exclusive whether or not beginning position is exclusive
  * @param end_key the content key of ending position
- * @param end_include whether or not ending position is exclusive
+ * @param end_exclusive whether or not ending position is exclusive
  * @param result [OUT] an iterator handle over the key range
  * @return Status::OK if the iterator was successfully prepared
  * @return otherwise if error was occurred
@@ -230,25 +231,25 @@ extern "C" StatusCode iterator_next(
  * @brief returns the key on the current iterator position.
  * The returned slice will be disposed after the iterator status was changed.
  * @param iterator the target iterator handle
- * @param value [OUT] the current key
+ * @param result [OUT] the current key
  * @return StatusCode::OK if the key content was successfully obtained
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode iterator_get_key(
         IteratorHandle iterator,
-        Slice* key);
+        Slice* result);
 
 /**
  * @brief returns the value on the current iterator position.
  * The returned slice will be disposed after the iterator status was changed.
  * @param iterator the target iterator handle
- * @param value [OUT] the current value
+ * @param result [OUT] the current value
  * @return StatusCode::OK if the value content was successfully obtained
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode iterator_get_value(
         IteratorHandle iterator,
-        Slice* value);
+        Slice* result);
 
 /**
  * @brief disposes the iterator handle.
