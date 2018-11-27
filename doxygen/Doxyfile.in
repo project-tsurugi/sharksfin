@@ -1,6 +1,7 @@
 PROJECT_NAME           = "sharksfin API"
 PROJECT_NUMBER         = @VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@
-STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@
+STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@ \
+                         @PROJECT_SOURCE_DIR@/docs
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@ \
                          @TARGET_INCLUDES@ \
                          @PROJECT_SOURCE_DIR@/docs
