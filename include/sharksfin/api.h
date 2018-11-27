@@ -64,15 +64,15 @@ enum Mode : std::uint32_t {
 /**
  * @brief creates a database handle.
  * The created handle must be disposed by database_dispose().
- * @param db [OUT] the output target of database handle
  * @param config the database configuration command
  * @param mode the database creation mode
+ * @param result [OUT] the output target of database handle
  * @return the operation status
  */
 extern "C" StatusCode database_create(
-        DatabaseHandle* db,
         char const* config,
-        DatabaseCreate::Mode mode);
+        DatabaseCreate::Mode mode,
+        DatabaseHandle* result);
 
 /**
  * @brief disposes the database handle.
@@ -109,7 +109,7 @@ enum class TransactionOperation : std::int32_t {
     /**
      * @brief abort the current transaction.
      */
-    ABORT = 2,
+    ABORT = 2, // FIXME: ROLLBACK?
 };
 
 /**
@@ -129,6 +129,7 @@ extern "C" StatusCode transaction_exec(
         TransactionCallback callback);
 // TODO: async (group) commit interface
 // TODO: callback for repair
+// TODO: for read only transactions
 
 /*
 FIXME: more transaction control

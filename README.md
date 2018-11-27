@@ -29,7 +29,7 @@ ninja
 ```
 
 available options:
-* `-DBUILD_MOCK=OFF` - never build API momck
+* `-DBUILD_MOCK=OFF` - never build API mock
 * `-DBUILD_TESTS=OFF` - never build test programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
 * `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths

@@ -3,10 +3,13 @@ function(register_tests)
     cmake_parse_arguments(
         TESTS # prefix
         ""
-        "TARGET"
+        "TARGET;BUILD"
         "SOURCES;DEPENDS"
         ${ARGN}
     )
+    if(NOT DEFINED TESTS_BUILD)
+        set(TESTS_BUILD ${BUILD_TESTS}) # inherit global setting
+    endif()
     if(NOT TESTS_TARGET)
         message(FATAL_ERROR "TARGET must be set")
     endif()
@@ -46,7 +49,7 @@ function(register_tests)
 
             set_compile_options(${test_name})
 
-            if(BUILD_TESTS)
+            if(TESTS_BUILD)
                 add_test(
                     NAME ${test_name}
                     COMMAND ${test_name} --gtest_output=xml:${test_name}_gtest_result.xml)
