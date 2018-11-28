@@ -7,7 +7,8 @@ function(set_compile_options target_name)
     else()
         target_compile_options(${target_name}
             PRIVATE -Wall -Wextra -Werror)
-        if (upper_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+        if (upper_CMAKE_BUILD_TYPE STREQUAL "DEBUG"
+                AND CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|AppleClang)$")
             target_compile_options(${target_name}
                 PRIVATE
                     -fsanitize=address,undefined,integer,nullability
@@ -30,9 +31,7 @@ function(set_compile_options target_name)
         if (NOT upper_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
             message(WARNING "code coverage with non-Debug build")
         endif()
-        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
-                OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-                OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+        if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
             target_compile_options(${target_name}
                 PRIVATE --coverage)
             target_link_libraries(${target_name}
