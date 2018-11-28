@@ -137,14 +137,14 @@ extern "C" StatusCode content_get(
 
 /**
  * @brief puts a content onto the target key.
- * @param transaction the current transaction handle
+ * @param handle the current transaction handle
  * @param key the content key
  * @param value the content value
  * @return Status::OK if the target content was successfully put
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_put(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice key,
         Slice value);
 

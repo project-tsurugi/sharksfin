@@ -45,7 +45,8 @@ StatusCode database_close(DatabaseHandle handle) {
 }
 
 StatusCode database_dispose(DatabaseHandle handle) {
-    delete unwrap(handle);
+    auto db = unwrap(handle);
+    delete db;  // NOLINT
     return StatusCode::OK;
 }
 }  // namespace sharksfin
