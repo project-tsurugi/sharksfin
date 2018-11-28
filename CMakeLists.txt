@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
+option(BUILD_MOCK "Build mock implementation" ON)
 option(BUILD_TESTS "Build test programs" ON)
 option(BUILD_EXAMPLES "Build and test example programs" ON)
 option(BUILD_DOCUMENTS "Build documents" ON)
@@ -19,19 +20,21 @@ option(FORCE_INSTALL_RPATH "force add lib dir of custom prefixes to INSTALL_RPAT
 
 find_package(Doxygen)
 find_package(Threads REQUIRED)
+find_package(LevelDB)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CompileOptions)
+include(InstallOptions)
 include(Tests)
 
 if (BUILD_TESTS OR BUILD_EXAMPLES)
     enable_testing()
 endif()
 
-add_library(sharksfin-interface INTERFACE)
+add_library(api INTERFACE)
 
-target_include_directories(sharksfin-interface
+target_include_directories(api
     INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/sharksfin>
@@ -51,15 +54,8 @@ write_basic_package_version_file(
     COMPATIBILITY SameMajorVersion
 )
 
-install(
-    TARGETS sharksfin-interface
-    EXPORT ${export_name}
-)
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    COMPONENT Development
-)
+install_custom(api ${export_name})
+
 install(
     EXPORT ${package_name}
     NAMESPACE ${package_name}-
@@ -71,4 +67,5 @@ install(
 add_subdirectory(doxygen)
 add_subdirectory(examples)
 add_subdirectory(test)
+add_subdirectory(mock)
 add_subdirectory(third_party)

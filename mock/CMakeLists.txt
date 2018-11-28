@@ -1,0 +1,10 @@
+if(NOT LevelDB_FOUND)
+    if(BUILD_MOCK)
+        message(FATAL_ERROR "LevelDB was not installed, please configure with -DBUILD_MOCK=OFF to skip")
+    else()
+        return()
+    endif()
+endif()
+
+add_subdirectory(src)
+add_subdirectory(test)

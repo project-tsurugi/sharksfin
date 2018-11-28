@@ -12,7 +12,7 @@ endif()
 
 set(TARGET_INCLUDES "")
 foreach (target_name
-        sharksfin-interface)
+        api)
     get_target_property(
         _includes
         ${target_name} INTERFACE_INCLUDE_DIRECTORIES

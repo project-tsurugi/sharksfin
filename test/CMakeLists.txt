@@ -3,6 +3,6 @@ file(GLOB TEST_SOURCES
 )
 
 register_tests(
-    TARGET sharksfin-interface
+    TARGET api
     SOURCES ${TEST_SOURCES}
 )

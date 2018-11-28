@@ -2,22 +2,22 @@ file(GLOB SOURCES
     "*.cpp"
 )
 
-add_executable(sharksfin-hello
+add_executable(hello
     ${SOURCES}
 )
 
-target_include_directories(sharksfin-hello
+target_include_directories(hello
     PRIVATE .
 )
 
-target_link_libraries(sharksfin-hello
-    PRIVATE sharksfin-interface
+target_link_libraries(hello
+    PRIVATE api
 )
 
 if(BUILD_EXAMPLES)
     add_test(
-        NAME sharksfin-hello
+        NAME hello
         COMMAND
-        sharksfin-hello
+            hello
     )
 endif()
