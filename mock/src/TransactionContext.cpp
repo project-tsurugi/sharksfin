@@ -21,57 +21,57 @@ namespace mock {
 }  // namespace mock
 
 StatusCode transaction_exec(
-        DatabaseHandle db,
+        DatabaseHandle handle,
         TransactionCallback callback) {
-    (void) db;
+    (void) handle;
     (void) callback;
     return StatusCode::OK;
 }
 
 StatusCode content_get(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice key,
         Slice* result) {
-    (void) transaction;
+    (void) handle;
     (void) key;
     (void) result;
     return StatusCode::OK;
 }
 
 StatusCode content_put(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice key,
         Slice value) {
-    (void) transaction;
+    (void) handle;
     (void) key;
     (void) value;
     return StatusCode::OK;
 }
 
 StatusCode content_delete(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice key) {
-    (void) transaction;
+    (void) handle;
     (void) key;
     return StatusCode::OK;
 }
 
 StatusCode content_scan_prefix(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice prefix_key,
         IteratorHandle* result) {
-    (void) transaction;
+    (void) handle;
     (void) prefix_key;
     (void) result;
     return StatusCode::OK;
 }
 
 StatusCode content_scan_range(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice begin_key, bool begin_exclusive,
         Slice end_key, bool end_exclusive,
         IteratorHandle* result) {
-    (void) transaction;
+    (void) handle;
     (void) begin_key;
     (void) begin_exclusive;
     (void) end_key;

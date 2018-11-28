@@ -21,30 +21,30 @@ namespace mock {
 }  // namespace mock
 
 StatusCode iterator_next(
-        IteratorHandle iterator) {
-    (void) iterator;
+        IteratorHandle handle) {
+    (void) handle;
     return StatusCode::OK;
 }
 
 StatusCode iterator_get_key(
-        IteratorHandle iterator,
+        IteratorHandle handle,
         Slice* result) {
-    (void) iterator;
+    (void) handle;
     (void) result;
     return StatusCode::OK;
 }
 
 StatusCode iterator_get_value(
-        IteratorHandle iterator,
+        IteratorHandle handle,
         Slice* result) {
-    (void) iterator;
+    (void) handle;
     (void) result;
     return StatusCode::OK;
 }
 
 StatusCode iterator_dispose(
-        IteratorHandle iterator) {
-    (void) iterator;
+        IteratorHandle handle) {
+    (void) handle;
     return StatusCode::OK;
 }
 }  // namespace sharksfin

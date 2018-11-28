@@ -23,7 +23,7 @@ namespace mock {
 }  // namespace mock
 
 static inline mock::Database* unwrap(DatabaseHandle handle) {
-    return reinterpret_cast<mock::Database*>(handle);
+    return reinterpret_cast<mock::Database*>(handle);  // NOLINT
 }
 
 StatusCode database_open(
@@ -33,7 +33,7 @@ StatusCode database_open(
     // FIXME: impl
     auto db = std::make_unique<mock::Database>();
 
-    *result = reinterpret_cast<DatabaseHandle>(db.release());
+    *result = reinterpret_cast<DatabaseHandle>(db.release());  // NOLINT
     return StatusCode::OK;
 }
 

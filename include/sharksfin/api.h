@@ -57,20 +57,21 @@ extern "C" StatusCode database_open(
 /**
  * @brief closes the target database.
  * This never disposes the given database handle.
- * @param db the target database
+ * @param handle the target database
  * @return the operation status
  * @see database_dispose()
  */
 extern "C" StatusCode database_close(
-        DatabaseHandle db);
+        DatabaseHandle handle);
 
 /**
  * @brief disposes the database handle.
+ * @param handle the target database
  * @return the operation status
- * @see #database_close()
+ * @see database_close()
  */
 extern "C" StatusCode database_dispose(
-        DatabaseHandle db);
+        DatabaseHandle handle);
 
 /**
  * @brief the operation type of transactions.
@@ -96,12 +97,12 @@ using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionH
 /**
  * @brief executes the given callback function in a new transaction process.
  * The callback function may be called twice or more.
- * @param db the target database
+ * @param handle the target database
  * @param callback the operation to be processed in transaction
  * @return the operation status
  */
 extern "C" StatusCode transaction_exec(
-        DatabaseHandle db,
+        DatabaseHandle handle,
         TransactionCallback callback);
 // TODO: async (group) commit interface
 // TODO: callback for repair
@@ -122,7 +123,7 @@ transaction_dispose(TransactionHandle)
  * @brief obtains a content on the target key.
  * The result is available only if the returned status was Status::OK.
  * The returned slice will be disposed after calling other API functions.
- * @param transaction the current transaction handle
+ * @param handle the current transaction handle
  * @param key the content key
  * @param result [OUT] the slice of obtained content
  * @return Status::OK if the target content was obtained successfully
@@ -130,7 +131,7 @@ transaction_dispose(TransactionHandle)
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_get(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice key,
         Slice* result);
 
@@ -149,13 +150,13 @@ extern "C" StatusCode content_put(
 
 /**
  * @brief removes a content on the target key.
- * @param transaction the current transaction handle
+ * @param handle the current transaction handle
  * @param key the content key
  * @return Status::OK if the target content was successfully deleted
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_delete(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice key);
 
 /**
@@ -163,14 +164,14 @@ extern "C" StatusCode content_delete(
  * The content of key must not be changed while using the returned iterator.
  * The created handle must be disposed by iterator_dispose();
  * The returned iterator is still available even if database content was changed.
- * @param transaction the current transaction handle
+ * @param handle the current transaction handle
  * @param prefix_key the content key prefix
  * @param result [OUT] an iterator handle over the key prefix range
  * @return Status::OK if the iterator was successfully prepared
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan_prefix(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice prefix_key,
         IteratorHandle* result);
 
@@ -179,7 +180,7 @@ extern "C" StatusCode content_scan_prefix(
  * The content of keys must not be changed while using the returned iterator.
  * The created handle must be disposed by iterator_dispose();
  * The returned iterator is still available even if database content was changed.
- * @param transaction the current transaction handle
+ * @param handle the current transaction handle
  * @param begin_key the content key of beginning position
  * @param begin_exclusive whether or not beginning position is exclusive
  * @param end_key the content key of ending position
@@ -189,54 +190,54 @@ extern "C" StatusCode content_scan_prefix(
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan_range(
-        TransactionHandle transaction,
+        TransactionHandle handle,
         Slice begin_key, bool begin_exclusive,
         Slice end_key, bool end_exclusive,
         IteratorHandle* result);
 
 /**
  * @brief advances the given iterator.
- * @param iterator the target iterator
+ * @param handle the target iterator
  * @return StatusCode::OK if the iterator was successfully advanced
  * @return StatusCode::NOT_FOUND if the next content does not exist
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode iterator_next(
-        IteratorHandle iterator);
+        IteratorHandle handle);
 
 /**
  * @brief returns the key on the current iterator position.
  * The returned slice will be disposed after the iterator status was changed.
- * @param iterator the target iterator handle
+ * @param handle the target iterator handle
  * @param result [OUT] the current key
  * @return StatusCode::OK if the key content was successfully obtained
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode iterator_get_key(
-        IteratorHandle iterator,
+        IteratorHandle handle,
         Slice* result);
 
 /**
  * @brief returns the value on the current iterator position.
  * The returned slice will be disposed after the iterator status was changed.
- * @param iterator the target iterator handle
+ * @param handle the target iterator handle
  * @param result [OUT] the current value
  * @return StatusCode::OK if the value content was successfully obtained
  * @return StatusCode::NOT_FOUND if the pointing entry is already disabled
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode iterator_get_value(
-        IteratorHandle iterator,
+        IteratorHandle handle,
         Slice* result);
 
 /**
  * @brief disposes the iterator handle.
- * @param iterator the target iterator handle
+ * @param handle the target iterator handle
  * @return StatusCode::OK if the iterator was successfully disposed
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode iterator_dispose(
-        IteratorHandle iterator);
+        IteratorHandle handle);
 
 }  // namespace sharksfin
 
