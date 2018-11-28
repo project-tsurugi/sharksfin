@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -53,6 +54,19 @@ public:
     }
 
     /**
+     * @brief returns an database attribute.
+     * @param key the attribute key
+     * @return an attribute value, or empty if there is no such an attribute
+     */
+    inline std::optional<std::string> attribute(std::string const& key) const {
+        auto it = attributes_.find(key);
+        if (it == attributes_.end()) {
+            return {};
+        }
+        return { it->second };
+    }
+
+    /**
      * @brief adds a database attribute.
      * @param key the attribute key
      * @param value the attribute value
@@ -79,15 +93,6 @@ public:
     inline DatabaseOptions& open_mode(OpenMode value) {
         open_mode_ = value;
         return *this;
-    }
-
-    /**
-     * @brief sets the mode of opening database.
-     * @param value the mode
-     * @return this
-     */
-    inline DatabaseOptions& open_mode(std::underlying_type_t<OpenMode> value) {
-        return open_mode(static_cast<OpenMode>(value));
     }
 
 private:

@@ -18,10 +18,38 @@
 
 namespace sharksfin {
 
-class DatabaseOptionsTest : public ::testing::Test {};
+class DatabaseOptionsTest : public ::testing::Test {
+public:
+    DatabaseOptions options;
+};
 
-TEST_F(DatabaseOptionsTest, simple) {
-    // FIXME: impl
+using OpenMode = DatabaseOptions::OpenMode;
+
+TEST_F(DatabaseOptionsTest, defaults) {
+    EXPECT_TRUE(options.attributes().empty());
+    EXPECT_EQ(options.open_mode(), OpenMode::CREATE_OR_RESTORE);
+}
+
+TEST_F(DatabaseOptionsTest, attribute) {
+    EXPECT_EQ(options.attribute("testing").value_or(""), "");
+
+    options.attribute("testing", "AAA");
+    EXPECT_EQ(options.attribute("testing").value_or(""), "AAA");
+}
+
+TEST_F(DatabaseOptionsTest, attributes) {
+    options.attribute("a", "A");
+    options.attribute("b", "B");
+    options.attribute("b", "C");
+
+    auto& attrs = options.attributes();
+    EXPECT_EQ(attrs.at("a"), "A");
+    EXPECT_EQ(attrs.at("b"), "C");
+}
+
+TEST_F(DatabaseOptionsTest, open_mode) {
+    options.open_mode(OpenMode::RESTORE);
+    EXPECT_EQ(options.open_mode(), OpenMode::RESTORE);
 }
 
 }  // namespace sharksfin

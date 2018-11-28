@@ -48,6 +48,7 @@ enum class StatusCode : std::int64_t {
 extern "C" inline char const* status_code_label(StatusCode code) {
     switch (code) {
         case StatusCode::OK: return "OK";
+        case StatusCode::NOT_FOUND: return "NOT_FOUND";
         case StatusCode::ERR_UNKNOWN: return "ERR_UNKNOWN";
         default: return "UNDEFINED";
     }

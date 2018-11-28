@@ -21,7 +21,7 @@ namespace sharksfin {
 class StatusCodeTest : public ::testing::Test {};
 
 TEST_F(StatusCodeTest, simple) {
-    EXPECT_STREQ("OK", status_code_label(StatusCode::OK));
+    EXPECT_STREQ(status_code_label(StatusCode::OK), "OK");
 }
 
 }  // namespace sharksfin

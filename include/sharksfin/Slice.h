@@ -46,8 +46,17 @@ public:
      * @param size the number of slice size in bytes
      */
     inline Slice(void const* pointer, std::size_t size) noexcept
-        : pointer_(reinterpret_cast<std::byte const*>(pointer))
+        : pointer_(reinterpret_cast<std::byte const*>(pointer))  // NOLINT
         , size_(size)
+    {}
+
+    /**
+     * @brief constructs a new object.
+     * @param pointer the null-terminated string
+     */
+    inline Slice(char const* pointer) noexcept
+        : pointer_(reinterpret_cast<std::byte const*>(pointer))  // NOLINT
+        , size_(strlen(pointer))
     {}
 
     /**
@@ -56,17 +65,16 @@ public:
      * @param string the source string
      */
     inline Slice(std::string const& string) noexcept
-        : pointer_(reinterpret_cast<std::byte const*>(string.data()))
+        : pointer_(reinterpret_cast<std::byte const*>(string.data()))  // NOLINT
         , size_(string.length())
     {}
 
     /**
      * @brief constructs a new object.
-     * If the source string was changed, then this slice may not point valid range.
      * @param string the source string
      */
     inline Slice(std::string_view const& string) noexcept
-        : pointer_(reinterpret_cast<std::byte const*>(string.data()))
+        : pointer_(reinterpret_cast<std::byte const*>(string.data()))  // NOLINT
         , size_(string.length())
     {}
 
@@ -112,7 +120,7 @@ public:
      */
     template<class T>
     inline T const& at(std::size_t offset) const {
-        return *reinterpret_cast<T const*>(&pointer_[offset]);
+        return *reinterpret_cast<T const*>(&pointer_[offset]);  // NOLINT
     }
 
     /**
@@ -123,7 +131,24 @@ public:
         if (empty()) {
             return {};
         }
-        return { reinterpret_cast<const std::string::value_type*>(pointer_), size_ };
+        return {
+            reinterpret_cast<const std::string::value_type*>(pointer_),  // NOLINT
+            size_
+        };
+    }
+
+    /**
+     * @brief returns a string view of this slice.
+     * @return a string view
+     */
+    inline std::string_view to_string_view() const {
+        if (empty()) {
+            return {};
+        }
+        return {
+            reinterpret_cast<const std::string_view::value_type*>(pointer_), // NOLINT
+            size_
+        };
     }
 
     /**
@@ -132,7 +157,9 @@ public:
      * @return the target buffer
      */
     inline std::string& append_to(std::string& buffer) const {
-        buffer.append(reinterpret_cast<const std::string::value_type*>(pointer_), size_);
+        buffer.append(
+            reinterpret_cast<const std::string::value_type*>(pointer_),  // NOLINT
+            size_);
         return buffer;
     }
 
@@ -178,7 +205,7 @@ public:
      * @return false if this slice is empty
      */
     explicit inline operator bool() const {
-        return empty();
+        return !empty();
     }
 
     /**
