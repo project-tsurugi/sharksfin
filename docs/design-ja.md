@@ -9,6 +9,8 @@
 
 * `include/api.h`
   * 低レベルAPI
+* `include/DatabaseOptions.h`
+  * データベース設定情報
 * `include/Slice.h`
   * メモリスライス
   * メモリ上の連続領域に対する単なるビューであり、このオブジェクトを経由してメモリを変更しない
@@ -56,7 +58,7 @@
     * `extern "C"` でsymbol manglingを防ぐ
       * その関係で関数名が長い
     * 例外を利用しない
-      * 
+      * APIの前後でセマンティクスが異なると面倒なので
   * TBD: 名前空間を汚さないように、関数テーブルを提供する方式でも良かったかも
 * misc.
   * `StatusCode`
@@ -72,6 +74,8 @@
       * trivially constructible
       * trivially copyable
       * trivially destructible
+  * `DatabaseOptions`
+    * データベースの設定情報を構築するためのクラス
   * `*` in API function parameters
     * 明示的にポインタ型 (without `const`) のパラメータは、基本的に出力用にのみ使っている
 
@@ -82,18 +86,15 @@
 * 概要
   * データベースインスタンスの操作
 * 関数
-  * `database_create`
-    * データベースの設定情報を指定し、データベースハンドルを作成する
-      * データベースの設定情報の解釈は実装に任せる
-    * この時点ではデータベースに接続していない状態
-  * `database_dispose`
-    * データベースハンドルを破棄する
   * `database_open`
-    * データベースに接続する
+    * データベースに接続し、対応するデータベースハンドルを返す
   * `database_close`
     * データベースの接続を終了する
+  * `database_dispose`
+    * データベースハンドルを破棄する
 * 備考
   * TBD: LLVMから触らないイメージなのでもう少しゆるいAPIでもよいかも
+  * TBD: キーの比較を外部からカスタマイズ可能かどうか
 
 ### transaction_*
 
@@ -114,7 +115,7 @@
   * `content_get`
     * 指定のキーに対する値を返す
   * `content_put`
-    * 指定のキーに対して値を書き込む
+    * 指定のキーに対して値を書き込む (上書き、なければエントリを作成)
   * `content_delete`
     * 指定のキーに関連する値を削除する
   * `content_scan_prefix`
@@ -124,6 +125,8 @@
 * 備考
   * `Slice` を返すだけでなく、 `std::string` に書き出す仕組みがあっても良いかもしれない
   * TBD: スレッド安全性
+  * TBD: `put` は `insert`, `update`, `insert or update` を区別できるようにするか
+    * `get` -> `put` で同等の操作が可能
 
 ### iterator_*
 
@@ -142,4 +145,5 @@
   * 作成直後のイテレータは何も指していないので、最初に `iterator_next` を行う必要がある
   * イテレータを作成後にデータベースの内容が変わっても、そのイテレータは正しく動作する
     * 例えば、 `iterator_get_key` の結果を `content_delete` しても `iterator_next` は正しく現在の次の値を返す
+    * 場合によっては `iterator_{put, delete}` を用意し、それのみ許すというのはありそう
   * TBD: スレッド安全性

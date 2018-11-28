@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <type_traits>
 
+#include "DatabaseOptions.h"
 #include "Slice.h"
 #include "StatusCode.h"
 
@@ -40,61 +41,36 @@ using TransactionHandle = std::add_pointer_t<void>;
 using IteratorHandle = std::add_pointer_t<void>;
 
 /**
- * @brief helpers of database_create().
- */
-namespace DatabaseCreate {
-
-/**
- * @brief the mode of database_create().
- */
-enum Mode : std::uint32_t {
-
-    /**
-     * @brief creates a new database if the target database does not exist.
-     */
-    CREATE = 0x01,
-
-    /**
-     * @brief restores the target database if the target database already exists.
-     */
-    RESTORE = 0x02,
-};
-}  // namespace DatabaseCreate
-
-/**
- * @brief creates a database handle.
+ * @brief opens a database and returns its handle.
  * The created handle must be disposed by database_dispose().
- * @param config the database configuration command
- * @param mode the database creation mode
+ * @param options the target database options
  * @param result [OUT] the output target of database handle
- * @return the operation status
+ * @return Status::OK if the target database is successfully opened
+ * @return Status::NOT_FOUND if the target database does not exist
+ *      and the open mode is DatabaseOptions::OpenMode::CREATE_OR_RESTORE
+ * @return otherwise if error was occurred
  */
-extern "C" StatusCode database_create(
-        char const* config,
-        DatabaseCreate::Mode mode,
+extern "C" StatusCode database_open(
+        DatabaseOptions const& options,
         DatabaseHandle* result);
+
+/**
+ * @brief closes the target database.
+ * This never disposes the given database handle.
+ * @param db the target database
+ * @return the operation status
+ * @see database_dispose()
+ */
+extern "C" StatusCode database_close(
+        DatabaseHandle db);
 
 /**
  * @brief disposes the database handle.
  * @return the operation status
  * @see #database_close()
  */
-extern "C" StatusCode database_dispose(DatabaseHandle db);
-
-/**
- * @brief opens the target database.
- * @param db the target database
- * @return the operation status
- */
-extern "C" StatusCode database_open(DatabaseHandle db);
-
-/**
- * @brief closes the target database.
- * If the database is not opened, this operation does nothing.
- * @param db the target database
- * @return the operation status
- */
-extern "C" StatusCode database_close(DatabaseHandle db);
+extern "C" StatusCode database_dispose(
+        DatabaseHandle db);
 
 /**
  * @brief the operation type of transactions.
@@ -246,6 +222,7 @@ extern "C" StatusCode iterator_get_key(
  * @param iterator the target iterator handle
  * @param result [OUT] the current value
  * @return StatusCode::OK if the value content was successfully obtained
+ * @return StatusCode::NOT_FOUND if the pointing entry is already disabled
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode iterator_get_value(
