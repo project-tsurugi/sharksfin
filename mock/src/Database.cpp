@@ -23,7 +23,7 @@
 namespace sharksfin {
 namespace mock {
 
-const std::string Database::KEY_LOCATION { "location" };
+const std::string Database::KEY_LOCATION { "location" };  // NOLINT
 
 void Database::shutdown() {
     std::unique_lock lock { transaction_mutex_ };

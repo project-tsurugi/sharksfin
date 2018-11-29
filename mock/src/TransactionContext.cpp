@@ -26,7 +26,7 @@ static inline mock::TransactionContext* unwrap(TransactionHandle handle) {
 StatusCode transaction_exec(
         DatabaseHandle handle,
         TransactionCallback callback) {
-    auto database = reinterpret_cast<mock::Database*>(handle);
+    auto database = reinterpret_cast<mock::Database*>(handle);  // NOLINT
     auto tx = database->create_transaction();
     tx->acquire();
     callback(tx.get());
