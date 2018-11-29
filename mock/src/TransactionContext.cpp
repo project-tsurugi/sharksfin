@@ -15,16 +15,21 @@
  */
 #include "TransactionContext.h"
 
-namespace sharksfin {
-namespace mock {
+#include "Iterator.h"
 
-}  // namespace mock
+namespace sharksfin {
+
+static inline mock::TransactionContext* unwrap(TransactionHandle handle) {
+    return reinterpret_cast<mock::TransactionContext*>(handle);  // NOLINT
+}
 
 StatusCode transaction_exec(
         DatabaseHandle handle,
         TransactionCallback callback) {
-    (void) handle;
-    (void) callback;
+    auto database = reinterpret_cast<mock::Database*>(handle);
+    auto tx = database->create_transaction();
+    tx->acquire();
+    callback(tx.get());
     return StatusCode::OK;
 }
 
@@ -32,37 +37,53 @@ StatusCode content_get(
         TransactionHandle handle,
         Slice key,
         Slice* result) {
-    (void) handle;
-    (void) key;
-    (void) result;
-    return StatusCode::OK;
+    auto tx = unwrap(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto& buffer = tx->buffer();
+    auto status = database->get(key, buffer);
+    if (status == StatusCode::OK) {
+        *result = buffer;
+    }
+    return status;
 }
 
 StatusCode content_put(
         TransactionHandle handle,
         Slice key,
         Slice value) {
-    (void) handle;
-    (void) key;
-    (void) value;
-    return StatusCode::OK;
+    auto tx = unwrap(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    return database->put(key, value);
 }
 
 StatusCode content_delete(
         TransactionHandle handle,
         Slice key) {
-    (void) handle;
-    (void) key;
-    return StatusCode::OK;
+    auto tx = unwrap(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    return database->remove(key);
 }
 
 StatusCode content_scan_prefix(
         TransactionHandle handle,
         Slice prefix_key,
         IteratorHandle* result) {
-    (void) handle;
-    (void) prefix_key;
-    (void) result;
+    auto tx = unwrap(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto iterator = database->scan_prefix(prefix_key);
+    *result = iterator.release();
     return StatusCode::OK;
 }
 
@@ -71,12 +92,15 @@ StatusCode content_scan_range(
         Slice begin_key, bool begin_exclusive,
         Slice end_key, bool end_exclusive,
         IteratorHandle* result) {
-    (void) handle;
-    (void) begin_key;
-    (void) begin_exclusive;
-    (void) end_key;
-    (void) end_exclusive;
-    (void) result;
+    auto tx = unwrap(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto iterator = database->scan_range(
+            begin_key, begin_exclusive,
+            end_key, end_exclusive);
+    *result = iterator.release();
     return StatusCode::OK;
 }
 }  // namespace sharksfin

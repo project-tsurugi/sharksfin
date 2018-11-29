@@ -161,8 +161,8 @@ extern "C" StatusCode content_delete(
 
 /**
  * @brief obtains an iterator over the prefix key range.
- * The content of key must not be changed while using the returned iterator.
- * The created handle must be disposed by iterator_dispose();
+ * The content of prefix key must not be changed while using the returned iterator.
+ * The created handle must be disposed by iterator_dispose().
  * The returned iterator is still available even if database content was changed.
  * @param handle the current transaction handle
  * @param prefix_key the content key prefix
@@ -176,9 +176,9 @@ extern "C" StatusCode content_scan_prefix(
         IteratorHandle* result);
 
 /**
- * @brief obtains iterator over the key range.
- * The content of keys must not be changed while using the returned iterator.
- * The created handle must be disposed by iterator_dispose();
+ * @brief obtains iterator between begin and end keys range.
+ * The content of begin/end keys must not be changed while using the returned iterator.
+ * The created handle must be disposed by iterator_dispose().
  * The returned iterator is still available even if database content was changed.
  * @param handle the current transaction handle
  * @param begin_key the content key of beginning position
@@ -197,6 +197,7 @@ extern "C" StatusCode content_scan_range(
 
 /**
  * @brief advances the given iterator.
+ * This will change the iterator state.
  * @param handle the target iterator
  * @return StatusCode::OK if the iterator was successfully advanced
  * @return StatusCode::NOT_FOUND if the next content does not exist
@@ -207,7 +208,8 @@ extern "C" StatusCode iterator_next(
 
 /**
  * @brief returns the key on the current iterator position.
- * The returned slice will be disposed after the iterator status was changed.
+ * The returned slice will be disabled after the iterator state was changed.
+ * This never changes the iterator state.
  * @param handle the target iterator handle
  * @param result [OUT] the current key
  * @return StatusCode::OK if the key content was successfully obtained
@@ -219,7 +221,8 @@ extern "C" StatusCode iterator_get_key(
 
 /**
  * @brief returns the value on the current iterator position.
- * The returned slice will be disposed after the iterator status was changed.
+ * The returned slice will be disabled after the iterator status was changed.
+ * This never changes the iterator state.
  * @param handle the target iterator handle
  * @param result [OUT] the current value
  * @return StatusCode::OK if the value content was successfully obtained
@@ -232,6 +235,7 @@ extern "C" StatusCode iterator_get_value(
 
 /**
  * @brief disposes the iterator handle.
+ * This will change the iterator state.
  * @param handle the target iterator handle
  * @return StatusCode::OK if the iterator was successfully disposed
  * @return otherwise if error was occurred

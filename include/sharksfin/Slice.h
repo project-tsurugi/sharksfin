@@ -152,6 +152,16 @@ public:
     }
 
     /**
+     * @brief sets the contents of this slice into the given buffer.
+     * @param buffer the target buffer
+     * @return the target buffer
+     */
+    inline std::string& assign_to(std::string& buffer) const {
+        buffer.clear();
+        return append_to(buffer);
+    }
+
+    /**
      * @brief appends the contents of this slice into the given buffer.
      * @param buffer the target buffer
      * @return the target buffer

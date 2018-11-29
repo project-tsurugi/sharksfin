@@ -39,6 +39,26 @@ enum class StatusCode : std::int64_t {
      * @brief unknown errors.
      */
     ERR_UNKNOWN = -1,
+
+    /**
+     * @brief I/O error.
+     */
+    ERR_IO_ERROR = -2,
+
+    /**
+     * @brief API arguments are invalid.
+     */
+    ERR_INVALID_ARGUMENT = -3,
+
+    /**
+     * @brief API state is invalid.
+     */
+    ERR_INVALID_STATE = -4,
+
+    /**
+     * @brief operation is unsupported.
+     */
+    ERR_UNSUPPORTED = -5,
 };
 
 /**
@@ -50,6 +70,10 @@ extern "C" inline char const* status_code_label(StatusCode code) {
         case StatusCode::OK: return "OK";
         case StatusCode::NOT_FOUND: return "NOT_FOUND";
         case StatusCode::ERR_UNKNOWN: return "ERR_UNKNOWN";
+        case StatusCode::ERR_IO_ERROR: return "ERR_IO_ERROR";
+        case StatusCode::ERR_INVALID_ARGUMENT: return "ERR_INVALID_ARGUMENT";
+        case StatusCode::ERR_INVALID_STATE: return "ERR_INVALID_STATE";
+        case StatusCode::ERR_UNSUPPORTED: return "ERR_UNSUPPORTED";
         default: return "UNDEFINED";
     }
 }

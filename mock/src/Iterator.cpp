@@ -16,35 +16,43 @@
 #include "Iterator.h"
 
 namespace sharksfin {
-namespace mock {
 
-}  // namespace mock
+static inline mock::Iterator* unwrap(IteratorHandle handle) {
+    return reinterpret_cast<mock::Iterator*>(handle);  // NOLINT
+}
 
 StatusCode iterator_next(
         IteratorHandle handle) {
-    (void) handle;
-    return StatusCode::OK;
+    auto iterator = unwrap(handle);
+    return iterator->next();
 }
 
 StatusCode iterator_get_key(
         IteratorHandle handle,
         Slice* result) {
-    (void) handle;
-    (void) result;
+    auto iterator = unwrap(handle);
+    if (!iterator->is_valid()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    *result = iterator->key();
     return StatusCode::OK;
 }
 
 StatusCode iterator_get_value(
         IteratorHandle handle,
         Slice* result) {
-    (void) handle;
-    (void) result;
+    auto iterator = unwrap(handle);
+    if (!iterator->is_valid()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    *result = iterator->value();
     return StatusCode::OK;
 }
 
 StatusCode iterator_dispose(
         IteratorHandle handle) {
-    (void) handle;
+    auto iterator = unwrap(handle);
+    delete iterator;  // NOLINT
     return StatusCode::OK;
 }
 }  // namespace sharksfin

@@ -44,11 +44,13 @@
 
 ## design concept
 
+* header only
+  * API自体はheader only
 * 疎結合で動的リンクを前提
   * SQL engine と Tx engine を個別にビルドして実行時に動的リンクできるように
   * SQL engine は低レベルAPIを介してのみ Tx engine を利用する (当面は)
-  * 実装型を隠蔽するため、オブジェクトは `void*` 型のハンドルが中心
-    * Tx engine の内部で `reinterpret_cast` 経由で実装型に変換する想定
+  * 実装型を隠蔽するため、オブジェクトはハンドル (`void*`) を経由
+    * Tx engine の内部で `reinterpret_cast` 経由で実装型に変換する
     * ただし、この関係で `std::unique_ptr` が使いづらくなっている
 * LLVM JITから利用可能
   * すべての低レベルAPIの関数は `dlopen` から得たハンドル経由でアドレスを取得可能
@@ -59,6 +61,7 @@
       * その関係で関数名が長い
     * 例外を利用しない
       * APIの前後でセマンティクスが異なると面倒なので
+      * ただし、 `abort` を企図した例外はスローしてもよい (e.g. assertion error)
   * TBD: 名前空間を汚さないように、関数テーブルを提供する方式でも良かったかも
 * misc.
   * `StatusCode`

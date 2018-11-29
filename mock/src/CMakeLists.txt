@@ -12,6 +12,7 @@ target_include_directories(mock
 
 target_link_libraries(mock
     PUBLIC api
+    PUBLIC leveldb
 )
 
 set_compile_options(mock)
