@@ -3,7 +3,7 @@
 ## Requirements
 
 * CMake `>= 3.5`
-* C++ Compiler `>= C+17`
+* C++ Compiler `>= C++17`
 * and see *Dockerfile* section
 
 ```sh
@@ -16,7 +16,7 @@ git submodule update --init --recursive
 ```dockerfile
 FROM ubuntu:18.04
 
-RUN apt update -y && apt install -y git build-essential cmake ninja-build libleveldb-dev doxygen graphviz
+RUN apt update -y && apt install -y git build-essential cmake ninja-build libleveldb-dev libboost-filesystem-dev doxygen graphviz
 ```
 
 ## How to build

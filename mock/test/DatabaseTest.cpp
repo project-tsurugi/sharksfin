@@ -16,10 +16,25 @@
 #include "Database.h"
 #include <gtest/gtest.h>
 
+#include "TemporaryFolder.h"
+
 namespace sharksfin {
 namespace mock {
 
-class DatabaseTest : public ::testing::Test {};
+class DatabaseTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        folder_.prepare();
+        location = folder_.path();
+    }
+    void TearDown() override {
+        folder_.clean();
+    }
+
+private:
+    testing::TemporaryFolder folder_;
+    std::string location;
+};
 
 TEST_F(DatabaseTest, simple) {
     // FIXME: impl
