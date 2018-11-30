@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 #include "Iterator.h"
-#include <gtest/gtest.h>
+
+#include "TestRoot.h"
 
 namespace sharksfin {
 namespace mock {
 
-class IteratorTest : public ::testing::Test {};
+class IteratorTest : public testing::TestRoot {};
 
 TEST_F(IteratorTest, simple) {
     // FIXME: impl

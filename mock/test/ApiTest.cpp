@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 #include "sharksfin/api.h"
-#include <gtest/gtest.h>
+
+#include <string>
+
+#include "TestRoot.h"
 
 namespace sharksfin {
 
-class ApiTest : public ::testing::Test {};
+static const std::string KEY_LOCATION { "location" };
+
+class ApiTest : public testing::TestRoot {};
 
 TEST_F(ApiTest, simple) {
-    // compile only
+    // FIXME: impl
 }
 
 }  // namespace sharksfin

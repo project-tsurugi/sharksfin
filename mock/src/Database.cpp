@@ -16,17 +16,13 @@
 #include "Database.h"
 
 #include <memory>
+#include <utility>
 
 #include "Iterator.h"
 #include "TransactionContext.h"
 
 namespace sharksfin {
 namespace mock {
-
-/**
- * @brief the attribute key of database location on filesystem.
- */
-static const std::string KEY_LOCATION { "location" };  // NOLINT
 
 void Database::shutdown() {
     std::unique_lock lock { transaction_mutex_ };
@@ -102,45 +98,4 @@ std::unique_ptr<Iterator> Database::scan_range(
 }
 
 }  // namespace mock
-
-static inline mock::Database* unwrap(DatabaseHandle handle) {
-    return reinterpret_cast<mock::Database*>(handle);  // NOLINT
-}
-
-StatusCode database_open(
-        DatabaseOptions const& options,
-        DatabaseHandle* result) {
-    auto location = options.attribute(mock::KEY_LOCATION);
-    if (!location.has_value()) {
-        // FIXME: detail
-        return StatusCode::ERR_INVALID_ARGUMENT;
-    }
-
-    leveldb::Options leveldb_opts;
-    if (options.open_mode() == DatabaseOptions::OpenMode::CREATE_OR_RESTORE) {
-        leveldb_opts.create_if_missing = true;
-    }
-
-    leveldb::DB* leveldb_ptr = nullptr;
-    auto status = leveldb::DB::Open(leveldb_opts, location.value(), &leveldb_ptr);
-    if (status.ok()) {
-        std::unique_ptr<leveldb::DB> leveldb { leveldb_ptr };
-        auto db = std::make_unique<mock::Database>(std::move(leveldb));
-        *result = reinterpret_cast<DatabaseHandle>(db.release());  // NOLINT
-        return StatusCode::OK;
-    }
-    return mock::Database::resolve(status);
-}
-
-StatusCode database_close(DatabaseHandle handle) {
-    auto db = unwrap(handle);
-    db->shutdown();
-    return StatusCode::OK;
-}
-
-StatusCode database_dispose(DatabaseHandle handle) {
-    auto db = unwrap(handle);
-    delete db;  // NOLINT
-    return StatusCode::OK;
-}
 }  // namespace sharksfin

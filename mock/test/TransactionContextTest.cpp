@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 #include "TransactionContext.h"
-#include <gtest/gtest.h>
+
+#include "TestRoot.h"
 
 namespace sharksfin {
 namespace mock {
 
-class TransactionContextTest : public ::testing::Test {};
+class TransactionContextTest : public testing::TestRoot {};
 
 TEST_F(TransactionContextTest, simple) {
     // FIXME: impl
