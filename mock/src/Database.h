@@ -47,7 +47,7 @@ public:
      * @brief constructs a new object.
      * @param leveldb the target LevelDB instance
      */
-    inline Database(std::unique_ptr<leveldb::DB> leveldb)
+    inline Database(std::unique_ptr<leveldb::DB> leveldb) noexcept
         : leveldb_(std::move(leveldb))
     {};
 
@@ -113,7 +113,7 @@ public:
      * @return true if it is alive
      * @return false if it is already closed
      */
-    inline bool is_alive() {
+    inline bool is_alive() const {
         return static_cast<bool>(leveldb_);
     }
 
@@ -130,14 +130,6 @@ public:
      * @return the corresponded status code in shark's fin API
      */
     static StatusCode resolve(leveldb::Status const& status);
-
-    /**
-     * @brief returns the underlying LevelDB instance.
-     * @return the underlying LevelDB instance, or nullptr if it is already closed
-     */
-    inline leveldb::DB* leveldb() {
-        return leveldb_.get();
-    }
 
 private:
     std::unique_ptr<leveldb::DB> leveldb_ = {};

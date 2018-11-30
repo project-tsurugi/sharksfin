@@ -41,7 +41,7 @@ public:
     inline TransactionContext(
             Database* owner,
             std::size_t id,
-            std::unique_lock<Database::transaction_mutex_type> lock)
+            std::unique_lock<Database::transaction_mutex_type> lock) noexcept
         : owner_(owner)
         , id_(id)
         , lock_(std::move(lock))

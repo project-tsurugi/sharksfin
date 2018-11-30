@@ -46,10 +46,10 @@ public:
      * @param iterator the iterator
      * @param prefix_key the prefix key
      */
-    Iterator(
+    inline Iterator(
             Database* owner,
             std::unique_ptr<leveldb::Iterator> iterator,
-            Slice prefix_key)
+            Slice prefix_key) noexcept
         : owner_(owner)
         , iterator_(std::move(iterator))
         , begin_key_(resolve(prefix_key))
@@ -68,52 +68,31 @@ public:
      * @param end_key the content key of ending position
      * @param end_exclusive whether or not ending position is exclusive
      */
-    Iterator(
+    inline Iterator(
             Database* owner,
             std::unique_ptr<leveldb::Iterator> iterator,
             Slice begin_key, bool begin_exclusive,
-            Slice end_key, bool end_exclusive)
+            Slice end_key, bool end_exclusive) noexcept
         : owner_(owner)
         , iterator_(std::move(iterator))
         , begin_key_(resolve(begin_key))
         , end_key_(resolve(end_key))
         , begin_exclusive_(begin_exclusive)
         , end_exclusive_(end_exclusive)
-        , state_(State::INIT_PREFIX)
+        , state_(State::INIT_RANGE)
     {}
 
     /**
-     * @brief returns whether or not this iterator points a valid entry.
-     * @return true if this points a valid entry
-     * @return false otherwise
-     */
-    inline bool is_valid() {
-        return iterator_->Valid();
-    }
-
-    /**
      * @brief advances this iterator position.
-     * @return
+     * @return Status::OK if next entry exists
+     * @return Status::NOT_FOUND if next entry does not exist
+     * @return otherwise if error occurred
      */
     StatusCode next() {
-        switch (state_) {
-            case State::INIT_PREFIX:
-                state_ = state_init_prefix();
-                break;
-            case State::INIT_RANGE:
-                state_ = state_init_range();
-                break;
-            case State::BODY_PREFIX:
-                state_ = state_body_prefix();
-                break;
-            case State::BODY_RANGE:
-                state_ = state_body_range();
-                break;
-            case State::SAW_EOF:
-                break;
-            default:
-                abort();
+        if (state_ == State::SAW_EOF) {
+            return StatusCode::NOT_FOUND;
         }
+        state_ = state_step(state_);
         if (state_ == State::SAW_EOF) {
             auto status = iterator_->status();
             if (status.ok()) {
@@ -122,6 +101,15 @@ public:
             return owner_->resolve(status);
         }
         return StatusCode::OK;
+    }
+
+    /**
+     * @brief returns whether or not this iterator points a valid entry.
+     * @return true if this points a valid entry
+     * @return false otherwise
+     */
+    inline bool is_valid() const {
+        return iterator_->Valid();
     }
 
     /**
@@ -149,60 +137,58 @@ private:
     bool end_exclusive_;
     State state_;
 
+    inline State state_step(State current) {
+        switch (current) {
+            case State::INIT_PREFIX: return state_init_prefix();
+            case State::INIT_RANGE: return state_init_range();
+            case State::BODY_PREFIX: return state_body_prefix();
+            case State::BODY_RANGE: return state_body_range();
+            case State::SAW_EOF: return State::SAW_EOF;
+            default: abort();
+        }
+    }
+
     inline State state_init_prefix() {
         iterator_->Seek(begin_key_);
-        if (!has_prefix()) {
-            return State::SAW_EOF;
-        }
-        return State::BODY_PREFIX;
+        return test_prefix();
     }
 
     inline State state_body_prefix() {
         iterator_->Next();
-        if (!has_prefix()) {
-            return State::SAW_EOF;
-        }
-        return State::BODY_PREFIX;
+        return test_prefix();
     }
 
     inline State state_init_range() {
         iterator_->Seek(begin_key_);
+        if (!begin_exclusive_) {
+            return test_range();
+        }
         if (!iterator_->Valid()) {
             return State::SAW_EOF;
         }
-        if (begin_exclusive_) {
-            iterator_->Next();
-            if (!iterator_->Valid()) {
-                return State::SAW_EOF;
-            }
-        }
-        if (!before_range_end()) {
-            return State::SAW_EOF;
-        }
-        return State::BODY_RANGE;
+        return state_body_range();
     }
 
     inline State state_body_range() {
         iterator_->Next();
-        if (!before_range_end()) {
-            return State::SAW_EOF;
-        }
-        return State::BODY_PREFIX;
+        return test_range();
     }
 
-    inline bool has_prefix() {
-        if (!iterator_->Valid()) {
-            return false;
+    inline State test_prefix() {
+        if (iterator_->Valid() && iterator_->key().starts_with(begin_key_)) {
+            return State::BODY_PREFIX;
         }
-        return iterator_->key().starts_with(begin_key_);
+        return State::SAW_EOF;
     }
 
-    inline bool before_range_end() {
-        if (!iterator_->Valid()) {
-            return false;
+    inline State test_range() {
+        if (iterator_->Valid()) {
+            auto compare = iterator_->key().compare(end_key_);
+            if (compare < 0 || (compare == 0 && !end_exclusive_)) {
+                return State::BODY_RANGE;
+            }
         }
-        auto compare = iterator_->key().compare(end_key_);
-        return compare < 0 || (compare == 0 && !end_exclusive_);
+        return State::SAW_EOF;
     }
 
     static inline leveldb::Slice resolve(Slice slice) {
