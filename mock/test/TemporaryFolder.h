@@ -43,7 +43,7 @@ public:
         }
     }
 
-    std::string path() {
+    std::string path() const {
         if (path_.empty() || !boost::filesystem::exists(path_)) {
             throw std::runtime_error("temporary folder has not been initialized yet");
         }

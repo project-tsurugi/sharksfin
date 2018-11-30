@@ -31,7 +31,7 @@ namespace sharksfin {
  */
 class Slice final {
 private:
-    std::byte const* pointer_ = nullptr;
+    std::byte const* data_ = nullptr;
     std::size_t size_ = 0U;
 
 public:
@@ -46,7 +46,7 @@ public:
      * @param size the number of slice size in bytes
      */
     inline Slice(void const* pointer, std::size_t size) noexcept
-        : pointer_(reinterpret_cast<std::byte const*>(pointer))  // NOLINT
+        : data_(reinterpret_cast<std::byte const*>(pointer))  // NOLINT
         , size_(size)
     {}
 
@@ -55,7 +55,7 @@ public:
      * @param pointer the null-terminated string
      */
     inline Slice(char const* pointer) noexcept
-        : pointer_(reinterpret_cast<std::byte const*>(pointer))  // NOLINT
+        : data_(reinterpret_cast<std::byte const*>(pointer))  // NOLINT
         , size_(strlen(pointer))
     {}
 
@@ -65,7 +65,7 @@ public:
      * @param string the source string
      */
     inline Slice(std::string const& string) noexcept
-        : pointer_(reinterpret_cast<std::byte const*>(string.data()))  // NOLINT
+        : data_(reinterpret_cast<std::byte const*>(string.data()))  // NOLINT
         , size_(string.length())
     {}
 
@@ -74,7 +74,7 @@ public:
      * @param string the source string
      */
     inline Slice(std::string_view const& string) noexcept
-        : pointer_(reinterpret_cast<std::byte const*>(string.data()))  // NOLINT
+        : data_(reinterpret_cast<std::byte const*>(string.data()))  // NOLINT
         , size_(string.length())
     {}
 
@@ -82,8 +82,18 @@ public:
      * @brief returns the base pointer of this slice.
      * @return a pointer which points the beginning of this slice
      */
-    inline std::byte const* pointer() const {
-        return pointer_;
+    inline std::byte const* data() const {
+        return data_;
+    }
+
+    /**
+     * @brief returns the base pointer of this slice.
+     * @tparam T the content type
+     * @return a pointer which points the beginning of this slice
+     */
+    template<class T>
+    inline T const* data() const {
+        return reinterpret_cast<T const*>(data_);  // NOLINT
     }
 
     /**
@@ -109,7 +119,7 @@ public:
      * @return a content of the slice
      */
     inline std::byte const& at(std::size_t offset) const {
-        return pointer_[offset];
+        return data_[offset];
     }
 
     /**
@@ -120,7 +130,7 @@ public:
      */
     template<class T>
     inline T const& at(std::size_t offset) const {
-        return *reinterpret_cast<T const*>(&pointer_[offset]);  // NOLINT
+        return *reinterpret_cast<T const*>(&data_[offset]);  // NOLINT
     }
 
     /**
@@ -132,7 +142,7 @@ public:
             return {};
         }
         return {
-            reinterpret_cast<const std::string::value_type*>(pointer_),  // NOLINT
+            reinterpret_cast<const std::string::value_type*>(data_),  // NOLINT
             size_
         };
     }
@@ -146,7 +156,7 @@ public:
             return {};
         }
         return {
-            reinterpret_cast<const std::string_view::value_type*>(pointer_), // NOLINT
+            reinterpret_cast<const std::string_view::value_type*>(data_), // NOLINT
             size_
         };
     }
@@ -168,7 +178,7 @@ public:
      */
     inline std::string& append_to(std::string& buffer) const {
         buffer.append(
-            reinterpret_cast<const std::string::value_type*>(pointer_),  // NOLINT
+            reinterpret_cast<const std::string::value_type*>(data_),  // NOLINT
             size_);
         return buffer;
     }
@@ -184,9 +194,9 @@ public:
         if (this == &other || (empty() && other.empty())) {
             return 0;
         }
-        if (pointer_ != other.pointer_) {
+        if (data_ != other.data_) {
             auto min_size = std::min(size_, other.size_);
-            auto diff = std::memcmp(pointer_, other.pointer_, min_size);
+            auto diff = std::memcmp(data_, other.data_, min_size);
             if (diff != 0) {
                 return diff;
             }
@@ -240,10 +250,10 @@ public:
         if (size_ != other.size_) {
             return false;
         }
-        if (pointer_ == other.pointer_ || empty()) {
+        if (data_ == other.data_ || empty()) {
             return true;
         }
-        return std::memcmp(pointer_, other.pointer_, size_) == 0;
+        return std::memcmp(data_, other.data_, size_) == 0;
     }
 
     /**

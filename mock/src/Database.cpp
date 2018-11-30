@@ -23,7 +23,10 @@
 namespace sharksfin {
 namespace mock {
 
-const std::string Database::KEY_LOCATION { "location" };  // NOLINT
+/**
+ * @brief the attribute key of database location on filesystem.
+ */
+static const std::string KEY_LOCATION { "location" };  // NOLINT
 
 void Database::shutdown() {
     std::unique_lock lock { transaction_mutex_ };
@@ -107,7 +110,7 @@ static inline mock::Database* unwrap(DatabaseHandle handle) {
 StatusCode database_open(
         DatabaseOptions const& options,
         DatabaseHandle* result) {
-    auto location = options.attribute(mock::Database::KEY_LOCATION);
+    auto location = options.attribute(mock::KEY_LOCATION);
     if (!location.has_value()) {
         // FIXME: detail
         return StatusCode::ERR_INVALID_ARGUMENT;

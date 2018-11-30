@@ -206,9 +206,7 @@ private:
     }
 
     static inline leveldb::Slice resolve(Slice slice) {
-        return leveldb::Slice(
-            reinterpret_cast<char const*>(slice.pointer()),
-            slice.size());
+        return leveldb::Slice(slice.data<char>(), slice.size());
     }
 
     static inline Slice resolve(leveldb::Slice slice) {

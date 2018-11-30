@@ -17,6 +17,7 @@
 #define SHARKSFIN_STATUSCODE_H_
 
 #include <cstdint>
+#include <iostream>
 
 namespace sharksfin {
 
@@ -76,6 +77,17 @@ extern "C" inline char const* status_code_label(StatusCode code) {
         case StatusCode::ERR_UNSUPPORTED: return "ERR_UNSUPPORTED";
         default: return "UNDEFINED";
     }
+}
+
+/**
+ * @brief appends status code label into the given stream.
+ * @param out the target stream
+ * @param code the source status code
+ * @return the target stream
+ */
+inline std::ostream& operator<<(std::ostream& out, StatusCode code) {
+    out << status_code_label(code);
+    return out;
 }
 
 }  // namespace sharksfin

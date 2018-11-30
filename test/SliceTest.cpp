@@ -38,7 +38,7 @@ TEST_F(SliceTest, simple) {
     Slice s(str, 5);
     EXPECT_EQ(s.to_string_view(), "Hello");
     EXPECT_EQ(s.empty(), false);
-    EXPECT_EQ(s.pointer(), reinterpret_cast<std::byte const*>(&str[0]));
+    EXPECT_EQ(s.data<std::string::value_type>(), &str[0]);
     EXPECT_EQ(s.size(), 5);
 }
 

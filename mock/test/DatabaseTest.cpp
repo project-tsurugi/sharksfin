@@ -14,30 +14,26 @@
  * limitations under the License.
  */
 #include "Database.h"
-#include <gtest/gtest.h>
 
-#include "TemporaryFolder.h"
+#include "TestRoot.h"
 
 namespace sharksfin {
 namespace mock {
 
-class DatabaseTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        folder_.prepare();
-        location = folder_.path();
-    }
-    void TearDown() override {
-        folder_.clean();
-    }
-
-private:
-    testing::TemporaryFolder folder_;
-    std::string location;
-};
+class DatabaseTest : public testing::TestRoot {};
 
 TEST_F(DatabaseTest, simple) {
-    // FIXME: impl
+    Database db { open() };
+    std::string buf;
+    {
+        auto s = db.put("K", "testing");
+        ASSERT_EQ(s, StatusCode::OK);
+    }
+    {
+        auto s = db.get("K", buf);
+        ASSERT_EQ(s, StatusCode::OK);
+        EXPECT_EQ(buf, "testing");
+    }
 }
 
 }  // namespace mock

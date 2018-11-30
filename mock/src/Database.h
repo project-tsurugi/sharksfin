@@ -44,11 +44,6 @@ public:
     using transaction_mutex_type = std::mutex;
 
     /**
-     * @brief the attribute key of database location.
-     */
-    static const std::string KEY_LOCATION;
-
-    /**
      * @brief constructs a new object.
      * @param leveldb the target LevelDB instance
      */
@@ -150,9 +145,7 @@ private:
     std::atomic_size_t transaction_id_sequence_ = { 1U };
 
     static inline leveldb::Slice resolve(Slice slice) {
-        return leveldb::Slice(
-            reinterpret_cast<char const*>(slice.pointer()),
-            slice.size());
+        return leveldb::Slice(slice.data<char>(), slice.size());
     }
 };
 
