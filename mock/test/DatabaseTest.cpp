@@ -20,20 +20,49 @@
 namespace sharksfin {
 namespace mock {
 
-class DatabaseTest : public testing::TestRoot {};
+class DatabaseTest : public testing::TestRoot {
+public:
+    std::string buf;
+};
 
 TEST_F(DatabaseTest, simple) {
     Database db { open() };
-    std::string buf;
-    {
-        auto s = db.put("K", "testing");
-        ASSERT_EQ(s, StatusCode::OK);
-    }
-    {
-        auto s = db.get("K", buf);
-        ASSERT_EQ(s, StatusCode::OK);
-        EXPECT_EQ(buf, "testing");
-    }
+    ASSERT_EQ(db.put("K", "testing"), StatusCode::OK);
+    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
+    EXPECT_EQ(buf, "testing");
+}
+
+TEST_F(DatabaseTest, get) {
+    Database db { open() };
+    ASSERT_EQ(db.get("K", buf), StatusCode::NOT_FOUND);
+
+    ASSERT_EQ(db.put("K", "testing"), StatusCode::OK);
+    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
+    EXPECT_EQ(buf, "testing");
+
+    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
+    EXPECT_EQ(buf, "testing");
+}
+
+TEST_F(DatabaseTest, put) {
+    Database db { open() };
+    ASSERT_EQ(db.put("K", "a"), StatusCode::OK);
+    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
+    EXPECT_EQ(buf, "a");
+
+    ASSERT_EQ(db.put("K", "b"), StatusCode::OK);
+    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
+    EXPECT_EQ(buf, "b");
+}
+
+TEST_F(DatabaseTest, remove) {
+    Database db { open() };
+    ASSERT_EQ(db.put("K", "testing"), StatusCode::OK);
+    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
+    EXPECT_EQ(buf, "testing");
+
+    ASSERT_EQ(db.remove("K"), StatusCode::OK);
+    ASSERT_EQ(db.get("K", buf), StatusCode::NOT_FOUND);
 }
 
 }  // namespace mock

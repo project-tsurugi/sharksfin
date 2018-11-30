@@ -32,12 +32,13 @@ public:
             auto candidate = boost::filesystem::unique_path(pattern);
             if (boost::filesystem::create_directories(candidate)) {
                 path_ = candidate;
+                break;
             }
         }
     }
 
     void clean() {
-        if (path_.empty()) {
+        if (!path_.empty()) {
             boost::filesystem::remove_all(path_);
             path_.clear();
         }

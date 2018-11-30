@@ -16,6 +16,7 @@
 #ifndef SHARKSFIN_TESTING_TESTROOT_H_
 #define SHARKSFIN_TESTING_TESTROOT_H_
 
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -48,6 +49,7 @@ public:
         leveldb::DB* ptr = nullptr;
         auto status = leveldb::DB::Open(opts, path(), &ptr);
         if (status.ok()) {
+            std::cout << "leveldb: " << path() << std::endl;
             std::unique_ptr<leveldb::DB> leveldb { ptr };
             return leveldb;
         }
