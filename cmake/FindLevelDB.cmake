@@ -1,4 +1,4 @@
-if(TARGET LevelDB)
+if(TARGET leveldb)
     return()
 endif()
 
