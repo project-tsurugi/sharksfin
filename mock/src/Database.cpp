@@ -19,7 +19,7 @@
 #include <utility>
 
 #include "Iterator.h"
-#include "TransactionContext.h"
+#include "TransactionLock.h"
 
 namespace sharksfin {
 namespace mock {
@@ -56,10 +56,10 @@ StatusCode Database::resolve(leveldb::Status const& status) {
     return StatusCode::ERR_UNKNOWN;
 }
 
-std::unique_ptr<TransactionContext> Database::create_transaction() {
+std::unique_ptr<TransactionLock> Database::create_transaction() {
     auto id = transaction_id_sequence_.fetch_add(1U);
     std::unique_lock lock { transaction_mutex_, std::defer_lock };
-    return std::make_unique<TransactionContext>(this, id, std::move(lock));
+    return std::make_unique<TransactionLock>(this, id, std::move(lock));
 }
 
 StatusCode Database::get(Slice key, std::string &buffer) {

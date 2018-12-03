@@ -30,7 +30,7 @@
 namespace sharksfin {
 namespace mock {
 
-class TransactionContext;
+class TransactionLock;
 class Iterator;
 
 /**
@@ -57,10 +57,10 @@ public:
     void shutdown();
 
     /**
-     * @brief creates a new transaction.
-     * @return the created transaction (not begun)
+     * @brief creates a new transaction lock.
+     * @return the created transaction lock, but it's lock has not been acquired
      */
-    std::unique_ptr<TransactionContext> create_transaction();
+    std::unique_ptr<TransactionLock> create_transaction();
 
     /**
      * @brief obtains an entry and write its value into the given buffer.

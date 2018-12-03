@@ -17,7 +17,7 @@
 
 #include "Database.h"
 #include "Iterator.h"
-#include "TransactionContext.h"
+#include "TransactionLock.h"
 
 namespace sharksfin {
 
@@ -30,8 +30,8 @@ static inline mock::Database* unwrap_database(DatabaseHandle handle) {
     return reinterpret_cast<mock::Database*>(handle);  // NOLINT
 }
 
-static inline mock::TransactionContext* unwrap_transaction(TransactionHandle handle) {
-    return reinterpret_cast<mock::TransactionContext*>(handle);  // NOLINT
+static inline mock::TransactionLock* unwrap_transaction(TransactionHandle handle) {
+    return reinterpret_cast<mock::TransactionLock*>(handle);  // NOLINT
 }
 
 static inline mock::Iterator* unwrap_iterator(IteratorHandle handle) {

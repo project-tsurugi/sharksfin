@@ -18,7 +18,7 @@
 #include "TestRoot.h"
 
 #include "Iterator.h"
-#include "TransactionContext.h"
+#include "TransactionLock.h"
 
 namespace sharksfin {
 namespace mock {
@@ -38,7 +38,7 @@ TEST_F(DatabaseTest, simple) {
 
 TEST_F(DatabaseTest, begin_transaction) {
     Database db { open() };
-    TransactionContext::id_type t1, t2, t3;
+    TransactionLock::id_type t1, t2, t3;
     {
         auto tx = db.create_transaction();
         tx->acquire();

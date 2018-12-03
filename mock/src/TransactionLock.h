@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_MOCK_TRANSACTIONCONTEXT_H_
-#define SHARKSFIN_MOCK_TRANSACTIONCONTEXT_H_
+#ifndef SHARKSFIN_MOCK_TRANSACTIONLOCK_H_
+#define SHARKSFIN_MOCK_TRANSACTIONLOCK_H_
 
 #include <cstddef>
 #include <mutex>
@@ -27,11 +27,10 @@ namespace sharksfin {
 namespace mock {
 
 /**
- * @brief a mock transaction context.
+ * @brief a transaction lock.
  */
-class TransactionContext {
+class TransactionLock {
 public:
-
     /**
      * @brief transaction ID type.
      */
@@ -43,7 +42,7 @@ public:
      * @param id the transaction ID
      * @param lock the transaction lock
      */
-    inline TransactionContext(
+    inline TransactionLock(
             Database* owner,
             id_type id,
             std::unique_lock<Database::transaction_mutex_type> lock) noexcept
@@ -118,4 +117,4 @@ private:
 }  // namespace mock
 }  // namespace sharksfin
 
-#endif  // SHARKSFIN_MOCK_TRANSACTIONCONTEXT_H_
+#endif  // SHARKSFIN_MOCK_TRANSACTIONLOCK_H_

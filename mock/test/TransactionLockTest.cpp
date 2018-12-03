@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "TransactionContext.h"
+#include "TransactionLock.h"
 
 #include <vector>
 
@@ -22,11 +22,11 @@
 namespace sharksfin {
 namespace mock {
 
-class TransactionContextTest : public testing::TestRoot {};
+class TransactionLockTest : public testing::TestRoot {};
 
-TEST_F(TransactionContextTest, simple) {
+TEST_F(TransactionLockTest, simple) {
     Database db { open() };
-    std::vector<TransactionContext::id_type> ids;
+    std::vector<TransactionLock::id_type> ids;
     for (std::size_t i = 0U; i < 3U; ++i) {
         auto tx = db.create_transaction();
         ASSERT_TRUE(tx->try_acquire());
@@ -38,7 +38,19 @@ TEST_F(TransactionContextTest, simple) {
     EXPECT_NE(ids[1], ids[2]);
 }
 
-TEST_F(TransactionContextTest, block) {
+TEST_F(TransactionLockTest, owner) {
+    Database db { open() };
+    auto tx = db.create_transaction();
+    EXPECT_EQ(tx->owner(), nullptr);
+
+    tx->acquire();
+    EXPECT_EQ(tx->owner(), &db);
+
+    tx->release();
+    EXPECT_EQ(tx->owner(), nullptr);
+}
+
+TEST_F(TransactionLockTest, block) {
     Database db { open() };
     {
         auto tx = db.create_transaction();
