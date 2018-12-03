@@ -118,9 +118,11 @@ TEST_F(ApiTest, database_not_found) {
     options.attribute(KEY_LOCATION, path());
     options.open_mode(DatabaseOptions::OpenMode::RESTORE);
 
-    DatabaseHandle db;
-    ASSERT_NE(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    DatabaseHandle db = nullptr;
+    EXPECT_NE(database_open(options, &db), StatusCode::OK);
+    if (db != nullptr) {
+        database_dispose(db);
+    }
 }
 
 TEST_F(ApiTest, transaction_wait) {
