@@ -76,6 +76,12 @@ TEST_F(SliceTest, to_string) {
     EXPECT_EQ(s.to_string_view(), "Hello");
 }
 
+TEST_F(SliceTest, to_string_empty) {
+    Slice s;
+    auto str = s.to_string();
+    EXPECT_EQ(str, "");
+}
+
 TEST_F(SliceTest, append_to) {
     Slice s("!");
     std::string str { "Hello" };
@@ -89,6 +95,15 @@ TEST_F(SliceTest, compare) {
     EXPECT_LT(slice("f").compare(slice("g")), 0);
     EXPECT_GT(slice("f").compare(slice("e")), 0);
     EXPECT_LT(slice("f").compare(slice("ff")), 0);
+    EXPECT_GT(slice("ff").compare(slice("f")), 0);
+}
+
+TEST_F(SliceTest, compare_trivial) {
+    Slice s0;
+    EXPECT_EQ(s0.compare(s0), 0);
+
+    Slice s1 { "!" };
+    EXPECT_EQ(s1.compare(s1), 0);
 }
 
 TEST_F(SliceTest, operator_at) {
@@ -117,6 +132,14 @@ TEST_F(SliceTest, operator_compare) {
     EXPECT_LE(slice("f"), slice("g"));
     EXPECT_GT(slice("f"), slice("e"));
     EXPECT_GE(slice("f"), slice("e"));
+}
+
+TEST_F(SliceTest, operator_compare_trivial) {
+    Slice s0;
+    EXPECT_EQ(s0, s0);
+
+    Slice s1 { "!" };
+    EXPECT_NE(s0, s1);
 }
 
 

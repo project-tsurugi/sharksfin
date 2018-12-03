@@ -141,10 +141,7 @@ public:
         if (empty()) {
             return {};
         }
-        return {
-            reinterpret_cast<const std::string::value_type*>(data_),  // NOLINT
-            size_
-        };
+        return { data<std::string::value_type>(), size() };
     }
 
     /**
@@ -155,10 +152,7 @@ public:
         if (empty()) {
             return {};
         }
-        return {
-            reinterpret_cast<const std::string_view::value_type*>(data_), // NOLINT
-            size_
-        };
+        return { data<std::string::value_type>(), size() };
     }
 
     /**
@@ -177,9 +171,7 @@ public:
      * @return the target buffer
      */
     inline std::string& append_to(std::string& buffer) const {
-        buffer.append(
-            reinterpret_cast<const std::string::value_type*>(data_),  // NOLINT
-            size_);
+        buffer.append(data<std::string::value_type>(), size());
         return buffer;
     }
 
@@ -313,7 +305,6 @@ public:
      * @return the output stream
      */
     inline friend std::ostream& operator<<(std::ostream& out, Slice const& value) {
-        // FIXME: impl
         out << "Slice("
             << "size=" << value.size()
             << ")"
