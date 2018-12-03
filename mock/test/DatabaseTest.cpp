@@ -18,6 +18,7 @@
 #include "TestRoot.h"
 
 #include "Iterator.h"
+#include "TransactionContext.h"
 
 namespace sharksfin {
 namespace mock {
@@ -32,6 +33,33 @@ TEST_F(DatabaseTest, simple) {
     ASSERT_EQ(db.put("K", "testing"), StatusCode::OK);
     ASSERT_EQ(db.get("K", buf), StatusCode::OK);
     EXPECT_EQ(buf, "testing");
+    db.shutdown();
+}
+
+TEST_F(DatabaseTest, begin_transaction) {
+    Database db { open() };
+    TransactionContext::id_type t1, t2, t3;
+    {
+        auto tx = db.create_transaction();
+        tx->acquire();
+        t1 = tx->id();
+        tx->release();
+    }
+    {
+        auto tx = db.create_transaction();
+        tx->acquire();
+        t2 = tx->id();
+        // tx->release();
+    }
+    {
+        auto tx = db.create_transaction();
+        tx->acquire();
+        t3 = tx->id();
+        tx->release();
+    }
+    EXPECT_NE(t1, t2);
+    EXPECT_NE(t1, t3);
+    EXPECT_NE(t2, t3);
 }
 
 TEST_F(DatabaseTest, get) {

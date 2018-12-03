@@ -33,6 +33,11 @@ class TransactionContext {
 public:
 
     /**
+     * @brief transaction ID type.
+     */
+    using id_type = std::size_t;
+
+    /**
      * @brief creates a new instance.
      * @param owner the owner
      * @param id the transaction ID
@@ -40,7 +45,7 @@ public:
      */
     inline TransactionContext(
             Database* owner,
-            std::size_t id,
+            id_type id,
             std::unique_lock<Database::transaction_mutex_type> lock) noexcept
         : owner_(owner)
         , id_(id)
@@ -62,7 +67,7 @@ public:
      * @brief return the current transaction ID
      * @return the current transaction ID
      */
-    inline std::size_t id() const {
+    inline id_type id() const {
         return id_;
     }
 
@@ -74,12 +79,25 @@ public:
     }
 
     /**
-     * @brief releases the owned transaction lock only if it has been acquired.
+     * @brief try acquires the transaction lock.
+     * @return true if the lock was successfully acquired
+     * @return false if the lock was failed
      */
-    inline void release() {
+    inline bool try_acquire() {
+        return lock_.try_lock();
+    }
+
+    /**
+     * @brief releases the owned transaction lock only if it has been acquired.
+     * @return true if the lock was successfully released
+     * @return false if this does not own lock
+     */
+    inline bool release() {
         if (lock_.owns_lock()) {
             lock_.unlock();
+            return true;
         }
+        return false;
     }
 
     /**
@@ -92,7 +110,7 @@ public:
 
 private:
     Database* owner_;
-    std::size_t id_;
+    id_type id_;
     std::unique_lock<Database::transaction_mutex_type> lock_;
     std::string buffer_;
 };

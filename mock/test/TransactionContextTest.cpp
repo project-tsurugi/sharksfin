@@ -15,6 +15,8 @@
  */
 #include "TransactionContext.h"
 
+#include <vector>
+
 #include "TestRoot.h"
 
 namespace sharksfin {
@@ -23,7 +25,36 @@ namespace mock {
 class TransactionContextTest : public testing::TestRoot {};
 
 TEST_F(TransactionContextTest, simple) {
-    // FIXME: impl
+    Database db { open() };
+    std::vector<TransactionContext::id_type> ids;
+    for (std::size_t i = 0U; i < 3U; ++i) {
+        auto tx = db.create_transaction();
+        ASSERT_TRUE(tx->try_acquire());
+        ids.push_back(tx->id());
+        ASSERT_TRUE(tx->release());
+    }
+    EXPECT_NE(ids[0], ids[1]);
+    EXPECT_NE(ids[0], ids[2]);
+    EXPECT_NE(ids[1], ids[2]);
+}
+
+TEST_F(TransactionContextTest, block) {
+    Database db { open() };
+    {
+        auto tx = db.create_transaction();
+        ASSERT_TRUE(tx->try_acquire());
+        {
+            auto ntx = db.create_transaction();
+            ASSERT_FALSE(ntx->try_acquire());
+            ASSERT_FALSE(ntx->release());
+        }
+        {
+            auto ntx = db.create_transaction();
+            ASSERT_FALSE(ntx->try_acquire());
+            ASSERT_FALSE(ntx->release());
+        }
+        ASSERT_TRUE(tx->release());
+    }
 }
 
 }  // namespace mock

@@ -20,10 +20,146 @@
 namespace sharksfin {
 namespace mock {
 
-class IteratorTest : public testing::TestRoot {};
+class IteratorTest : public testing::TestRoot {
+public:
+    void SetUp() override {
+        testing::TestRoot::SetUp();
+        auto leveldb = open();
+        leveldb_ = leveldb.get();
+        database_ = std::make_unique<Database>(std::move(leveldb));
+    }
 
-TEST_F(IteratorTest, simple) {
-    // FIXME: impl
+    void put(Slice key, Slice value) {
+        EXPECT_EQ(database_->put(key, value), StatusCode::OK);
+    }
+
+    Database* database() {
+        return database_.get();
+    }
+
+    std::unique_ptr<leveldb::Iterator> iter() {
+        leveldb::ReadOptions options;
+        return std::unique_ptr<leveldb::Iterator>(leveldb_->NewIterator(options));
+    }
+
+private:
+    leveldb::DB* leveldb_;
+    std::unique_ptr<Database> database_;
+};
+
+TEST_F(IteratorTest, prefix) {
+    put("a", "NG");
+    put("a/", "A");
+    put("a/a", "B");
+    put("b", "NG");
+
+    Iterator it { database(), iter(), "a/" };
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "a/");
+    EXPECT_EQ(it.value(), "A");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "a/a");
+    EXPECT_EQ(it.value(), "B");
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, prefix_empty) {
+    Iterator it { database(), iter(), "a/" };
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, range_in_in) {
+    put("a", "A");
+    put("b", "B");
+    put("c", "C");
+    put("d", "D");
+    put("e", "E");
+
+    Iterator it { database(), iter(), "b", false, "d", false };
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "b");
+    EXPECT_EQ(it.value(), "B");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.value(), "C");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "d");
+    EXPECT_EQ(it.value(), "D");
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, range_ex_in) {
+    put("a", "A");
+    put("b", "B");
+    put("c", "C");
+    put("d", "D");
+    put("e", "E");
+
+    Iterator it { database(), iter(), "b", true, "d", false };
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.value(), "C");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "d");
+    EXPECT_EQ(it.value(), "D");
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, range_in_ex) {
+    put("a", "A");
+    put("b", "B");
+    put("c", "C");
+    put("d", "D");
+    put("e", "E");
+
+    Iterator it { database(), iter(), "b", false, "d", true };
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "b");
+    EXPECT_EQ(it.value(), "B");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.value(), "C");
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, range_ex_ex) {
+    put("a", "A");
+    put("b", "B");
+    put("c", "C");
+    put("d", "D");
+    put("e", "E");
+
+    Iterator it { database(), iter(), "b", true, "d", true };
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.value(), "C");
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, range_empty) {
+    Iterator it { database(), iter(), "b", false, "d", false };
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, range_ex_empty) {
+    Iterator it { database(), iter(), "b", true, "d", true };
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
 }  // namespace mock
