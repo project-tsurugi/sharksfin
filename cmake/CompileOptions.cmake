@@ -12,10 +12,12 @@ function(set_compile_options target_name)
             target_compile_options(${target_name}
                 PRIVATE
                     -fsanitize=address,undefined,integer,nullability
+                    -fno-sanitize=alignment
                     -fno-sanitize-recover=address,undefined,integer,nullability)
             target_link_libraries(${target_name}
                 PRIVATE
                     -fsanitize=address,undefined,integer,nullability
+                    -fno-sanitize=alignment
                     -fno-sanitize-recover=address,undefined,integer,nullability)
         endif()
     endif()

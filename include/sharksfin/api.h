@@ -17,6 +17,7 @@
 #define SHARKSFIN_API_H_
 
 #include <cstdint>
+#include <iostream>
 #include <type_traits>
 
 #include "DatabaseOptions.h"
@@ -46,8 +47,6 @@ using IteratorHandle = std::add_pointer_t<void>;
  * @param options the target database options
  * @param result [OUT] the output target of database handle
  * @return Status::OK if the target database is successfully opened
- * @return Status::NOT_FOUND if the target database does not exist
- *      and the open mode is DatabaseOptions::OpenMode::CREATE_OR_RESTORE
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode database_open(
@@ -84,10 +83,39 @@ enum class TransactionOperation : std::int32_t {
     COMMIT = 1,
 
     /**
-     * @brief abort the current transaction.
+     * @brief abort and roll-back the current transaction.
      */
-    ABORT = 2, // FIXME: ROLLBACK?
+    ROLLBACK = 2,
+
+    /**
+     * @brief occur an unrecoverable error.
+     */
+    ERROR = -1,
 };
+
+/**
+ * @brief returns label of the given transaction operation.
+ * @return the corresponded label of transaction operation.
+ */
+extern "C" inline char const* transaction_operation_label(TransactionOperation code) {
+    switch (code) {
+        case TransactionOperation::COMMIT: return "OK";
+        case TransactionOperation::ROLLBACK: return "ROLLBACK";
+        case TransactionOperation::ERROR: return "ERROR";
+        default: return "UNDEFINED";
+    }
+}
+
+/**
+ * @brief appends transaction operation label into the given stream.
+ * @param out the target stream
+ * @param code the source status code
+ * @return the target stream
+ */
+inline std::ostream& operator<<(std::ostream& out, TransactionOperation code) {
+    out << transaction_operation_label(code);
+    return out;
+}
 
 /**
  * @brief transaction callback function type.
@@ -152,7 +180,8 @@ extern "C" StatusCode content_put(
  * @brief removes a content on the target key.
  * @param handle the current transaction handle
  * @param key the content key
- * @return Status::OK if the target content was successfully deleted
+ * @return Status::OK if the target content was successfully deleted (or not found)
+ * @return Status::NOT_FOUND if the target content was not found (optional behavior)
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_delete(

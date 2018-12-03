@@ -39,8 +39,8 @@ static inline mock::Iterator* unwrap_iterator(IteratorHandle handle) {
 }
 
 StatusCode database_open(
-    DatabaseOptions const& options,
-    DatabaseHandle* result) {
+        DatabaseOptions const& options,
+        DatabaseHandle* result) {
     auto location = options.attribute(KEY_LOCATION);
     if (!location.has_value()) {
         // FIXME: detail
@@ -76,19 +76,23 @@ StatusCode database_dispose(DatabaseHandle handle) {
 }
 
 StatusCode transaction_exec(
-    DatabaseHandle handle,
-    TransactionCallback callback) {
+        DatabaseHandle handle,
+        TransactionCallback callback) {
     auto database = unwrap_database(handle);
     auto tx = database->create_transaction();
     tx->acquire();
-    callback(tx.get());
-    return StatusCode::OK;
+    auto status = callback(tx.get());
+    if (status == TransactionOperation::COMMIT) {
+        return StatusCode::OK;
+    }
+    // NOTE: LevelDB may be broken because it does not support rollback operations
+    return StatusCode::ERR_UNSUPPORTED;
 }
 
 StatusCode content_get(
-    TransactionHandle handle,
-    Slice key,
-    Slice* result) {
+        TransactionHandle handle,
+        Slice key,
+        Slice* result) {
     auto tx = unwrap_transaction(handle);
     auto database = tx->owner();
     if (!database) {
@@ -103,9 +107,9 @@ StatusCode content_get(
 }
 
 StatusCode content_put(
-    TransactionHandle handle,
-    Slice key,
-    Slice value) {
+        TransactionHandle handle,
+        Slice key,
+        Slice value) {
     auto tx = unwrap_transaction(handle);
     auto database = tx->owner();
     if (!database) {
@@ -115,8 +119,8 @@ StatusCode content_put(
 }
 
 StatusCode content_delete(
-    TransactionHandle handle,
-    Slice key) {
+        TransactionHandle handle,
+        Slice key) {
     auto tx = unwrap_transaction(handle);
     auto database = tx->owner();
     if (!database) {
@@ -126,9 +130,9 @@ StatusCode content_delete(
 }
 
 StatusCode content_scan_prefix(
-    TransactionHandle handle,
-    Slice prefix_key,
-    IteratorHandle* result) {
+        TransactionHandle handle,
+        Slice prefix_key,
+        IteratorHandle* result) {
     auto tx = unwrap_transaction(handle);
     auto database = tx->owner();
     if (!database) {
@@ -140,10 +144,10 @@ StatusCode content_scan_prefix(
 }
 
 StatusCode content_scan_range(
-    TransactionHandle handle,
-    Slice begin_key, bool begin_exclusive,
-    Slice end_key, bool end_exclusive,
-    IteratorHandle* result) {
+        TransactionHandle handle,
+        Slice begin_key, bool begin_exclusive,
+        Slice end_key, bool end_exclusive,
+        IteratorHandle* result) {
     auto tx = unwrap_transaction(handle);
     auto database = tx->owner();
     if (!database) {

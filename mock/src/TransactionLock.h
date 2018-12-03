@@ -111,7 +111,7 @@ private:
     Database* owner_;
     id_type id_;
     std::unique_lock<Database::transaction_mutex_type> lock_;
-    std::string buffer_;
+    alignas(16) std::string buffer_;
 };
 
 }  // namespace mock
