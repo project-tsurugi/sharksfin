@@ -1,11 +1,3 @@
-if(NOT BUILD_DOCUMENTS)
-    add_custom_target(doxygen
-        COMMAND ${CMAKE_COMMAND} -E echo "Generating API documentation is disabled because -DBUILD_DOCUMENTS=OFF was set"
-        COMMENT "Skip Generating API Documentation"
-        VERBATIM)
-    return()
-endif()
-
 if (NOT Doxygen_FOUND)
     message(FATAL_ERROR "doxygen was not installed, please configure with -DBUILD_DOCUMENTS=OFF to skip doxygen")
 endif()

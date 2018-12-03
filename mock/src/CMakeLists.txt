@@ -1,3 +1,7 @@
+if(NOT LevelDB_FOUND)
+    message(FATAL_ERROR "LevelDB was not installed, please configure with -DBUILD_MOCK=OFF to skip")
+endif()
+
 file(GLOB SOURCES
     "*.cpp"
 )
