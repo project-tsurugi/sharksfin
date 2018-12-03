@@ -20,8 +20,14 @@ namespace sharksfin {
 
 class StatusCodeTest : public ::testing::Test {};
 
-TEST_F(StatusCodeTest, simple) {
+TEST_F(StatusCodeTest, labels) {
     EXPECT_STREQ(status_code_label(StatusCode::OK), "OK");
+    EXPECT_STREQ(status_code_label(StatusCode::NOT_FOUND), "NOT_FOUND");
+    EXPECT_STREQ(status_code_label(StatusCode::ERR_UNKNOWN), "ERR_UNKNOWN");
+    EXPECT_STREQ(status_code_label(StatusCode::ERR_IO_ERROR), "ERR_IO_ERROR");
+    EXPECT_STREQ(status_code_label(StatusCode::ERR_INVALID_ARGUMENT), "ERR_INVALID_ARGUMENT");
+    EXPECT_STREQ(status_code_label(StatusCode::ERR_INVALID_STATE), "ERR_INVALID_STATE");
+    EXPECT_STREQ(status_code_label(StatusCode::ERR_UNSUPPORTED), "ERR_UNSUPPORTED");
 }
 
 }  // namespace sharksfin
