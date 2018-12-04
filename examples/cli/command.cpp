@@ -15,6 +15,7 @@
  */
 #include "command.h"
 
+#include <iostream>
 #include <string>
 #include <stdexcept>
 
@@ -23,30 +24,67 @@
 namespace sharksfin {
 namespace cli {
 
-std::string get(TransactionHandle handle, std::vector<std::string> const & arguments) {
+[[noreturn]] static void raise(StatusCode code) {
+    throw std::runtime_error(status_code_label(code));
+}
+
+static void check(StatusCode code) {
+    if (code != StatusCode::OK) {
+        raise(code);
+    }
+}
+
+static bool check_exists(StatusCode code) {
+    if (code == StatusCode::OK) {
+        return true;
+    }
+    if (code == StatusCode::NOT_FOUND) {
+        return false;
+    }
+    raise(code);
+}
+
+void get(TransactionHandle handle, std::vector<std::string> const & arguments) {
     auto& key = arguments[0];
     Slice value;
-    if (auto s = content_get(handle, key, &value); s != StatusCode::OK) {
-        throw std::runtime_error(status_code_label(s));
+    if (check_exists(content_get(handle, key, &value))) {
+        std::cout << value.to_string_view() << std::endl;
+    } else {
+        std::cerr << "(N/A)" << std::endl;
     }
-    return value.to_string();
 }
 
-std::string put(TransactionHandle handle, std::vector<std::string> const & arguments) {
+void put(TransactionHandle handle, std::vector<std::string> const & arguments) {
     auto& key = arguments[0];
     auto& value = arguments[1];
-    if (auto s = content_put(handle, key, value); s != StatusCode::OK) {
-        throw std::runtime_error(status_code_label(s));
-    }
-    return {};
+    check(content_put(handle, key, value));
+    std::cout << "put: " << key << " = " << value << std::endl;
 }
 
-std::string remove(TransactionHandle handle, std::vector<std::string> const & arguments) {
+void remove(TransactionHandle handle, std::vector<std::string> const & arguments) {
     auto& key = arguments[0];
-    if (auto s = content_delete(handle, key); s != StatusCode::OK) {
-        throw std::runtime_error(status_code_label(s));
+    if (check_exists(content_delete(handle, key))) {
+        std::cout << "deleted: " << key << std::endl;
+    } else {
+        std::cerr << "(N/A)" << std::endl;
     }
-    return {};
+}
+
+void scan(TransactionHandle handle, std::vector<std::string> const &arguments) {
+    auto& begin = arguments[0];
+    auto& end = arguments[1];
+    IteratorHandle iter;
+    check(content_scan_range(handle, begin, false, end, false, &iter));
+    Closer closer { [&]{ iterator_dispose(iter); } };
+    for (;;) {
+        if (!check_exists(iterator_next(iter))) {
+            break;
+        }
+        Slice key, value;
+        check(iterator_get_key(iter, &key));
+        check(iterator_get_value(iter, &value));
+        std::cout << key.to_string_view() << " = " << value.to_string_view() << std::endl;
+    }
 }
 
 }  // namespace cli

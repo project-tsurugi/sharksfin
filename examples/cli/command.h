@@ -34,11 +34,13 @@ private:
     std::function<void()> closer_;
 };
 
-using CommandFunction = std::add_pointer_t<std::string(TransactionHandle, std::vector<std::string> const&)>;
+using CommandFunction = std::add_pointer_t<void(TransactionHandle, std::vector<std::string> const&)>;
 
-std::string get(TransactionHandle handle, std::vector<std::string> const& arguments);
-std::string put(TransactionHandle handle, std::vector<std::string> const& arguments);
-std::string remove(TransactionHandle handle, std::vector<std::string> const& arguments);
+void get(TransactionHandle handle, std::vector<std::string> const& arguments);
+void put(TransactionHandle handle, std::vector<std::string> const& arguments);
+void remove(TransactionHandle handle, std::vector<std::string> const& arguments);
+
+void scan(TransactionHandle handle, std::vector<std::string> const& arguments);
 
 }  // namespace cli
 }  // namespace sharksfin

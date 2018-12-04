@@ -28,14 +28,14 @@ namespace cli {
 struct CommandSpec {
     std::string name;
     CommandFunction function;
-    bool has_result;
     std::vector<std::string> arguments;
 };
 
 static CommandSpec const command_list[] = {
-    { "get", &get, true, { "key" } },
-    { "put", &put, false, { "key", "value" } },
-    { "delete", &remove, false, { "key" } },
+    { "get", &get, { "key" } },
+    { "put", &put, { "key", "value" } },
+    { "delete", &remove, { "key" } },
+    { "scan", &scan, { "begin-key", "end-key" } }
 };
 
 extern "C" int main(int argc, char* argv[]) {
@@ -95,7 +95,7 @@ extern "C" int main(int argc, char* argv[]) {
         static TransactionOperation f(TransactionHandle handle, void* object) {
             auto self = reinterpret_cast<Callback*>(object);
             try {
-                self->result = self->spec->function(handle, *self->arguments);
+                self->spec->function(handle, *self->arguments);
                 return TransactionOperation::COMMIT;
             } catch (std::exception const& e) {
                 std::cerr << e.what() << std::endl;
@@ -104,16 +104,12 @@ extern "C" int main(int argc, char* argv[]) {
         }
         CommandSpec const* spec;
         std::vector<std::string> const* arguments;
-        std::string result {};
     };
 
     Callback callback { spec, &arguments };
     if (auto s = transaction_exec(db, Callback::f, &callback); s != StatusCode::OK) {
         std::cerr << "failed to execute transaction: " << status_code_label(s) << std::endl;
         return EXIT_FAILURE;
-    }
-    if (spec->has_result) {
-        std::cout << callback.result << std::endl;
     }
     return EXIT_SUCCESS;
 }
