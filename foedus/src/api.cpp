@@ -37,7 +37,8 @@ StatusCode database_dispose(DatabaseHandle handle) {
 
 StatusCode transaction_exec(
         DatabaseHandle handle,
-        TransactionCallback callback) {
+        TransactionCallback callback,
+        void *arguments) {
     (void)handle;
     (void)callback;
     return StatusCode::ERR_UNSUPPORTED;

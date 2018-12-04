@@ -120,18 +120,20 @@ inline std::ostream& operator<<(std::ostream& out, TransactionOperation code) {
 /**
  * @brief transaction callback function type.
  */
-using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionHandle)>;
+using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionHandle, void*)>;
 
 /**
  * @brief executes the given callback function in a new transaction process.
  * The callback function may be called twice or more.
  * @param handle the target database
  * @param callback the operation to be processed in transaction
+ * @param arguments extra arguments for the callback function
  * @return the operation status
  */
 extern "C" StatusCode transaction_exec(
         DatabaseHandle handle,
-        TransactionCallback callback);
+        TransactionCallback callback,
+        void* arguments = nullptr);
 // TODO: async (group) commit interface
 // TODO: callback for repair
 // TODO: for read only transactions

@@ -47,13 +47,13 @@ TEST_F(ApiTest, simple) {
     Closer dbc { [&]() { database_dispose(db); } };
 
     struct S {
-        static TransactionOperation f1(TransactionHandle tx) {
+        static TransactionOperation f1(TransactionHandle tx, void*) {
             if (content_put(tx, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation f2(TransactionHandle tx) {
+        static TransactionOperation f2(TransactionHandle tx, void*) {
             Slice s;
             if (content_get(tx, "a", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -78,7 +78,7 @@ TEST_F(ApiTest, database_restore) {
         Closer dbc { [&]() { database_dispose(db); } };
 
         struct S {
-            static TransactionOperation f(TransactionHandle tx) {
+            static TransactionOperation f(TransactionHandle tx, void*) {
                 if (content_put(tx, "a", "A") != StatusCode::OK) {
                     return TransactionOperation::ERROR;
                 }
@@ -97,7 +97,7 @@ TEST_F(ApiTest, database_restore) {
         Closer dbc { [&]() { database_dispose(db); } };
 
         struct S {
-            static TransactionOperation f(TransactionHandle tx) {
+            static TransactionOperation f(TransactionHandle tx, void*) {
                 Slice s;
                 if (content_get(tx, "a", &s) != StatusCode::OK) {
                     return TransactionOperation::ERROR;
@@ -134,14 +134,14 @@ TEST_F(ApiTest, transaction_wait) {
     Closer dbc { [&]() { database_dispose(db); } };
 
     struct S {
-        static TransactionOperation prepare(TransactionHandle tx) {
+        static TransactionOperation prepare(TransactionHandle tx, void*) {
             std::int8_t v = 0;
             if (content_put(tx, "k", { &v, sizeof(v) }) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation run(TransactionHandle tx) {
+        static TransactionOperation run(TransactionHandle tx, void*) {
             for (std::size_t i = 0U; i < 5U; ++i) {
                 Slice s;
                 if (content_get(tx, "k", &s) != StatusCode::OK) {
@@ -155,7 +155,7 @@ TEST_F(ApiTest, transaction_wait) {
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation validate(TransactionHandle tx) {
+        static TransactionOperation validate(TransactionHandle tx, void*) {
             Slice s;
             if (content_get(tx, "k", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -185,7 +185,7 @@ TEST_F(ApiTest, transaction_failed) {
     Closer dbc { [&]() { database_dispose(db); } };
 
     struct S {
-        static TransactionOperation f(TransactionHandle) {
+        static TransactionOperation f(TransactionHandle, void*) {
             return TransactionOperation::ERROR;
         }
     };
@@ -202,14 +202,14 @@ TEST_F(ApiTest, contents) {
     Closer dbc { [&]() { database_dispose(db); } };
 
     struct S {
-        static TransactionOperation get_miss(TransactionHandle tx) {
+        static TransactionOperation get_miss(TransactionHandle tx, void*) {
             Slice s;
             if (content_get(tx, "a", &s) != StatusCode::NOT_FOUND) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation get_exists(TransactionHandle tx) {
+        static TransactionOperation get_exists(TransactionHandle tx, void*) {
             Slice s;
             if (content_get(tx, "a", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -219,13 +219,13 @@ TEST_F(ApiTest, contents) {
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation put(TransactionHandle tx) {
+        static TransactionOperation put(TransactionHandle tx, void*) {
             if (content_put(tx, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation delete_(TransactionHandle tx) {
+        static TransactionOperation delete_(TransactionHandle tx, void*) {
             // NOTE: LevelDB does not support to detect whether or not delete target actually exists
             if (content_delete(tx, "a") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -252,7 +252,7 @@ TEST_F(ApiTest, scan_prefix) {
     Closer dbc { [&]() { database_dispose(db); } };
 
     struct S {
-        static TransactionOperation prepare(TransactionHandle tx) {
+        static TransactionOperation prepare(TransactionHandle tx, void*) {
             if (content_put(tx, "a", "NG") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
@@ -267,7 +267,7 @@ TEST_F(ApiTest, scan_prefix) {
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation test(TransactionHandle tx) {
+        static TransactionOperation test(TransactionHandle tx, void*) {
             IteratorHandle iter;
             if (content_scan_prefix(tx, "a/", &iter) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -315,7 +315,7 @@ TEST_F(ApiTest, scan_range) {
     Closer dbc { [&]() { database_dispose(db); } };
 
     struct S {
-        static TransactionOperation prepare(TransactionHandle tx) {
+        static TransactionOperation prepare(TransactionHandle tx, void*) {
             if (content_put(tx, "a", "NG") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
@@ -330,7 +330,7 @@ TEST_F(ApiTest, scan_range) {
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation test(TransactionHandle tx) {
+        static TransactionOperation test(TransactionHandle tx, void*) {
             IteratorHandle iter;
             if (content_scan_range(tx, "b", false, "c", false, &iter) != StatusCode::OK) {
                 return TransactionOperation::ERROR;

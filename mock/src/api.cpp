@@ -77,11 +77,12 @@ StatusCode database_dispose(DatabaseHandle handle) {
 
 StatusCode transaction_exec(
         DatabaseHandle handle,
-        TransactionCallback callback) {
+        TransactionCallback callback,
+        void *arguments) {
     auto database = unwrap_database(handle);
     auto tx = database->create_transaction();
     tx->acquire();
-    auto status = callback(tx.get());
+    auto status = callback(tx.get(), arguments);
     if (status == TransactionOperation::COMMIT) {
         return StatusCode::OK;
     }
