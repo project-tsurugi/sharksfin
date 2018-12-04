@@ -7,6 +7,7 @@ pipeline {
         }
     }
     environment {
+        GITHUB_URL = 'https://github.com/project-tsurugi/sharksfin'
         BUILD_PARALLEL_NUM="8"
     }
     stages {
