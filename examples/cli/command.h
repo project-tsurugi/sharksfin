@@ -16,6 +16,7 @@
 #ifndef SHARKSFIN_CLI_COMMAND_H_
 #define SHARKSFIN_CLI_COMMAND_H_
 
+#include <functional>
 #include <string>
 #include <type_traits>
 #include <vector>
