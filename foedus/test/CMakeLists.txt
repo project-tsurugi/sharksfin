@@ -13,7 +13,7 @@
 # limitations under the License.
 
 if(NOT TARGET Boost::filesystem)
-    message(FATAL_ERROR "Boost::filesystem was not installed, please configure with -DBUILD_FOEDUS_ENGINE=OFF or -DBUILD_TESTS=OFF to skip")
+    message(FATAL_ERROR "Boost::filesystem was not installed, please configure with -DBUILD_FOEDUS_BRIDGE=OFF or -DBUILD_TESTS=OFF to skip")
 endif()
 
 file(GLOB TEST_SOURCES
@@ -21,9 +21,9 @@ file(GLOB TEST_SOURCES
 )
 
 register_tests(
-    TARGET foedus-engine
+    TARGET foedus-bridge
     DEPENDS
-        foedus-impl
+        bridge-impl
         Boost::filesystem
     SOURCES ${TEST_SOURCES}
 )

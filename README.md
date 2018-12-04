@@ -33,7 +33,7 @@ available options:
 * `-DBUILD_TESTS=OFF` - never build test programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
 * `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths
-* `-DBUILD_FOEDUS_ENGINE=ON` - build transaction engine with foedus
+* `-DBUILD_FOEDUS_BRIDGE=ON` - build transaction engine with foedus
 
 ### install 
 

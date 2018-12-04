@@ -1,30 +1,30 @@
 if(NOT FOEDUS_FOUND)
-    message(FATAL_ERROR "Foedus was not installed, please configure with -DBUILD_FOEDUS_ENGINE=OFF to skip")
+    message(FATAL_ERROR "Foedus was not installed, please configure with -DBUILD_FOEDUS_BRIDGE=OFF to skip")
 endif()
 
 file(GLOB SOURCES
     "*.cpp"
 )
 
-add_library(foedus-engine SHARED
+add_library(foedus-bridge SHARED
     ${SOURCES}
 )
 
-target_include_directories(foedus-engine
+target_include_directories(foedus-bridge
     PRIVATE .
 )
 
-target_link_libraries(foedus-engine
+target_link_libraries(foedus-bridge
     PUBLIC api
     PUBLIC foedus-core
 )
 
-set_compile_options(foedus-engine)
-install_custom(foedus-engine ${export_name})
+set_compile_options(foedus-bridge)
+install_custom(foedus-bridge  ${export_name})
 
 # for tests
-add_library(foedus-impl INTERFACE)
+add_library(bridge-impl INTERFACE)
 
-target_include_directories(foedus-impl
+target_include_directories(bridge-impl
     INTERFACE .
 )
