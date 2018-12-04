@@ -12,4 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(GRAPHVIZ_IGNORE_TARGETS "^.*Test$;gmock;gtest;^-f;--coverage")
+file(GLOB SOURCES
+    "*.cpp"
+)
+
+add_executable(cli
+    ${SOURCES}
+)
+
+set_target_properties(cli
+    PROPERTIES
+        RUNTIME_OUTPUT_NAME "sharksfin-cli"
+)
+
+target_include_directories(cli
+    PRIVATE .
+)
+
+target_link_libraries(cli
+    PRIVATE api
+    PRIVATE ${EXAMPLE_IMPLEMENTATION}
+)
+
+if(INSTALL_EXAMPLES)
+    install_custom(cli ${export_name})
+endif()
+
+# NOTE: no tests

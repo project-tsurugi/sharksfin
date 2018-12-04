@@ -26,6 +26,7 @@ target_include_directories(deleteme
 
 target_link_libraries(deleteme
     PRIVATE api
+    PRIVATE ${EXAMPLE_IMPLEMENTATION}
 )
 
 if(INSTALL_EXAMPLES)

@@ -13,3 +13,4 @@
 # limitations under the License.
 
 add_subdirectory(deleteme)
+add_subdirectory(cli)

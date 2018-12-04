@@ -24,16 +24,21 @@ RUN apt update -y && apt install -y git build-essential cmake ninja-build liblev
 ```sh
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 ninja
 ```
 
 available options:
-* `-DBUILD_MOCK=OFF` - never build API mock
 * `-DBUILD_TESTS=OFF` - never build test programs
+* `-DBUILD_MOCK=OFF` - never build API mock implementation
+* `-DBUILD_FOEDUS_BRIDGE=ON` - build FOEDUS bridge
+* `-DBUILD_EXAMPLES=OFF` - never build example programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
 * `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths
-* `-DBUILD_FOEDUS_BRIDGE=ON` - build transaction engine with foedus
+* `-DINSTALL_EXAMPLES=ON` - also install example programs (requires `BUILD_EXAMPLES` is enables)
+* `-DEXAMPLE_IMPLEMENTATION=...` - link the specified target-name implementation to example programs
+  * `mock` - link to mock implementation (default)
+  * `foedus-bridge` - link to FOEDUS (requires `-DBUILD_FOEDUS_BRIDGE`)
 
 ### install 
 

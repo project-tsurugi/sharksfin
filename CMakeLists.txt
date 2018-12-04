@@ -16,7 +16,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(sharksfin
     VERSION 0.0.1
-    DESCRIPTION "Sharksfin - low-level header only library"
+    DESCRIPTION "Shark's fin - minimal API for transactional key-value stores"
     LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -31,7 +31,15 @@ option(BUILD_FOEDUS_ENGINE "Build transaction engine with foedus" OFF)
 option(BUILD_EXAMPLES "Build and test example programs" ON)
 option(BUILD_DOCUMENTS "Build documents" ON)
 option(INSTALL_EXAMPLES "Install example programs" OFF)
-option(FORCE_INSTALL_RPATH "force add lib dir of custom prefixes to INSTALL_RPATH" OFF)
+option(FORCE_INSTALL_RPATH "Force add lib dir of custom prefixes to INSTALL_RPATH" OFF)
+
+if(NOT EXAMPLE_IMPLEMENTATION)
+    set(
+        EXAMPLE_IMPLEMENTATION "mock"
+        CACHE STRING
+        "Target name to link implementation with example programs"
+    )
+endif()
 
 find_package(Doxygen)
 find_package(Threads REQUIRED)
@@ -88,13 +96,13 @@ endif()
 if(BUILD_MOCK)
     add_subdirectory(mock)
 endif()
+if(BUILD_FOEDUS_BRIDGE)
+    add_subdirectory(foedus)
+endif()
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 if (BUILD_DOCUMENTS)
     add_subdirectory(doxygen)
-endif()
-if(BUILD_FOEDUS_BRIDGE)
-    add_subdirectory(foedus)
 endif()
 add_subdirectory(third_party)
