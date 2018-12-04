@@ -1,15 +1,22 @@
 pipeline {
+    triggers { pollSCM('H/5 * * * *') }
     agent {
         docker {
             image 'nautilus/oltp-sandbox'
             label 'docker'
-            args '--add-host="asakusa-private-repos:192.168.201.246"'
         }
     }
     environment {
         BUILD_PARALLEL_NUM="8"
     }
     stages {
+        stage ('Prepare env') {
+            steps {
+                sh '''
+                    ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
+                '''
+            }
+        }
         stage ('checkout master') {
             steps {
                 checkout scm
@@ -97,7 +104,6 @@ pipeline {
             cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'build/gcovr-xml/sharksfin-gcovr.xml', failNoReports: false, failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, zoomCoverageChart: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'build/sharksfin-coverage-report.zip, build/sharksfin-doxygen.zip, build/clang-tidy-fix.yaml, build/dependency-graph/sharksfin.png', onlyIfSuccessful: true
             openTasks high: 'FIXME', normal: 'TODO', pattern: '**/*.md,**/*.txt,**/*.in,**/*.cmake,**/*.cpp,**/*.h', excludePattern: 'third_party/**'
-            updateUpsourceBuildStatus()
             notifySlack('shakujo-dev')
         }
     }
