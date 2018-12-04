@@ -24,6 +24,11 @@ add_library(mock SHARED
     ${SOURCES}
 )
 
+set_target_properties(mock
+    PROPERTIES
+        LIBRARY_OUTPUT_NAME "sharksfin-mock"
+)
+
 target_include_directories(mock
     PRIVATE .
 )

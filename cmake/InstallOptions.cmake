@@ -13,13 +13,6 @@
 # limitations under the License.
 
 function(install_custom target_name export_name)
-    get_target_property(target_type ${target_name} TYPE)
-    if (target_type STREQUAL "SHARED_LIBRARY")
-        set_target_properties(${target_name}
-            PROPERTIES
-                LIBRARY_OUTPUT_NAME "${export_name}-${target_name}"
-        )
-    endif()
     install(
         TARGETS
             ${target_name}
@@ -38,6 +31,7 @@ function(install_custom target_name export_name)
     # Add INSTALL_RPATH from CMAKE_INSTALL_PREFIX and CMAKE_PREFIX_PATH
     # The default behavior of CMake omits RUNPATH if it is already in CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES.
     if (FORCE_INSTALL_RPATH)
+        get_target_property(target_type ${target_name} TYPE)
         if (target_type STREQUAL "SHARED_LIBRARY"
                 OR target_type STREQUAL "EXECUTABLE")
             get_target_property(rpath ${target_name} INSTALL_RPATH)
