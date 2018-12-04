@@ -13,6 +13,8 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 option(BUILD_TESTS "Build test programs" ON)
 option(BUILD_MOCK "Build mock implementation" ON)
+option(BUILD_MOCK_LEVELDB "Build mock for leveldb" ON)
+option(BUILD_MOCK_FOEDUS "Build mock for foedus" OFF)
 option(BUILD_EXAMPLES "Build and test example programs" ON)
 option(BUILD_DOCUMENTS "Build documents" ON)
 option(INSTALL_EXAMPLES "Install example programs" OFF)
@@ -21,7 +23,8 @@ option(FORCE_INSTALL_RPATH "force add lib dir of custom prefixes to INSTALL_RPAT
 find_package(Doxygen)
 find_package(Threads REQUIRED)
 find_package(LevelDB)
-find_package(Boost 
+find_package(FOEDUS)
+find_package(Boost
     COMPONENTS filesystem)
 
 include(GNUInstallDirs)

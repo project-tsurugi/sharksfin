@@ -1,5 +1,5 @@
 if(NOT LevelDB_FOUND)
-    message(FATAL_ERROR "LevelDB was not installed, please configure with -DBUILD_MOCK=OFF to skip")
+    message(FATAL_ERROR "LevelDB was not installed, please configure with -DBUILD_MOCK=OFF or -DBUILD_MOCK_LEVELDB to skip")
 endif()
 
 file(GLOB SOURCES
