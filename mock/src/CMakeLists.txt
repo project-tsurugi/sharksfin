@@ -12,18 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if(NOT TARGET Boost::filesystem)
-    message(FATAL_ERROR "Boost::filesystem was not installed, please configure with -DBUILD_MOCK=OFF or -DBUILD_TESTS=OFF to skip")
+if(NOT LevelDB_FOUND)
+    message(FATAL_ERROR "LevelDB was not installed, please configure with -DBUILD_MOCK=OFF to skip")
 endif()
 
-file(GLOB TEST_SOURCES
+file(GLOB SOURCES
     "*.cpp"
 )
 
-register_tests(
-    TARGET mock-foedus
-    DEPENDS
-        mock-foedus-impl
-        Boost::filesystem
-    SOURCES ${TEST_SOURCES}
+add_library(mock SHARED
+    ${SOURCES}
+)
+
+target_include_directories(mock
+    PRIVATE .
+)
+
+target_link_libraries(mock
+    PUBLIC api
+    PUBLIC leveldb
+)
+
+set_compile_options(mock)
+install_custom(mock ${export_name})
+
+# for tests
+add_library(mock-impl INTERFACE)
+
+target_include_directories(mock-impl
+    INTERFACE .
 )

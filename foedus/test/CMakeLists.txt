@@ -12,7 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(src)
-if(BUILD_TESTS)
-    add_subdirectory(test)
+if(NOT TARGET Boost::filesystem)
+    message(FATAL_ERROR "Boost::filesystem was not installed, please configure with -DBUILD_FOEDUS_ENGINE=OFF or -DBUILD_TESTS=OFF to skip")
 endif()
+
+file(GLOB TEST_SOURCES
+    "*.cpp"
+)
+
+register_tests(
+    TARGET foedus-engine
+    DEPENDS
+        foedus-impl
+        Boost::filesystem
+    SOURCES ${TEST_SOURCES}
+)

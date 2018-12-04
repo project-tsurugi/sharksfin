@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if(BUILD_MOCK_LEVELDB)
-    add_subdirectory(leveldb)
-endif()
-
-if(BUILD_MOCK_FOEDUS)
-    add_subdirectory(foedus)
+add_subdirectory(src)
+if(BUILD_TESTS)
+    add_subdirectory(test)
 endif()
