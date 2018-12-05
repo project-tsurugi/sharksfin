@@ -41,6 +41,7 @@ StatusCode transaction_exec(
         void *arguments) {
     (void)handle;
     (void)callback;
+    (void)arguments;
     return StatusCode::ERR_UNSUPPORTED;
 }
 
