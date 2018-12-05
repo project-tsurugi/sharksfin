@@ -73,7 +73,7 @@ public:
      * @brief constructs a new object.
      * @param string the source string
      */
-    inline Slice(std::string_view const& string) noexcept
+    inline Slice(std::string_view string) noexcept
         : data_(reinterpret_cast<std::byte const*>(string.data()))  // NOLINT
         , size_(string.length())
     {}

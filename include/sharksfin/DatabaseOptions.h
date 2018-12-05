@@ -20,6 +20,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace sharksfin {
@@ -58,8 +59,8 @@ public:
      * @param key the attribute key
      * @return an attribute value, or empty if there is no such an attribute
      */
-    inline std::optional<std::string> attribute(std::string const& key) const {
-        auto it = attributes_.find(key);
+    inline std::optional<std::string> attribute(std::string_view key) const {
+        auto it = attributes_.find(std::string { key });
         if (it == attributes_.end()) {
             return {};
         }
@@ -72,8 +73,10 @@ public:
      * @param value the attribute value
      * @return this
      */
-    inline DatabaseOptions& attribute(std::string key, std::string value) {
-        attributes_.insert_or_assign(std::move(key), std::move(value));
+    inline DatabaseOptions& attribute(std::string_view key, std::string_view value) {
+        attributes_.insert_or_assign(
+                std::string { key },
+                std::string { value });
         return *this;
     }
 

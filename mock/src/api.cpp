@@ -24,7 +24,7 @@ namespace sharksfin {
 /**
  * @brief the attribute key of database location on filesystem.
  */
-static const std::string KEY_LOCATION { "location" };  // NOLINT
+static constexpr std::string_view KEY_LOCATION { "location" };  // NOLINT
 
 static inline mock::Database* unwrap_database(DatabaseHandle handle) {
     return reinterpret_cast<mock::Database*>(handle);  // NOLINT

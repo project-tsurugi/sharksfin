@@ -26,7 +26,7 @@
 
 namespace sharksfin {
 
-static const std::string KEY_LOCATION { "location" };
+static constexpr std::string_view KEY_LOCATION { "location" };
 
 class ApiTest : public testing::TestRoot {};
 
