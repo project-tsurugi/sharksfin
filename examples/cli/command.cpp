@@ -19,10 +19,19 @@
 #include <string>
 #include <stdexcept>
 
+#include "Closer.h"
+
 #include "sharksfin/api.h"
 
 namespace sharksfin {
 namespace cli {
+
+std::vector<CommandSpec> const command_list {
+    { "get", &get, { "key" } },
+    { "put", &put, { "key", "value" } },
+    { "delete", &remove, { "key" } },
+    { "scan", &scan, { "begin-key", "end-key" } }
+};
 
 [[noreturn]] static void raise(StatusCode code) {
     throw std::runtime_error(status_code_label(code));
@@ -46,33 +55,32 @@ static bool check_exists(StatusCode code) {
 
 void get(TransactionHandle handle, std::vector<std::string> const & arguments) {
     auto& key = arguments[0];
+    std::cout << "get: " << key << std::endl;
     Slice value;
     if (check_exists(content_get(handle, key, &value))) {
-        std::cout << value.to_string_view() << std::endl;
-    } else {
-        std::cerr << "(N/A)" << std::endl;
+        std::cout << "-> " << value.to_string_view() << std::endl;
     }
 }
 
 void put(TransactionHandle handle, std::vector<std::string> const & arguments) {
     auto& key = arguments[0];
     auto& value = arguments[1];
-    check(content_put(handle, key, value));
     std::cout << "put: " << key << " = " << value << std::endl;
+    check(content_put(handle, key, value));
 }
 
 void remove(TransactionHandle handle, std::vector<std::string> const & arguments) {
     auto& key = arguments[0];
+    std::cout << "delete: " << key << std::endl;
     if (check_exists(content_delete(handle, key))) {
-        std::cout << "deleted: " << key << std::endl;
-    } else {
-        std::cerr << "(N/A)" << std::endl;
+        std::cout << "-> " << key << std::endl;
     }
 }
 
 void scan(TransactionHandle handle, std::vector<std::string> const &arguments) {
     auto& begin = arguments[0];
     auto& end = arguments[1];
+    std::cout << "scan: " << begin << " ... " << end << std::endl;
     IteratorHandle iter;
     check(content_scan_range(handle, begin, false, end, false, &iter));
     Closer closer { [&]{ iterator_dispose(iter); } };
@@ -83,7 +91,7 @@ void scan(TransactionHandle handle, std::vector<std::string> const &arguments) {
         Slice key, value;
         check(iterator_get_key(iter, &key));
         check(iterator_get_value(iter, &value));
-        std::cout << key.to_string_view() << " = " << value.to_string_view() << std::endl;
+        std::cout << "-> " << key.to_string_view() << " = " << value.to_string_view() << std::endl;
     }
 }
 

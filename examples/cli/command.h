@@ -16,7 +16,6 @@
 #ifndef SHARKSFIN_CLI_COMMAND_H_
 #define SHARKSFIN_CLI_COMMAND_H_
 
-#include <functional>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -26,15 +25,15 @@
 namespace sharksfin {
 namespace cli {
 
-class Closer {
-public:
-    Closer(std::function<void()>&& closer) : closer_(std::move(closer)) {}
-    ~Closer() { closer_(); }
-private:
-    std::function<void()> closer_;
+using CommandFunction = std::add_pointer_t<void(TransactionHandle, std::vector<std::string> const&)>;
+
+struct CommandSpec {
+    std::string name;
+    CommandFunction function;
+    std::vector<std::string> arguments;
 };
 
-using CommandFunction = std::add_pointer_t<void(TransactionHandle, std::vector<std::string> const&)>;
+extern std::vector<CommandSpec> const command_list;
 
 void get(TransactionHandle handle, std::vector<std::string> const& arguments);
 void put(TransactionHandle handle, std::vector<std::string> const& arguments);

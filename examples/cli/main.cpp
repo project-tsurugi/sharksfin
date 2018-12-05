@@ -14,100 +14,50 @@
  * limitations under the License.
  */
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
-#include <string>
-#include <vector>
+#include <stdexcept>
+
+#include "Closer.h"
+#include "Options.h"
 
 #include "sharksfin/api.h"
-#include "command.h"
 
 namespace sharksfin {
 namespace cli {
 
-struct CommandSpec {
-    std::string name;
-    CommandFunction function;
-    std::vector<std::string> arguments;
-};
-
-static CommandSpec const command_list[] = {
-    { "get", &get, { "key" } },
-    { "put", &put, { "key", "value" } },
-    { "delete", &remove, { "key" } },
-    { "scan", &scan, { "begin-key", "end-key" } }
-};
-
 extern "C" int main(int argc, char* argv[]) {
-    if (argc <= 2) {
-        std::cerr << "usage: " << argv[0] << " <location> <command-name> <command-options...>" << std::endl;
-        std::cerr << "available commands:" << std::endl;
-        for (auto& cmd : command_list) {
-            std::cerr << "    " << cmd.name << std::endl;
-        }
-        return EXIT_FAILURE;
-    }
-    std::string location { argv[1] };
-    std::string name { argv[2] };
-    std::vector<std::string> arguments;
-    for (int i = 3; i < argc; ++i) {
-        arguments.emplace_back(argv[i]);
-    }
-    CommandSpec const* spec = nullptr;
-    for (auto& cmd : command_list) {
-        if (name == cmd.name) {
-            if (arguments.size() != cmd.arguments.size()) {
-                std::cerr << "usage: " << argv[0] << " <location> " << cmd.name;
-                for (auto& a : cmd.arguments) {
-                    std::cerr << " <" << a << ">";
-                }
-                std::cerr << std::endl;
-                return EXIT_FAILURE;
-            }
-            spec = &cmd;
-            break;
-        }
-    }
-    if (!spec) {
-        std::cerr << "unknown command " << name << std::endl;
-        std::cerr << "available commands:" << std::endl;
-        for (auto& cmd : command_list) {
-            std::cerr << "    " << cmd.name << std::endl;
-        }
+    auto options = Options::parse(argc, argv);
+    if (!options.valid) {
         return EXIT_FAILURE;
     }
 
-    DatabaseOptions options;
-    options.attribute("location", location);
     DatabaseHandle db;
-    if (auto s = database_open(options, &db); s != StatusCode::OK) {
-        std::cerr << "cannot open " << location << ": " << status_code_label(s) << std::endl;
+    if (auto s = database_open(options.database, &db); s != StatusCode::OK) {
+        std::cerr << "cannot open database: " << status_code_label(s) << std::endl;
         return EXIT_FAILURE;
     }
     Closer dbc { [&]{
         if (auto s = database_close(db); s != StatusCode::OK) {
-            std::cerr << "cannot shutdown " << location << ": " << status_code_label(s) << std::endl;
+            std::cerr << "failed to shutdown database: " << status_code_label(s) << std::endl;
         }
         database_dispose(db);
     }};
 
     struct Callback {
         static TransactionOperation f(TransactionHandle handle, void* object) {
-            auto self = reinterpret_cast<Callback*>(object);
+            auto commands = reinterpret_cast<std::vector<Options::Command>*>(object);
             try {
-                self->spec->function(handle, *self->arguments);
+                for (auto& command : *commands) {
+                    command.function(handle, command.arguments);
+                }
                 return TransactionOperation::COMMIT;
             } catch (std::exception const& e) {
                 std::cerr << e.what() << std::endl;
                 return TransactionOperation::ERROR;
             }
         }
-        CommandSpec const* spec;
-        std::vector<std::string> const* arguments;
     };
-
-    Callback callback { spec, &arguments };
-    if (auto s = transaction_exec(db, Callback::f, &callback); s != StatusCode::OK) {
+    if (auto s = transaction_exec(db, Callback::f, &options.commands); s != StatusCode::OK) {
         std::cerr << "failed to execute transaction: " << status_code_label(s) << std::endl;
         return EXIT_FAILURE;
     }
