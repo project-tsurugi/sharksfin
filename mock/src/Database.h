@@ -30,6 +30,7 @@
 namespace sharksfin {
 namespace mock {
 
+class Storage;
 class TransactionLock;
 class Iterator;
 
@@ -57,56 +58,32 @@ public:
     void shutdown();
 
     /**
+     * @brief creates a new storage space.
+     * @param key the storage key
+     * @return non empty pointer if the storage was successfully created
+     * @return otherwise if the storage space with the key already exists
+     */
+    std::unique_ptr<Storage> create_storage(Slice key);
+
+    /**
+     * @brief returns a storage space.
+     * @param key the storage key
+     * @return non empty pointer if it exists
+     * @return otherwise if it does not exist
+     */
+    std::unique_ptr<Storage> get_storage(Slice key);
+
+    /**
+     * @brief deletes storage.
+     * @param storage the target storage
+     */
+    void delete_storage(Storage& storage);
+
+    /**
      * @brief creates a new transaction lock.
      * @return the created transaction lock, but it's lock has not been acquired
      */
     std::unique_ptr<TransactionLock> create_transaction();
-
-    /**
-     * @brief obtains an entry and write its value into the given buffer.
-     * @param key the entry key
-     * @param buffer the destination buffer
-     * @return the operation status
-     */
-    StatusCode get(Slice key, std::string& buffer);
-
-    /**
-     * @brief creates or overwrites an entry.
-     * @param key the entry key
-     * @param value the entry value
-     * @return the operation status
-     */
-    StatusCode put(Slice key, Slice value);
-
-    /**
-     * @brief removes an entry.
-     * @param key the entry key
-     * @return the operation status
-     */
-    StatusCode remove(Slice key);
-
-    /**
-     * @brief creates an iterator over the prefix key range.
-     * The content of prefix key must not be changed while using the returned iterator.
-     * The returned iterator is still available even if database content was changed.
-     * @param prefix_key the prefix key
-     * @return the created iterator
-     */
-    std::unique_ptr<Iterator> scan_prefix(Slice prefix_key);
-
-    /**
-     * @brief creates an iterator over the key range.
-     * The content of begin/end key pair must not be changed while using the returned iterator.
-     * The returned iterator is still available even if database content was changed.
-     * @param begin_key the content key of beginning position
-     * @param begin_exclusive whether or not beginning position is exclusive
-     * @param end_key the content key of ending position
-     * @param end_exclusive whether or not ending position is exclusive
-     * @return the created iterator
-     */
-    std::unique_ptr<Iterator> scan_range(
-            Slice begin_key, bool begin_exclusive,
-            Slice end_key, bool end_exclusive);
 
     /**
      * @brief returns whether or not the underlying LevelDB is still alive.
@@ -135,10 +112,6 @@ private:
     std::unique_ptr<leveldb::DB> leveldb_ = {};
     transaction_mutex_type transaction_mutex_ = {};
     std::atomic_size_t transaction_id_sequence_ = { 1U };
-
-    static inline leveldb::Slice resolve(Slice slice) {
-        return leveldb::Slice(slice.data<char>(), slice.size());
-    }
 };
 
 }  // namespace mock

@@ -17,6 +17,7 @@
 #define SHARKSFIN_MOCK_ITERATOR_H_
 
 #include "Database.h"
+#include "Storage.h"
 
 #include "sharksfin/api.h"
 
@@ -47,12 +48,12 @@ public:
      * @param prefix_key the prefix key
      */
     inline Iterator(
-            Database* owner,
+            Storage* owner,
             std::unique_ptr<leveldb::Iterator> iterator,
             Slice prefix_key) noexcept
         : owner_(owner)
         , iterator_(std::move(iterator))
-        , begin_key_(resolve(prefix_key))
+        , begin_key_(qualified(owner, prefix_key))
         , end_key_()
         , begin_exclusive_(false)
         , end_exclusive_(false)
@@ -69,14 +70,14 @@ public:
      * @param end_exclusive whether or not ending position is exclusive
      */
     inline Iterator(
-            Database* owner,
+            Storage* owner,
             std::unique_ptr<leveldb::Iterator> iterator,
             Slice begin_key, bool begin_exclusive,
             Slice end_key, bool end_exclusive) noexcept
         : owner_(owner)
         , iterator_(std::move(iterator))
-        , begin_key_(resolve(begin_key))
-        , end_key_(resolve(end_key))
+        , begin_key_(qualified(owner, begin_key))
+        , end_key_(qualified(owner, end_key))
         , begin_exclusive_(begin_exclusive)
         , end_exclusive_(end_exclusive)
         , state_(State::INIT_RANGE)
@@ -98,7 +99,7 @@ public:
             if (status.ok()) {
                 return StatusCode::NOT_FOUND;
             }
-            return owner_->resolve(status);
+            return owner_->handle(status);
         }
         return StatusCode::OK;
     }
@@ -117,7 +118,8 @@ public:
      * @return the key
      */
     inline Slice key() const {
-        return resolve(iterator_->key());
+        auto s = iterator_->key();
+        return owner_->subkey({ s.data(), s.size() });
     }
 
     /**
@@ -125,14 +127,15 @@ public:
      * @return the value
      */
     inline Slice value() const {
-        return resolve(iterator_->value());
+        auto s = iterator_->value();
+        return { s.data(), s.size() };
     }
 
 private:
-    Database* owner_;
+    Storage* owner_;
     std::unique_ptr<leveldb::Iterator> iterator_;
-    leveldb::Slice begin_key_;
-    leveldb::Slice end_key_;
+    std::string const begin_key_;
+    std::string const end_key_;
     bool begin_exclusive_;
     bool end_exclusive_;
     State state_;
@@ -191,12 +194,12 @@ private:
         return State::SAW_EOF;
     }
 
-    static inline leveldb::Slice resolve(Slice slice) {
-        return leveldb::Slice(slice.data<char>(), slice.size());
-    }
-
-    static inline Slice resolve(leveldb::Slice slice) {
-        return Slice(slice.data(), slice.size());
+    static inline std::string qualified(Storage* owner, Slice key) {
+        std::string result;
+        result.reserve(owner->prefix().size() + key.size());
+        owner->prefix().append_to(result);
+        key.append_to(result);
+        return result;
     }
 };
 

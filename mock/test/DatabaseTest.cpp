@@ -17,6 +17,7 @@
 
 #include "TestRoot.h"
 
+#include "Storage.h"
 #include "Iterator.h"
 #include "TransactionLock.h"
 
@@ -30,10 +31,64 @@ public:
 
 TEST_F(DatabaseTest, simple) {
     Database db { open() };
-    ASSERT_EQ(db.put("K", "testing"), StatusCode::OK);
-    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
+    auto st = db.create_storage("S");
+
+    ASSERT_EQ(st->put("K", "testing"), StatusCode::OK);
+    ASSERT_EQ(st->get("K", buf), StatusCode::OK);
     EXPECT_EQ(buf, "testing");
     db.shutdown();
+}
+
+TEST_F(DatabaseTest, storage_create) {
+    Database db { open() };
+    auto s0 = db.create_storage("a");
+    auto s1 = db.create_storage("a");
+    auto s2 = db.create_storage("b");
+
+    ASSERT_FALSE(s1);
+    ASSERT_TRUE(s2);
+    EXPECT_NE(s0->prefix(), s2->prefix());
+}
+
+TEST_F(DatabaseTest, storage_get) {
+    Database db { open() };
+    auto s0 = db.create_storage("a");
+    auto s1 = db.get_storage("a");
+    auto s2 = db.get_storage("b");
+
+    ASSERT_TRUE(s1);
+    EXPECT_EQ(s0->prefix(), s1->prefix());
+
+    ASSERT_FALSE(s2);
+}
+
+TEST_F(DatabaseTest, storage_delete) {
+    Database db { open() };
+    auto s0 = db.create_storage("S");
+    ASSERT_EQ(s0->put("K", "testing"), StatusCode::OK);
+    db.delete_storage(*s0);
+
+    auto s1 = db.create_storage("S");
+    ASSERT_TRUE(s1);
+    ASSERT_EQ(s1->get("K", buf), StatusCode::NOT_FOUND);
+}
+
+TEST_F(DatabaseTest, storage_separated) {
+    Database db { open() };
+    auto s0 = db.create_storage("s0");
+    auto s1 = db.create_storage("s1");
+
+    ASSERT_EQ(s0->put("0", "A"), StatusCode::OK);
+    ASSERT_EQ(s1->put("1", "B"), StatusCode::OK);
+
+    ASSERT_EQ(s0->get("0", buf), StatusCode::OK);
+    EXPECT_EQ(buf, "A");
+
+    ASSERT_EQ(s1->get("1", buf), StatusCode::OK);
+    EXPECT_EQ(buf, "B");
+
+    ASSERT_EQ(s0->get("1", buf), StatusCode::NOT_FOUND);
+    ASSERT_EQ(s1->get("0", buf), StatusCode::NOT_FOUND);
 }
 
 TEST_F(DatabaseTest, begin_transaction) {
@@ -60,112 +115,6 @@ TEST_F(DatabaseTest, begin_transaction) {
     EXPECT_NE(t1, t2);
     EXPECT_NE(t1, t3);
     EXPECT_NE(t2, t3);
-}
-
-TEST_F(DatabaseTest, get) {
-    Database db { open() };
-    ASSERT_EQ(db.get("K", buf), StatusCode::NOT_FOUND);
-
-    ASSERT_EQ(db.put("K", "testing"), StatusCode::OK);
-    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
-    EXPECT_EQ(buf, "testing");
-
-    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
-    EXPECT_EQ(buf, "testing");
-}
-
-TEST_F(DatabaseTest, put) {
-    Database db { open() };
-    ASSERT_EQ(db.put("K", "a"), StatusCode::OK);
-    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
-    EXPECT_EQ(buf, "a");
-
-    ASSERT_EQ(db.put("K", "b"), StatusCode::OK);
-    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
-    EXPECT_EQ(buf, "b");
-}
-
-TEST_F(DatabaseTest, remove) {
-    Database db { open() };
-    ASSERT_EQ(db.put("K", "testing"), StatusCode::OK);
-    ASSERT_EQ(db.get("K", buf), StatusCode::OK);
-    EXPECT_EQ(buf, "testing");
-
-    ASSERT_EQ(db.remove("K"), StatusCode::OK);
-    ASSERT_EQ(db.get("K", buf), StatusCode::NOT_FOUND);
-}
-
-TEST_F(DatabaseTest, scan_prefix) {
-    Database db { open() };
-    ASSERT_EQ(db.put("a", "a"), StatusCode::OK);
-    ASSERT_EQ(db.put("a/", "a-"), StatusCode::OK);
-    ASSERT_EQ(db.put("a/a", "a-a"), StatusCode::OK);
-    ASSERT_EQ(db.put("a/a/c", "a-a-c"), StatusCode::OK);
-    ASSERT_EQ(db.put("a/b", "a-b"), StatusCode::OK);
-    ASSERT_EQ(db.put("b", "b"), StatusCode::OK);
-
-    auto iter = db.scan_prefix("a/");
-
-    ASSERT_EQ(iter->next(), StatusCode::OK);
-    EXPECT_EQ(iter->key().to_string_view(), "a/");
-    EXPECT_EQ(iter->value().to_string_view(), "a-");
-
-    ASSERT_EQ(iter->next(), StatusCode::OK);
-    EXPECT_EQ(iter->key().to_string_view(), "a/a");
-    EXPECT_EQ(iter->value().to_string_view(), "a-a");
-
-    ASSERT_EQ(iter->next(), StatusCode::OK);
-    EXPECT_EQ(iter->key().to_string_view(), "a/a/c");
-    EXPECT_EQ(iter->value().to_string_view(), "a-a-c");
-
-    ASSERT_EQ(iter->next(), StatusCode::OK);
-    EXPECT_EQ(iter->key().to_string_view(), "a/b");
-    EXPECT_EQ(iter->value().to_string_view(), "a-b");
-
-    ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
-}
-
-TEST_F(DatabaseTest, scan_range) {
-    Database db { open() };
-    ASSERT_EQ(db.put("a", "A"), StatusCode::OK);
-    ASSERT_EQ(db.put("b", "B"), StatusCode::OK);
-    ASSERT_EQ(db.put("c", "C"), StatusCode::OK);
-    ASSERT_EQ(db.put("d", "D"), StatusCode::OK);
-    ASSERT_EQ(db.put("e", "E"), StatusCode::OK);
-
-
-    auto iter = db.scan_range("b", false, "d", false);
-
-    ASSERT_EQ(iter->next(), StatusCode::OK);
-    EXPECT_EQ(iter->key().to_string_view(), "b");
-    EXPECT_EQ(iter->value().to_string_view(), "B");
-
-    ASSERT_EQ(iter->next(), StatusCode::OK);
-    EXPECT_EQ(iter->key().to_string_view(), "c");
-    EXPECT_EQ(iter->value().to_string_view(), "C");
-
-    ASSERT_EQ(iter->next(), StatusCode::OK);
-    EXPECT_EQ(iter->key().to_string_view(), "d");
-    EXPECT_EQ(iter->value().to_string_view(), "D");
-
-    ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
-}
-
-TEST_F(DatabaseTest, scan_range_exclusive) {
-    Database db { open() };
-    ASSERT_EQ(db.put("a", "A"), StatusCode::OK);
-    ASSERT_EQ(db.put("b", "B"), StatusCode::OK);
-    ASSERT_EQ(db.put("c", "C"), StatusCode::OK);
-    ASSERT_EQ(db.put("d", "D"), StatusCode::OK);
-    ASSERT_EQ(db.put("e", "E"), StatusCode::OK);
-
-    auto iter = db.scan_range("b", true, "d", true);
-
-    ASSERT_EQ(iter->next(), StatusCode::OK);
-    EXPECT_EQ(iter->key().to_string_view(), "c");
-    EXPECT_EQ(iter->value().to_string_view(), "C");
-
-    ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
 }
 
 TEST_F(DatabaseTest, lifecycle) {

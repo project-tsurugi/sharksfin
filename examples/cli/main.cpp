@@ -43,12 +43,23 @@ extern "C" int main(int argc, char* argv[]) {
         database_dispose(db);
     }};
 
+    struct CommandParam {
+        CommandParam(
+                Options* options,
+                StorageHandle storage)
+            : options_(options)
+            , storage_(storage)
+        {}
+        Options* options_;
+        StorageHandle storage_;
+    };
+
     struct Callback {
         static TransactionOperation f(TransactionHandle handle, void* object) {
-            auto commands = reinterpret_cast<std::vector<Options::Command>*>(object);
+            auto param = reinterpret_cast<CommandParam*>(object);
             try {
-                for (auto& command : *commands) {
-                    command.function(handle, command.arguments);
+                for (auto& command : param->options_->commands) {
+                    command.function(handle, param->storage_, command.arguments);
                 }
                 return TransactionOperation::COMMIT;
             } catch (std::exception const& e) {
@@ -57,9 +68,25 @@ extern "C" int main(int argc, char* argv[]) {
             }
         }
     };
-    if (auto s = transaction_exec(db, Callback::f, &options.commands); s != StatusCode::OK) {
-        std::cerr << "failed to execute transaction: " << status_code_label(s) << std::endl;
-        return EXIT_FAILURE;
+    {
+        StorageHandle storage;
+        if (auto s = storage_get(db, "main", &storage); s != StatusCode::OK) {
+            if (s == StatusCode::NOT_FOUND) {
+                if (s = storage_create(db, "main", &storage); s != StatusCode::OK) {
+                    std::cerr << "failed to create storage: " << status_code_label(s) << std::endl;
+                    return EXIT_FAILURE;
+                }
+            } else {
+                std::cerr << "failed to restore storage: " << status_code_label(s) << std::endl;
+                return EXIT_FAILURE;
+            }
+        }
+        CommandParam param { &options, storage };
+        Closer stc { [&]{ storage_dispose(storage); }};
+        if (auto s = transaction_exec(db, Callback::f, &param); s != StatusCode::OK) {
+            std::cerr << "failed to execute transaction: " << status_code_label(s) << std::endl;
+            return EXIT_FAILURE;
+        }
     }
     return EXIT_SUCCESS;
 }

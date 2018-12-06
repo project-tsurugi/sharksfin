@@ -29,6 +29,12 @@ void Database::shutdown() {
     leveldb_.reset();
 }
 
+std::unique_ptr<TransactionLock> Database::create_transaction() {
+    auto id = transaction_id_sequence_.fetch_add(1U);
+    std::unique_lock lock { transaction_mutex_, std::defer_lock };
+    return std::make_unique<TransactionLock>(this, id, std::move(lock));
+}
+
 StatusCode Database::handle(leveldb::Status const& status) {
     return Database::resolve(status);
 }
@@ -56,45 +62,58 @@ StatusCode Database::resolve(leveldb::Status const& status) {
     return StatusCode::ERR_UNKNOWN;
 }
 
-std::unique_ptr<TransactionLock> Database::create_transaction() {
-    auto id = transaction_id_sequence_.fetch_add(1U);
-    std::unique_lock lock { transaction_mutex_, std::defer_lock };
-    return std::make_unique<TransactionLock>(this, id, std::move(lock));
+static constexpr Slice META_PREFIX = { "\0", 1 };
+
+static leveldb::Slice qualify_meta(Slice key, std::string& buffer) {
+    META_PREFIX.assign_to(buffer);
+    key.append_to(buffer);
+    return buffer;
 }
 
-StatusCode Database::get(Slice key, std::string &buffer) {
-    leveldb::ReadOptions options;
-    auto status = leveldb_->Get(options, resolve(key), &buffer);
-    return handle(status);
+std::unique_ptr<Storage> Database::create_storage(Slice key) {
+    std::string k, v;
+    qualify_meta(key, k);
+    auto s = leveldb_->Get(leveldb::ReadOptions(), k, &v);
+    if (s.ok()) {
+        return {}; // already exists
+    }
+    if (s.IsNotFound()) {
+        if (auto s2 = leveldb_->Put(leveldb::WriteOptions(), k, "!"); s2.ok()) {
+            return std::make_unique<Storage>(this, key, leveldb_.get());
+        }
+    }
+    throw std::runtime_error(s.ToString());
 }
 
-StatusCode Database::put(Slice key, Slice value) {
-    leveldb::WriteOptions options;
-    auto status = leveldb_->Put(options, resolve(key), resolve(value));
-    return handle(status);
+std::unique_ptr<Storage> Database::get_storage(Slice key) {
+    std::string k, v;
+    qualify_meta(key, k);
+    auto s = leveldb_->Get(leveldb::ReadOptions(), k, &v);
+    if (s.IsNotFound()) {
+        return {}; // not found
+    }
+    if (s.ok()) {
+        return std::make_unique<Storage>(this, key, leveldb_.get());
+    }
+    throw std::runtime_error(s.ToString());
 }
 
-StatusCode Database::remove(Slice key) {
-    leveldb::WriteOptions options;
-    auto status = leveldb_->Delete(options, resolve(key));
-    return handle(status);
-}
-
-std::unique_ptr<Iterator> Database::scan_prefix(Slice prefix_key) {
-    leveldb::ReadOptions options;
-    std::unique_ptr<leveldb::Iterator> iter { leveldb_->NewIterator(options) };
-    return std::make_unique<Iterator>(this, std::move(iter), prefix_key);
-}
-
-std::unique_ptr<Iterator> Database::scan_range(
-        Slice begin_key, bool begin_exclusive,
-        Slice end_key, bool end_exclusive) {
-    leveldb::ReadOptions options;
-    std::unique_ptr<leveldb::Iterator> iter { leveldb_->NewIterator(options) };
-    return std::make_unique<Iterator>(
-            this, std::move(iter),
-            begin_key, begin_exclusive,
-            end_key, end_exclusive);
+void Database::delete_storage(Storage& storage) {
+    std::string k, v;
+    qualify_meta(storage.prefix(), k);
+    if (auto s = leveldb_->Delete(leveldb::WriteOptions(), k); !s.ok()) {
+        throw std::runtime_error(s.ToString());
+    }
+    std::unique_ptr<leveldb::Iterator> iter {
+        leveldb_->NewIterator(leveldb::ReadOptions())
+    };
+    leveldb::Slice prefix { storage.prefix().data<char>(), storage.prefix().size() };
+    iter->Seek(prefix);
+    for (; iter->Valid() && iter->key().starts_with(prefix); iter->Next()) {
+        if (auto s = leveldb_->Delete(leveldb::WriteOptions(), iter->key()); !s.ok()) {
+            throw std::runtime_error(s.ToString());
+        }
+    }
 }
 
 }  // namespace mock

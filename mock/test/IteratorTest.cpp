@@ -15,6 +15,8 @@
  */
 #include "Iterator.h"
 
+#include "Storage.h"
+
 #include "TestRoot.h"
 
 namespace sharksfin {
@@ -27,14 +29,15 @@ public:
         auto leveldb = open();
         leveldb_ = leveldb.get();
         database_ = std::make_unique<Database>(std::move(leveldb));
+        storage_ = database_->create_storage("@");
     }
 
     void put(Slice key, Slice value) {
-        EXPECT_EQ(database_->put(key, value), StatusCode::OK);
+        EXPECT_EQ(storage_->put(key, value), StatusCode::OK);
     }
 
-    Database* database() {
-        return database_.get();
+    Storage* storage() {
+        return storage_.get();
     }
 
     std::unique_ptr<leveldb::Iterator> iter() {
@@ -45,6 +48,7 @@ public:
 private:
     leveldb::DB* leveldb_;
     std::unique_ptr<Database> database_;
+    std::unique_ptr<Storage> storage_;
 };
 
 TEST_F(IteratorTest, prefix) {
@@ -53,7 +57,7 @@ TEST_F(IteratorTest, prefix) {
     put("a/a", "B");
     put("b", "NG");
 
-    Iterator it { database(), iter(), "a/" };
+    Iterator it { storage(), iter(), "a/" };
 
     ASSERT_EQ(it.next(), StatusCode::OK);
     EXPECT_EQ(it.key(), "a/");
@@ -67,7 +71,7 @@ TEST_F(IteratorTest, prefix) {
 }
 
 TEST_F(IteratorTest, prefix_empty) {
-    Iterator it { database(), iter(), "a/" };
+    Iterator it { storage(), iter(), "a/" };
 
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
@@ -79,7 +83,7 @@ TEST_F(IteratorTest, range_in_in) {
     put("d", "D");
     put("e", "E");
 
-    Iterator it { database(), iter(), "b", false, "d", false };
+    Iterator it { storage(), iter(), "b", false, "d", false };
 
     ASSERT_EQ(it.next(), StatusCode::OK);
     EXPECT_EQ(it.key(), "b");
@@ -103,7 +107,7 @@ TEST_F(IteratorTest, range_ex_in) {
     put("d", "D");
     put("e", "E");
 
-    Iterator it { database(), iter(), "b", true, "d", false };
+    Iterator it { storage(), iter(), "b", true, "d", false };
 
     ASSERT_EQ(it.next(), StatusCode::OK);
     EXPECT_EQ(it.key(), "c");
@@ -123,7 +127,7 @@ TEST_F(IteratorTest, range_in_ex) {
     put("d", "D");
     put("e", "E");
 
-    Iterator it { database(), iter(), "b", false, "d", true };
+    Iterator it { storage(), iter(), "b", false, "d", true };
 
     ASSERT_EQ(it.next(), StatusCode::OK);
     EXPECT_EQ(it.key(), "b");
@@ -143,7 +147,7 @@ TEST_F(IteratorTest, range_ex_ex) {
     put("d", "D");
     put("e", "E");
 
-    Iterator it { database(), iter(), "b", true, "d", true };
+    Iterator it { storage(), iter(), "b", true, "d", true };
 
     ASSERT_EQ(it.next(), StatusCode::OK);
     EXPECT_EQ(it.key(), "c");
@@ -153,12 +157,12 @@ TEST_F(IteratorTest, range_ex_ex) {
 }
 
 TEST_F(IteratorTest, range_empty) {
-    Iterator it { database(), iter(), "b", false, "d", false };
+    Iterator it { storage(), iter(), "b", false, "d", false };
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
 TEST_F(IteratorTest, range_ex_empty) {
-    Iterator it { database(), iter(), "b", true, "d", true };
+    Iterator it { storage(), iter(), "b", true, "d", true };
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 

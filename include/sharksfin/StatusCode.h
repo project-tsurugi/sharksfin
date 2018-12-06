@@ -37,6 +37,11 @@ enum class StatusCode : std::int64_t {
     NOT_FOUND = 1,
 
     /**
+     * @brief the target element already exists.
+     */
+    ALREADY_EXISTS = 2,
+
+    /**
      * @brief unknown errors.
      */
     ERR_UNKNOWN = -1,
@@ -70,6 +75,7 @@ extern "C" inline char const* status_code_label(StatusCode code) {
     switch (code) {
         case StatusCode::OK: return "OK";
         case StatusCode::NOT_FOUND: return "NOT_FOUND";
+        case StatusCode::ALREADY_EXISTS: return "ALREADY_EXISTS";
         case StatusCode::ERR_UNKNOWN: return "ERR_UNKNOWN";
         case StatusCode::ERR_IO_ERROR: return "ERR_IO_ERROR";
         case StatusCode::ERR_INVALID_ARGUMENT: return "ERR_INVALID_ARGUMENT";

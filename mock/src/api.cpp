@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <sharksfin/api.h>
+
 #include "sharksfin/api.h"
 
 #include "Database.h"
 #include "Iterator.h"
+#include "Storage.h"
 #include "TransactionLock.h"
 
 namespace sharksfin {
@@ -26,15 +29,35 @@ namespace sharksfin {
  */
 static constexpr std::string_view KEY_LOCATION { "location" };  // NOLINT
 
-static inline mock::Database* unwrap_database(DatabaseHandle handle) {
+static inline DatabaseHandle wrap(mock::Database* object) {
+    return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
+}
+
+static inline StorageHandle wrap(mock::Storage* object) {
+    return reinterpret_cast<StorageHandle>(object);  // NOLINT
+}
+
+static inline TransactionHandle wrap(mock::TransactionLock* object) {
+    return reinterpret_cast<TransactionHandle>(object);  // NOLINT
+}
+
+static inline IteratorHandle wrap(mock::Iterator* object) {
+    return reinterpret_cast<IteratorHandle>(object);  // NOLINT
+}
+
+static inline mock::Database* unwrap(DatabaseHandle handle) {
     return reinterpret_cast<mock::Database*>(handle);  // NOLINT
 }
 
-static inline mock::TransactionLock* unwrap_transaction(TransactionHandle handle) {
+static inline mock::Storage* unwrap(StorageHandle handle) {
+    return reinterpret_cast<mock::Storage*>(handle);  // NOLINT
+}
+
+static inline mock::TransactionLock* unwrap(TransactionHandle handle) {
     return reinterpret_cast<mock::TransactionLock*>(handle);  // NOLINT
 }
 
-static inline mock::Iterator* unwrap_iterator(IteratorHandle handle) {
+static inline mock::Iterator* unwrap(IteratorHandle handle) {
     return reinterpret_cast<mock::Iterator*>(handle);  // NOLINT
 }
 
@@ -57,21 +80,59 @@ StatusCode database_open(
     if (status.ok()) {
         std::unique_ptr<leveldb::DB> leveldb { leveldb_ptr };
         auto db = std::make_unique<mock::Database>(std::move(leveldb));
-        *result = db.release();
+        *result = wrap(db.release());
         return StatusCode::OK;
     }
     return mock::Database::resolve(status);
 }
 
 StatusCode database_close(DatabaseHandle handle) {
-    auto db = unwrap_database(handle);
+    auto db = unwrap(handle);
     db->shutdown();
     return StatusCode::OK;
 }
 
 StatusCode database_dispose(DatabaseHandle handle) {
-    auto db = unwrap_database(handle);
+    auto db = unwrap(handle);
     delete db;  // NOLINT
+    return StatusCode::OK;
+}
+
+StatusCode storage_create(
+        DatabaseHandle handle,
+        Slice key,
+        StorageHandle *result) {
+    auto database = unwrap(handle);
+    auto storage = database->create_storage(key);
+    if (!storage) {
+        return StatusCode::ALREADY_EXISTS;
+    }
+    *result = wrap(storage.release());
+    return StatusCode::OK;
+}
+
+StatusCode storage_get(
+        DatabaseHandle handle,
+        Slice key,
+        StorageHandle *result) {
+    auto database = unwrap(handle);
+    auto storage = database->get_storage(key);
+    if (!storage) {
+        return StatusCode::NOT_FOUND;
+    }
+    *result = wrap(storage.release());
+    return StatusCode::OK;
+}
+
+StatusCode storage_delete(StorageHandle handle) {
+    auto storage = unwrap(handle);
+    storage->purge();
+    return StatusCode::OK;
+}
+
+StatusCode storage_dispose(StorageHandle handle) {
+    auto object = unwrap(handle);
+    delete object;  // NOLINT
     return StatusCode::OK;
 }
 
@@ -79,10 +140,10 @@ StatusCode transaction_exec(
         DatabaseHandle handle,
         TransactionCallback callback,
         void *arguments) {
-    auto database = unwrap_database(handle);
+    auto database = unwrap(handle);
     auto tx = database->create_transaction();
     tx->acquire();
-    auto status = callback(tx.get(), arguments);
+    auto status = callback(wrap(tx.get()), arguments);
     if (status == TransactionOperation::COMMIT) {
         return StatusCode::OK;
     }
@@ -90,17 +151,29 @@ StatusCode transaction_exec(
     return StatusCode::ERR_UNSUPPORTED;
 }
 
-StatusCode content_get(
+StatusCode transaction_borrow_owner(
         TransactionHandle handle,
+        DatabaseHandle* result) {
+    auto transaction = unwrap(handle);
+    if (auto database = transaction->owner()) {
+        *result = wrap(database);
+        return StatusCode::OK;
+    }
+    return StatusCode::ERR_INVALID_STATE;
+}
+
+StatusCode content_get(
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice key,
         Slice* result) {
-    auto tx = unwrap_transaction(handle);
-    auto database = tx->owner();
-    if (!database) {
+    auto tx = unwrap(transaction);
+    auto st = unwrap(storage);
+    if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
     auto& buffer = tx->buffer();
-    auto status = database->get(key, buffer);
+    auto status = st->get(key, buffer);
     if (status == StatusCode::OK) {
         *result = buffer;
     }
@@ -108,69 +181,73 @@ StatusCode content_get(
 }
 
 StatusCode content_put(
-        TransactionHandle handle,
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice key,
         Slice value) {
-    auto tx = unwrap_transaction(handle);
-    auto database = tx->owner();
-    if (!database) {
+    auto tx = unwrap(transaction);
+    auto st = unwrap(storage);
+    if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    return database->put(key, value);
+    return st->put(key, value);
 }
 
 StatusCode content_delete(
-        TransactionHandle handle,
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice key) {
-    auto tx = unwrap_transaction(handle);
-    auto database = tx->owner();
-    if (!database) {
+    auto tx = unwrap(transaction);
+    auto st = unwrap(storage);
+    if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    return database->remove(key);
+    return st->remove(key);
 }
 
 StatusCode content_scan_prefix(
-        TransactionHandle handle,
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice prefix_key,
         IteratorHandle* result) {
-    auto tx = unwrap_transaction(handle);
-    auto database = tx->owner();
-    if (!database) {
+    auto tx = unwrap(transaction);
+    auto st = unwrap(storage);
+    if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto iterator = database->scan_prefix(prefix_key);
-    *result = iterator.release();
+    auto iterator = st->scan_prefix(prefix_key);
+    *result = wrap(iterator.release());
     return StatusCode::OK;
 }
 
 StatusCode content_scan_range(
-        TransactionHandle handle,
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice begin_key, bool begin_exclusive,
         Slice end_key, bool end_exclusive,
         IteratorHandle* result) {
-    auto tx = unwrap_transaction(handle);
-    auto database = tx->owner();
-    if (!database) {
+    auto tx = unwrap(transaction);
+    auto st = unwrap(storage);
+    if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto iterator = database->scan_range(
+    auto iterator = st->scan_range(
         begin_key, begin_exclusive,
         end_key, end_exclusive);
-    *result = iterator.release();
+    *result = wrap(iterator.release());
     return StatusCode::OK;
 }
 
 StatusCode iterator_next(
         IteratorHandle handle) {
-    auto iterator = unwrap_iterator(handle);
+    auto iterator = unwrap(handle);
     return iterator->next();
 }
 
 StatusCode iterator_get_key(
         IteratorHandle handle,
         Slice* result) {
-    auto iterator = unwrap_iterator(handle);
+    auto iterator = unwrap(handle);
     if (!iterator->is_valid()) {
         return StatusCode::ERR_INVALID_STATE;
     }
@@ -181,7 +258,7 @@ StatusCode iterator_get_key(
 StatusCode iterator_get_value(
         IteratorHandle handle,
         Slice* result) {
-    auto iterator = unwrap_iterator(handle);
+    auto iterator = unwrap(handle);
     if (!iterator->is_valid()) {
         return StatusCode::ERR_INVALID_STATE;
     }
@@ -191,7 +268,7 @@ StatusCode iterator_get_value(
 
 StatusCode iterator_dispose(
         IteratorHandle handle) {
-    auto iterator = unwrap_iterator(handle);
+    auto iterator = unwrap(handle);
     delete iterator;  // NOLINT
     return StatusCode::OK;
 }

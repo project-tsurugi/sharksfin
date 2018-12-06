@@ -29,17 +29,22 @@ namespace sharksfin {
 /**
  * @brief a database handle type.
  */
-using DatabaseHandle = std::add_pointer_t<void>;
+typedef struct DatabaseStub {} * DatabaseHandle;
+
+/**
+ * @brief a storage handle type.
+ */
+typedef struct StorageStub {} * StorageHandle;
 
 /**
  * @brief a transaction handle type.
  */
-using TransactionHandle = std::add_pointer_t<void>;
+typedef struct TransactionStub {} * TransactionHandle;
 
 /**
  * @brief an iterator handle type.
  */
-using IteratorHandle = std::add_pointer_t<void>;
+typedef struct IteratorStub {} * IteratorHandle;
 
 /**
  * @brief opens a database and returns its handle.
@@ -71,6 +76,54 @@ extern "C" StatusCode database_close(
  */
 extern "C" StatusCode database_dispose(
         DatabaseHandle handle);
+
+/**
+ * @brief creates a new storage space onto the target database.
+ * The specified slice can be disposed after this operation.
+ * The created handle must be disposed by storage_dispose().
+ * @param handle the target database
+ * @param key the storage key
+ * @param result [OUT] the output target of storage handle, and it is available only if StatusCode::OK was returned
+ * @return StatusCode::OK if the target storage was successfully created
+ * @return StatusCode::ALREADY_EXISTS if the target storage already exists on the target database
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode storage_create(
+        DatabaseHandle handle,
+        Slice key,
+        StorageHandle *result);
+
+/**
+ * @brief obtains the registered storage on the database.
+ * The specified slice can be disposed after this operation.
+ * The created handle must be disposed by storage_dispose().
+ * @param handle the target database
+ * @param key the target storage key
+ * @param result [OUT] the output target of storage handle, and it is available only if StatusCode::OK was returned
+ * @return StatusCode::OK if the target storage space was successfully obtained
+ * @return StatusCode::NOT_FOUND if the storage space does not exist
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode storage_get(
+        DatabaseHandle handle,
+        Slice key,
+        StorageHandle *result);
+
+/**
+ * @brief removes a storage space from the corresponded database.
+ * The handle must be disposed by storage_dispose() even if this operation was succeeded.
+ * @return StatusCode::OK if the target storage space was successfully deleted
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode storage_delete(
+        StorageHandle handle);
+
+/**
+ * @brief disposes storage handles.
+ * @return operation status
+ */
+extern "C" StatusCode storage_dispose(
+        StorageHandle handle);
 
 /**
  * @brief the operation type of transactions.
@@ -138,6 +191,18 @@ extern "C" StatusCode transaction_exec(
 // TODO: callback for repair
 // TODO: for read only transactions
 
+/**
+ * @brief borrows a database handle which the given transaction is participated.
+ * The returned database handle must not be disposed.
+ * @param handle the current transaction handle
+ * @param result [OUT] the output target of database handle
+ * @return StatusCode::OK if the database handle was successfully borrowed
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode transaction_borrow_owner(
+        TransactionHandle handle,
+        DatabaseHandle* result);
+
 /*
 FIXME: more transaction control
 
@@ -147,13 +212,12 @@ transaction_abort(TransactionHandle)
 transaction_dispose(TransactionHandle)
 */
 
-// TODO: table/index ID or put it into prefix of keys
-
 /**
  * @brief obtains a content on the target key.
  * The result is available only if the returned status was Status::OK.
  * The returned slice will be disposed after calling other API functions.
- * @param handle the current transaction handle
+ * @param transaction the current transaction handle
+ * @param storage the target storage
  * @param key the content key
  * @param result [OUT] the slice of obtained content
  * @return Status::OK if the target content was obtained successfully
@@ -161,33 +225,38 @@ transaction_dispose(TransactionHandle)
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_get(
-        TransactionHandle handle,
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice key,
         Slice* result);
 
 /**
  * @brief puts a content onto the target key.
- * @param handle the current transaction handle
+ * @param transaction the current transaction handle
+ * @param storage the target storage
  * @param key the content key
  * @param value the content value
  * @return Status::OK if the target content was successfully put
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_put(
-        TransactionHandle handle,
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice key,
         Slice value);
 
 /**
  * @brief removes a content on the target key.
- * @param handle the current transaction handle
+ * @param transaction the current transaction handle
+ * @param storage the target storage
  * @param key the content key
  * @return Status::OK if the target content was successfully deleted (or not found)
  * @return Status::NOT_FOUND if the target content was not found (optional behavior)
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_delete(
-        TransactionHandle handle,
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice key);
 
 /**
@@ -195,14 +264,16 @@ extern "C" StatusCode content_delete(
  * The content of prefix key must not be changed while using the returned iterator.
  * The created handle must be disposed by iterator_dispose().
  * The returned iterator is still available even if database content was changed.
- * @param handle the current transaction handle
+ * @param transaction the current transaction handle
+ * @param storage the target storage
  * @param prefix_key the content key prefix
  * @param result [OUT] an iterator handle over the key prefix range
  * @return Status::OK if the iterator was successfully prepared
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan_prefix(
-        TransactionHandle handle,
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice prefix_key,
         IteratorHandle* result);
 
@@ -211,7 +282,8 @@ extern "C" StatusCode content_scan_prefix(
  * The content of begin/end keys must not be changed while using the returned iterator.
  * The created handle must be disposed by iterator_dispose().
  * The returned iterator is still available even if database content was changed.
- * @param handle the current transaction handle
+ * @param transaction the current transaction handle
+ * @param storage the target storage
  * @param begin_key the content key of beginning position
  * @param begin_exclusive whether or not beginning position is exclusive
  * @param end_key the content key of ending position
@@ -221,7 +293,8 @@ extern "C" StatusCode content_scan_prefix(
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan_range(
-        TransactionHandle handle,
+        TransactionHandle transaction,
+        StorageHandle storage,
         Slice begin_key, bool begin_exclusive,
         Slice end_key, bool end_exclusive,
         IteratorHandle* result);

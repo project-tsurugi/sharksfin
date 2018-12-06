@@ -53,36 +53,36 @@ static bool check_exists(StatusCode code) {
     raise(code);
 }
 
-void get(TransactionHandle handle, std::vector<std::string> const & arguments) {
+void get(TransactionHandle transaction, StorageHandle storage, std::vector<std::string> const & arguments) {
     auto& key = arguments[0];
     std::cout << "get: " << key << std::endl;
     Slice value;
-    if (check_exists(content_get(handle, key, &value))) {
+    if (check_exists(content_get(transaction, storage, key, &value))) {
         std::cout << "-> " << value.to_string_view() << std::endl;
     }
 }
 
-void put(TransactionHandle handle, std::vector<std::string> const & arguments) {
+void put(TransactionHandle transaction, StorageHandle storage, std::vector<std::string> const & arguments) {
     auto& key = arguments[0];
     auto& value = arguments[1];
     std::cout << "put: " << key << " = " << value << std::endl;
-    check(content_put(handle, key, value));
+    check(content_put(transaction, storage, key, value));
 }
 
-void remove(TransactionHandle handle, std::vector<std::string> const & arguments) {
+void remove(TransactionHandle transaction, StorageHandle storage, std::vector<std::string> const & arguments) {
     auto& key = arguments[0];
     std::cout << "delete: " << key << std::endl;
-    if (check_exists(content_delete(handle, key))) {
+    if (check_exists(content_delete(transaction, storage, key))) {
         std::cout << "-> " << key << std::endl;
     }
 }
 
-void scan(TransactionHandle handle, std::vector<std::string> const &arguments) {
+void scan(TransactionHandle transaction, StorageHandle storage, std::vector<std::string> const &arguments) {
     auto& begin = arguments[0];
     auto& end = arguments[1];
     std::cout << "scan: " << begin << " ... " << end << std::endl;
     IteratorHandle iter;
-    check(content_scan_range(handle, begin, false, end, false, &iter));
+    check(content_scan_range(transaction, storage, begin, false, end, false, &iter));
     Closer closer { [&]{ iterator_dispose(iter); } };
     for (;;) {
         if (!check_exists(iterator_next(iter))) {

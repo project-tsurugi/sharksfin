@@ -25,7 +25,7 @@
 namespace sharksfin {
 namespace cli {
 
-using CommandFunction = std::add_pointer_t<void(TransactionHandle, std::vector<std::string> const&)>;
+using CommandFunction = std::add_pointer_t<void(TransactionHandle, StorageHandle, std::vector<std::string> const&)>;
 
 struct CommandSpec {
     std::string name;
@@ -35,11 +35,10 @@ struct CommandSpec {
 
 extern std::vector<CommandSpec> const command_list;
 
-void get(TransactionHandle handle, std::vector<std::string> const& arguments);
-void put(TransactionHandle handle, std::vector<std::string> const& arguments);
-void remove(TransactionHandle handle, std::vector<std::string> const& arguments);
-
-void scan(TransactionHandle handle, std::vector<std::string> const& arguments);
+void get(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
+void put(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
+void remove(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
+void scan(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
 
 }  // namespace cli
 }  // namespace sharksfin

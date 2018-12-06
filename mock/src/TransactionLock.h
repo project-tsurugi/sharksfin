@@ -63,6 +63,15 @@ public:
     }
 
     /**
+     * @brief returns whether or not this transaction lock is acquired.
+     * @return true if this transaction lock is acquired
+     * @return false otherwise
+     */
+    inline bool is_alive() {
+        return lock_.owns_lock();
+    }
+
+    /**
      * @brief return the current transaction ID
      * @return the current transaction ID
      */
