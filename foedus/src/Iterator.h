@@ -20,9 +20,6 @@
 
 #include "sharksfin/api.h"
 
-#include "leveldb/iterator.h"
-#include "leveldb/slice.h"
-
 namespace sharksfin {
 namespace foedus {
 
