@@ -21,18 +21,55 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <numa.h>
 
 #include <gtest/gtest.h>
 
+#include "foedus/engine.hpp"
+#include "foedus/engine_options.hpp"
+#include "foedus/error_stack.hpp"
+
+#include "Database.h"
+
 namespace sharksfin {
 
-class ApiTest : public ::testing::Test {};
+class Closer {
+public:
+    Closer(std::function<void()>&& closer) : closer_(std::move(closer)) {}
+    ~Closer() { closer_(); }
+private:
+    std::function<void()> closer_;
+};
 
-TEST_F(ApiTest, simple) {
+class FoedusApiTest : public ::testing::Test {};
+
+TEST_F(FoedusApiTest, simple) {
     DatabaseOptions options;
-    DatabaseHandle db;
-    database_open(options, &db);
-    EXPECT_EQ(database_close(db), StatusCode::OK);
+    DatabaseHandle handle;
+    ASSERT_EQ(database_open(options, &handle), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(handle); } };
+
+    struct S {
+        static TransactionOperation f1(TransactionHandle tx) {
+            if (content_put(tx, "a", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation f2(TransactionHandle tx) {
+            Slice s;
+            if (content_get(tx, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+//    EXPECT_EQ(transaction_exec(handle, &S::f1), StatusCode::OK);
+//    EXPECT_EQ(transaction_exec(handle, &S::f2), StatusCode::OK);
+    EXPECT_EQ(database_close(handle), StatusCode::OK);
 }
 
 }  // namespace sharksfin
