@@ -10,6 +10,11 @@ add_library(foedus-bridge SHARED
     ${SOURCES}
 )
 
+set_target_properties(foedus-bridge
+        PROPERTIES
+        LIBRARY_OUTPUT_NAME "sharksfin-foedus"
+        )
+
 target_include_directories(foedus-bridge
     PRIVATE .
 )
