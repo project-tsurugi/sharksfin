@@ -41,39 +41,47 @@ public:
      */
     inline Transaction(
             Database* owner,
-            std::unique_ptr<::foedus::thread::Thread> context,
+            ::foedus::thread::Thread* context,
             ::foedus::Engine* engine
             ) noexcept
         :
         owner_(owner)
-        , context_(std::move(context))
+        , context_(context)
         , engine_(engine)
     {}
 
-    inline bool begin() {
-        auto* ctx = context_.get();
+    inline ::foedus::ErrorCode begin() {
         auto* xct_manager = engine_->get_xct_manager();
-        auto ret = xct_manager->begin_xct(ctx, ::foedus::xct::kSerializable);
-        if (ret == ::foedus::kErrorCodeOk) {
-            return true;
-        } else {
+        auto ret = xct_manager->begin_xct(context_, ::foedus::xct::kSerializable);
+        if (ret != ::foedus::kErrorCodeOk) {
             std::cout << "foedus error:[begin_xct]: "<< ::foedus::get_error_message(ret) << "\n";
-            return false;
         }
+        return ret;
     }
 
-    inline bool commit() {
+    inline ::foedus::ErrorCode commit() {
         std::cout << "FOEDUS commit" << std::endl;
-        auto* ctx = context_.get();
         auto* xct_manager = engine_->get_xct_manager();
         ::foedus::Epoch commit_epoch;
-        auto ret = xct_manager->precommit_xct(ctx, &commit_epoch);
+        auto ret = xct_manager->precommit_xct(context_, &commit_epoch);
         if (ret != ::foedus::kErrorCodeOk) {
             std::cout << ret << "\n";
         } else {
             std::cout << "success.\n";
         }
-        return true;
+        return ret;
+    }
+
+    inline ::foedus::ErrorCode abort() {
+        std::cout << "FOEDUS abort" << std::endl;
+        auto* xct_manager = engine_->get_xct_manager();
+        auto ret = xct_manager->abort_xct(context_);
+        if (ret != ::foedus::kErrorCodeOk) {
+            std::cout << ret << "\n";
+        } else {
+            std::cout << "success.\n";
+        }
+        return ret;
     }
     /**
      * @brief returns the owner of this transaction.
@@ -91,11 +99,14 @@ public:
         return buffer_;
     }
 
+    inline ::foedus::thread::Thread* context() {
+        return context_;
+    }
 private:
     Database* owner_;
-    std::unique_ptr<::foedus::thread::Thread> context_;
+    ::foedus::thread::Thread* context_;
     ::foedus::Engine* engine_;
-    alignas(16) std::string buffer_;
+    std::string buffer_;
 };
 
 }  // namespace foedus

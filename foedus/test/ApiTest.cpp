@@ -50,13 +50,13 @@ TEST_F(FoedusApiTest, simple) {
     Closer dbc { [&]() { database_dispose(handle); } };
 
     struct S {
-        static TransactionOperation f1(TransactionHandle tx) {
+        static TransactionOperation f1(TransactionHandle tx, void*) {
             if (content_put(tx, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation f2(TransactionHandle tx) {
+        static TransactionOperation f2(TransactionHandle tx, void*) {
             Slice s;
             if (content_get(tx, "a", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -67,7 +67,7 @@ TEST_F(FoedusApiTest, simple) {
             return TransactionOperation::COMMIT;
         }
     };
-//    EXPECT_EQ(transaction_exec(handle, &S::f1), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(handle, &S::f1), StatusCode::OK);
 //    EXPECT_EQ(transaction_exec(handle, &S::f2), StatusCode::OK);
     EXPECT_EQ(database_close(handle), StatusCode::OK);
 }

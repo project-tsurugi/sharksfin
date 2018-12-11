@@ -25,9 +25,13 @@
 #include "foedus/error_stack.hpp"
 #include "foedus/proc/proc_options.hpp"
 #include "foedus/proc/proc_manager.hpp"
+#include "foedus/thread/thread_pool.hpp"
+#include "foedus/error_code.hpp"
 
 namespace sharksfin {
 namespace foedus {
+
+char const* kProc = "foedusCallback";
 
 std::unique_ptr<::foedus::EngineOptions> make_engine_options() {
     ::foedus::EngineOptions options;
@@ -72,19 +76,38 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options() {
     return std::make_unique<::foedus::EngineOptions>(options);
 }
 
+struct Input {
+    TransactionCallback callback_;
+    void *arguments_;
+    Database* db_;
+    ::foedus::Engine* engine_;
+};
+
 ::foedus::ErrorStack foedusCallback(const ::foedus::proc::ProcArguments& arg) {
-    Database* ptr;
-    std::memcpy(&ptr, arg.input_buffer_, sizeof(Database*));
+    Input* ptr;
+    std::memcpy(&ptr, arg.input_buffer_, sizeof(Input*));
+    TransactionCallback callback(ptr->callback_);
+    auto tx = std::make_unique<foedus::Transaction>(ptr->db_, arg.context_, ptr->engine_);
+
+    FOEDUS_WRAP_ERROR_CODE(tx->begin());
+    auto status = callback(tx.get(), ptr->arguments_);
+    if (status == TransactionOperation::COMMIT) {
+        FOEDUS_WRAP_ERROR_CODE(tx->commit());
+    } else {
+        FOEDUS_WRAP_ERROR_CODE(tx->abort());
+        FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeXctUserAbort);
+    }
     return ::foedus::kRetOk;
 }
 
 Database::Database() noexcept {
     std::unique_ptr<::foedus::EngineOptions> engine_options { make_engine_options() };
     engine_ = std::make_unique<::foedus::Engine>(*engine_options);
-    engine_->get_proc_manager()->pre_register("foedusCallback", foedusCallback);
+    engine_->get_proc_manager()->pre_register(kProc, foedusCallback);
     ::foedus::ErrorStack e{engine_->initialize()};
-    if (!e.is_error()) {
-        //TODO
+    if (e.is_error()) {
+        std::cout << "*** failed to initialize engine ***" << e << std::endl;
+        return;
     }
     masstree_ = std::make_unique<::foedus::storage::masstree::MasstreeStorage>(engine_.get(), "db");
     ::foedus::storage::masstree::MasstreeMetadata meta("db");
@@ -94,31 +117,37 @@ Database::Database() noexcept {
                 ->create_storage(&meta, &create_epoch);
     }
 }
-void Database::shutdown() {
-    engine_->uninitialize();
+StatusCode Database::shutdown() {
+    return resolve(engine_->uninitialize());
 }
 
-std::unique_ptr<Transaction> Database::create_transaction() {
-//    auto id = transaction_id_sequence_.fetch_add(1U);
-    std::unique_ptr<::foedus::thread::Thread> context
-        { std::make_unique<::foedus::thread::Thread>(engine_.get(), (::foedus::thread::ThreadId)0, (::foedus::thread::ThreadGlobalOrdinal)0)}; // TODO
-    return std::make_unique<Transaction>(this, std::move(context), engine_.get());
+StatusCode Database::exec_transaction(
+    TransactionCallback callback,
+    void *arguments) {
+    Input in{callback, arguments, this, engine_.get()};
+    auto id = transaction_id_sequence_.fetch_add(1U);
+    (void)id;
+    Input* in_ptr = &in;
+    ::foedus::ErrorStack result = engine_->get_thread_pool()->impersonate_synchronous(kProc, &in_ptr, sizeof(Input*));
+    return resolve(result);
 }
 
-StatusCode Database::get(Slice key, std::string &buffer) {
+StatusCode Database::get(Transaction* tx, Slice key, std::string &buffer) {
+    (void)tx;
     (void)key;
     (void)buffer;
-//    leveldb::ReadOptions options;
-//    auto status = leveldb_->Get(options, resolve(key), &buffer);
+//    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
+//    ::foedus::storage::masstree::PayloadLength capacity;
+//    tree.get_record(tx->context(), key.data(), key.size(), buffer.data(), &capacity, false);
     return StatusCode::OK;
 }
 
-StatusCode Database::put(Slice key, Slice value) {
+StatusCode Database::put(Transaction* tx, Slice key, Slice value) {
+    (void)tx;
     (void)key;
     (void)value;
-//    leveldb::WriteOptions options;
-//    auto status = leveldb_->Put(options, resolve(key), resolve(value));
-//    return handle(status);
+//    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
+//    tree.insert_record(tx->context(), key.data(), key.size(), value.data(), value.size());
     return StatusCode::OK;
 }
 
@@ -153,6 +182,14 @@ std::unique_ptr<Iterator> Database::scan_range(
 //            begin_key, begin_exclusive,
 //            end_key, end_exclusive);
     return std::make_unique<Iterator>();
+}
+
+StatusCode Database::resolve(::foedus::ErrorStack const& result) {
+    if (!result.is_error()) {
+        return StatusCode::OK;
+    }
+    std::cout << "Foedus error : " << result << std::endl;
+    return StatusCode::ERR_UNKNOWN;
 }
 
 }  // namespace foedus

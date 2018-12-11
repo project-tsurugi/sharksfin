@@ -37,6 +37,16 @@ namespace foedus {
 class Transaction;
 class Iterator;
 
+//static const char* kStorageName = "sharksfin_tree";
+
+// due to namespace conflict, these macros are copied from foedus
+#define FOEDUS_ERROR_STACK(e) ::foedus::ErrorStack(__FILE__, __FUNCTION__, __LINE__, e)
+#define FOEDUS_WRAP_ERROR_CODE(x)\
+{\
+  ::foedus::ErrorCode __e = x;\
+  if (UNLIKELY(__e != ::foedus::kErrorCodeOk)) {return FOEDUS_ERROR_STACK(__e);}\
+}
+
 /**
  * @brief a foedus wrapper.
  */
@@ -44,20 +54,21 @@ class Database {
 public:
     /**
      * @brief constructs a new object.
-     * @param engine the t  foedus::storage::masstree::MasstreeMetadata meta("db");
      */
     Database() noexcept;
 
     /**
      * @brief shutdown this database.
      */
-    void shutdown();
+    StatusCode shutdown();
 
     /**
      * @brief creates a new transaction context.
      * @return the created transaction context
      */
-    std::unique_ptr<Transaction> create_transaction();
+    StatusCode exec_transaction(
+        TransactionCallback callback,
+        void *arguments);
 
     /**
      * @brief obtains an entry and write its value into the given buffer.
@@ -65,7 +76,7 @@ public:
      * @param buffer the destination buffer
      * @return the operation status
      */
-    StatusCode get(Slice key, std::string& buffer);
+    StatusCode get(Transaction* tx, Slice key, std::string& buffer);
 
     /**
      * @brief creates or overwrites an entry.
@@ -73,7 +84,7 @@ public:
      * @param value the entry value
      * @return the operation status
      */
-    StatusCode put(Slice key, Slice value);
+    StatusCode put(Transaction* tx, Slice key, Slice value);
 
     /**
      * @brief removes an entry.
@@ -105,9 +116,13 @@ public:
             Slice begin_key, bool begin_exclusive,
             Slice end_key, bool end_exclusive);
 
+
+    StatusCode resolve(::foedus::ErrorStack const& result);
+
 private:
     std::unique_ptr<::foedus::storage::masstree::MasstreeStorage> masstree_;
     std::unique_ptr<::foedus::Engine> engine_;
+    std::atomic_size_t transaction_id_sequence_ = { 1U };
 };
 
 }  // namespace foedus

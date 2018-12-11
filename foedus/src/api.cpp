@@ -53,13 +53,12 @@ StatusCode database_open(
     if (options.open_mode() == DatabaseOptions::OpenMode::CREATE_OR_RESTORE) {
         //TODO
     }
-    return StatusCode::OK; // TODO resolve to status code
+    return StatusCode::OK;
 }
 
 StatusCode database_close(DatabaseHandle handle) {
     auto db = unwrap_database(handle);
-    db->shutdown(); // TODO error handling
-    return StatusCode::OK;
+    return db->shutdown();
 }
 
 StatusCode database_dispose(DatabaseHandle handle) {
@@ -71,36 +70,38 @@ StatusCode database_dispose(DatabaseHandle handle) {
 StatusCode transaction_exec(
         DatabaseHandle handle,
         TransactionCallback callback,
-		        void *arguments) {
+        void *arguments) {
     auto database = unwrap_database(handle);
-    auto tx = database->create_transaction();
-    tx->begin();
-    auto status = callback(tx.get(), arguments);
-    if (status == TransactionOperation::COMMIT) {
-        tx->commit();
-    }
-    return StatusCode::ERR_UNSUPPORTED;
+    return database->exec_transaction(callback, arguments);
 }
 
 StatusCode content_get(
-        TransactionHandle handle,
-        Slice key,
-        Slice* result) {
-    (void)handle;
-    (void)key;
-    (void)result;
-    (void)unwrap_transaction(handle);
-    return StatusCode::OK;
+    TransactionHandle handle,
+    Slice key,
+    Slice* result) {
+    auto tx = unwrap_transaction(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto& buffer = tx->buffer();
+    auto status = database->get(tx, key, buffer);
+    if (status == StatusCode::OK) {
+        *result = buffer;
+    }
+    return status;
 }
 
 StatusCode content_put(
-        TransactionHandle handle,
-        Slice key,
-        Slice value) {
-    (void)handle;
-    (void)key;
-    (void)value;
-    return StatusCode::OK;
+    TransactionHandle handle,
+    Slice key,
+    Slice value) {
+    auto tx = unwrap_transaction(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    return database->put(tx, key, value);
 }
 
 StatusCode content_delete(
