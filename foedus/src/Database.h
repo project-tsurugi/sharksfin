@@ -46,16 +46,7 @@ public:
      * @brief constructs a new object.
      * @param engine the t  foedus::storage::masstree::MasstreeMetadata meta("db");
      */
-    inline Database(std::unique_ptr<::foedus::Engine> engine) noexcept
-        : engine_(std::move(engine)) {
-        masstree_ = std::make_unique<::foedus::storage::masstree::MasstreeStorage>(engine_.get(), "db");
-        ::foedus::storage::masstree::MasstreeMetadata meta("db");
-        if (!engine_->get_storage_manager()->get_pimpl()->exists("db")) {
-            ::foedus::Epoch create_epoch;
-            engine_->get_storage_manager()
-                    ->create_storage(&meta, &create_epoch);
-        }
-    }
+    Database() noexcept;
 
     /**
      * @brief shutdown this database.

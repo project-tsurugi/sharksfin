@@ -38,52 +38,11 @@ static inline foedus::Iterator* unwrap_iterator(IteratorHandle handle) {
     return reinterpret_cast< foedus::Iterator*>(handle);  // NOLINT
 }
 
-std::unique_ptr<::foedus::EngineOptions> make_engine_options() {
-    ::foedus::EngineOptions options;
-    options.debugging_.debug_log_min_threshold_ =
-        ::foedus::debugging::DebuggingOptions::kDebugLogError;
-    options.memory_.use_numa_alloc_ = true;
-    options.memory_.page_pool_size_mb_per_node_ = 32;
-    options.memory_.private_page_pool_initial_grab_ = 8;
-
-    std::string path = "./";
-    if (path[path.size() - 1] != '/') {
-        path += "/";
-    }
-    const std::string snapshot_folder_path_pattern = path + "snapshot/node_$NODE$";
-    options.snapshot_.folder_path_pattern_ = snapshot_folder_path_pattern.c_str();
-    const std::string log_folder_path_pattern = path + "log/node_$NODE$/logger_$LOGGER$";
-    options.log_.folder_path_pattern_ = log_folder_path_pattern.c_str();
-
-    int threads = 1;
-    const int cpus = numa_num_task_cpus();
-    const int use_nodes = (threads - 1) / cpus + 1;
-    const int threads_per_node = (threads + (use_nodes - 1)) / use_nodes;
-
-    options.thread_.group_count_ = (uint16_t) use_nodes;
-    options.thread_.thread_count_per_group_ = (::foedus::thread::ThreadLocalOrdinal) threads_per_node;
-
-    options.log_.log_buffer_kb_ = 512;
-    options.log_.flush_at_shutdown_ = true;
-
-    options.cache_.snapshot_cache_size_mb_per_node_ = 2;
-    options.cache_.private_snapshot_cache_initial_grab_ = 16;
-
-    options.xct_.max_write_set_size_ = 4096;
-
-    options.snapshot_.log_mapper_io_buffer_mb_ = 2;
-    options.snapshot_.log_reducer_buffer_mb_ = 2;
-    options.snapshot_.log_reducer_dump_io_buffer_mb_ = 4;
-    options.snapshot_.snapshot_writer_page_pool_size_mb_ = 4;
-    options.snapshot_.snapshot_writer_intermediate_pool_size_mb_ = 2;
-    options.storage_.max_storages_ = 128;
-
-    return std::make_unique<::foedus::EngineOptions>(options);
-}
 
 StatusCode database_open(
         DatabaseOptions const& options,
         DatabaseHandle* result) {
+    *result = new foedus::Database();
 
     // TODO how to specify location with foedus
     //    auto location = options.attribute(KEY_LOCATION);
@@ -91,18 +50,10 @@ StatusCode database_open(
     //        return StatusCode::ERR_INVALID_ARGUMENT;
     //    }
 
-    std::unique_ptr<::foedus::EngineOptions> engine_options { make_engine_options() };
     if (options.open_mode() == DatabaseOptions::OpenMode::CREATE_OR_RESTORE) {
         //TODO
     }
-    auto engine = std::make_unique<::foedus::Engine>(*engine_options);
-    ::foedus::ErrorStack e{engine->initialize()};
-    if (!e.is_error()) {
-        auto db = std::make_unique<foedus::Database>(std::move(engine));
-        *result = db.release();
-        return StatusCode::OK;
-    }
-    return StatusCode::ERR_UNKNOWN; // TODO resolve to status code
+    return StatusCode::OK; // TODO resolve to status code
 }
 
 StatusCode database_close(DatabaseHandle handle) {
@@ -112,7 +63,8 @@ StatusCode database_close(DatabaseHandle handle) {
 }
 
 StatusCode database_dispose(DatabaseHandle handle) {
-    (void)handle;
+    auto db = unwrap_database(handle);
+    delete db;
     return StatusCode::OK;
 }
 
