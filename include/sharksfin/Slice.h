@@ -18,7 +18,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -45,19 +44,17 @@ public:
      * @param pointer the pointer where this slice starts
      * @param size the number of slice size in bytes
      */
-    inline constexpr Slice(  // NOLINT
-            void const* pointer,
-            std::size_t size) noexcept
+    inline constexpr Slice(void const* pointer, std::size_t size) noexcept
         : data_(pointer)
         , size_(size)
     {}
 
     /**
      * @brief constructs a new object.
-     * @param pointer the null-terminated string
+     * @param pointer C-style string
      */
-    inline Slice(char const* pointer) noexcept  // NOLINT
-        : Slice(pointer, strlen(pointer))
+    inline constexpr Slice(std::string::value_type const* string) noexcept  // NOLINT
+        : Slice(string, std::char_traits<std::string::value_type>::length(string))
     {}
 
     /**
@@ -198,7 +195,7 @@ public:
      * @return true if this slice has any contents
      * @return false if this slice is empty
      */
-    explicit inline operator bool() const {
+    explicit inline constexpr operator bool() const {
         return !empty();
     }
 
@@ -207,7 +204,7 @@ public:
      * @return true if this slice is empty
      * @return false if this slice has any contents
      */
-    inline bool operator!() const {
+    inline bool constexpr operator!() const {
         return !static_cast<bool>(*this);
     }
 

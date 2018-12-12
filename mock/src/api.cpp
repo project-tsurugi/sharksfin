@@ -24,10 +24,12 @@
 
 namespace sharksfin {
 
+using namespace std::literals::string_view_literals;
+
 /**
  * @brief the attribute key of database location on filesystem.
  */
-static constexpr std::string_view KEY_LOCATION { "location" };  // NOLINT
+static constexpr auto KEY_LOCATION = "location"sv;
 
 static inline DatabaseHandle wrap(mock::Database* object) {
     return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
