@@ -11,6 +11,7 @@ fuchsia-*,\
 -fuchsia-overloaded-operator,\
 google-*,\
 -google-build-using-namespace,\
+-google-readability-todo,\
 -google-runtime-references,\
 hicpp-*,\
 -hicpp-braces-around-statements,\
