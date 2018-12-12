@@ -33,6 +33,8 @@
 
 namespace sharksfin {
 
+static const std::string KEY_LOCATION { "location" };  // NOLINT
+
 class Closer {
 public:
     Closer(std::function<void()>&& closer) : closer_(std::move(closer)) {}

@@ -24,7 +24,6 @@
 
 namespace sharksfin {
 
-static const std::string KEY_LOCATION { "location" };  // NOLINT
 
 static inline foedus::Database* unwrap_database(DatabaseHandle handle) {
     return reinterpret_cast< foedus::Database*>(handle);  // NOLINT
@@ -42,13 +41,8 @@ static inline foedus::Iterator* unwrap_iterator(IteratorHandle handle) {
 StatusCode database_open(
         DatabaseOptions const& options,
         DatabaseHandle* result) {
-    *result = new foedus::Database();
+    *result = new foedus::Database(options);
 
-    // TODO how to specify location with foedus
-    //    auto location = options.attribute(KEY_LOCATION);
-    //    if (!location.has_value()) {
-    //        return StatusCode::ERR_INVALID_ARGUMENT;
-    //    }
 
     if (options.open_mode() == DatabaseOptions::OpenMode::CREATE_OR_RESTORE) {
         //TODO

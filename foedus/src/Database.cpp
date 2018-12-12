@@ -32,8 +32,10 @@ namespace sharksfin {
 namespace foedus {
 
 char const* kProc = "foedusCallback";
+//static const char* kStorageName = "sharksfin_tree";
+static const std::string KEY_LOCATION { "location" };  // NOLINT
 
-std::unique_ptr<::foedus::EngineOptions> make_engine_options() {
+std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions const& dboptions) {
     ::foedus::EngineOptions options;
     options.debugging_.debug_log_min_threshold_ =
         ::foedus::debugging::DebuggingOptions::kDebugLogError;
@@ -41,14 +43,20 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options() {
     options.memory_.page_pool_size_mb_per_node_ = 32;
     options.memory_.private_page_pool_initial_grab_ = 8;
 
-    std::string path = "./";
+    std::string path = "./foedus.out/";
+    auto location = dboptions.attribute(KEY_LOCATION);
+    if (location.has_value()) {
+        path = location.value();
+    }
     if (path[path.size() - 1] != '/') {
         path += "/";
     }
-    const std::string snapshot_folder_path_pattern = path + "snapshot/node_$NODE$";
+    const std::string snapshot_folder_path_pattern = path + "snapshotsj/node_$NODE$";
     options.snapshot_.folder_path_pattern_ = snapshot_folder_path_pattern.c_str();
-    const std::string log_folder_path_pattern = path + "log/node_$NODE$/logger_$LOGGER$";
+    const std::string log_folder_path_pattern = path + "logs/node_$NODE$/logger_$LOGGER$";
     options.log_.folder_path_pattern_ = log_folder_path_pattern.c_str();
+    const std::string savepoint_path = path + "savepoint.xml";
+    options.savepoint_.savepoint_path_ = savepoint_path.c_str();
 
     int threads = 1;
     const int cpus = numa_num_task_cpus();
@@ -100,8 +108,8 @@ struct Input {
     return ::foedus::kRetOk;
 }
 
-Database::Database() noexcept {
-    std::unique_ptr<::foedus::EngineOptions> engine_options { make_engine_options() };
+Database::Database(DatabaseOptions const& options) noexcept {
+    std::unique_ptr<::foedus::EngineOptions> engine_options { make_engine_options(options) };
     engine_ = std::make_unique<::foedus::Engine>(*engine_options);
     engine_->get_proc_manager()->pre_register(kProc, foedusCallback);
     ::foedus::ErrorStack e{engine_->initialize()};

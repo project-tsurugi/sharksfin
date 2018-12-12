@@ -37,7 +37,6 @@ namespace foedus {
 class Transaction;
 class Iterator;
 
-//static const char* kStorageName = "sharksfin_tree";
 
 // due to namespace conflict, these macros are copied from foedus
 #define FOEDUS_ERROR_STACK(e) ::foedus::ErrorStack(__FILE__, __FUNCTION__, __LINE__, e)
@@ -55,7 +54,7 @@ public:
     /**
      * @brief constructs a new object.
      */
-    Database() noexcept;
+    Database(DatabaseOptions const& options) noexcept;
 
     /**
      * @brief shutdown this database.
