@@ -33,8 +33,6 @@
 
 namespace sharksfin {
 
-static const std::string KEY_LOCATION { "location" };  // NOLINT
-
 class Closer {
 public:
     Closer(std::function<void()>&& closer) : closer_(std::move(closer)) {}
@@ -53,14 +51,14 @@ TEST_F(FoedusApiTest, simple) {
 
     struct S {
         static TransactionOperation f1(TransactionHandle tx, void*) {
-            if (content_put(tx, "a", "A") != StatusCode::OK) {
+            if (content_put(tx, "key1", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
         static TransactionOperation f2(TransactionHandle tx, void*) {
             Slice s;
-            if (content_get(tx, "a", &s) != StatusCode::OK) {
+            if (content_get(tx, "key1", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             if (s != "A") {

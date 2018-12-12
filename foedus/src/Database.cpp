@@ -32,7 +32,7 @@ namespace sharksfin {
 namespace foedus {
 
 char const* kProc = "foedusCallback";
-//static const char* kStorageName = "sharksfin_tree";
+static const char* kStorageName = "sharksfin_tree";
 static const std::string KEY_LOCATION { "location" };  // NOLINT
 
 std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions const& dboptions) {
@@ -51,7 +51,7 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     if (path[path.size() - 1] != '/') {
         path += "/";
     }
-    const std::string snapshot_folder_path_pattern = path + "snapshotsj/node_$NODE$";
+    const std::string snapshot_folder_path_pattern = path + "snapshots/node_$NODE$";
     options.snapshot_.folder_path_pattern_ = snapshot_folder_path_pattern.c_str();
     const std::string log_folder_path_pattern = path + "logs/node_$NODE$/logger_$LOGGER$";
     options.log_.folder_path_pattern_ = log_folder_path_pattern.c_str();
@@ -117,9 +117,9 @@ Database::Database(DatabaseOptions const& options) noexcept {
         std::cout << "*** failed to initialize engine ***" << e << std::endl;
         return;
     }
-    masstree_ = std::make_unique<::foedus::storage::masstree::MasstreeStorage>(engine_.get(), "db");
-    ::foedus::storage::masstree::MasstreeMetadata meta("db");
-    if (!engine_->get_storage_manager()->get_pimpl()->exists("db")) {
+    masstree_ = std::make_unique<::foedus::storage::masstree::MasstreeStorage>(engine_.get(), kStorageName);
+    ::foedus::storage::masstree::MasstreeMetadata meta(kStorageName);
+    if (!engine_->get_storage_manager()->get_pimpl()->exists(kStorageName)) {
         ::foedus::Epoch create_epoch;
         engine_->get_storage_manager()
                 ->create_storage(&meta, &create_epoch);
@@ -144,19 +144,14 @@ StatusCode Database::get(Transaction* tx, Slice key, std::string &buffer) {
     (void)tx;
     (void)key;
     (void)buffer;
-//    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-//    ::foedus::storage::masstree::PayloadLength capacity;
-//    tree.get_record(tx->context(), key.data(), key.size(), buffer.data(), &capacity, false);
-    return StatusCode::OK;
+    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
+    ::foedus::storage::masstree::PayloadLength capacity;
+    return resolve(tree.get_record(tx->context(), key.data(), key.size(), buffer.data(), &capacity, false));
 }
 
 StatusCode Database::put(Transaction* tx, Slice key, Slice value) {
-    (void)tx;
-    (void)key;
-    (void)value;
-//    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-//    tree.insert_record(tx->context(), key.data(), key.size(), value.data(), value.size());
-    return StatusCode::OK;
+    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
+    return resolve(tree.insert_record(tx->context(), key.data(), key.size(), value.data(), value.size()));
 }
 
 StatusCode Database::remove(Slice key) {
@@ -200,5 +195,11 @@ StatusCode Database::resolve(::foedus::ErrorStack const& result) {
     return StatusCode::ERR_UNKNOWN;
 }
 
+StatusCode Database::resolve(::foedus::ErrorCode const& code) {
+    if (code != ::foedus::kErrorCodeOk) {
+        return resolve(FOEDUS_ERROR_STACK(code));
+    }
+    return StatusCode::OK;
+}
 }  // namespace foedus
 }  // namespace sharksfin

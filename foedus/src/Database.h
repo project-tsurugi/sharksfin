@@ -117,7 +117,7 @@ public:
 
 
     StatusCode resolve(::foedus::ErrorStack const& result);
-
+    StatusCode resolve(::foedus::ErrorCode const& code);
 private:
     std::unique_ptr<::foedus::storage::masstree::MasstreeStorage> masstree_;
     std::unique_ptr<::foedus::Engine> engine_;
