@@ -31,22 +31,24 @@ namespace sharksfin {
  */
 class Slice final {
 private:
-    std::byte const* data_ = nullptr;
+    void const* data_ = nullptr;
     std::size_t size_ = 0U;
 
 public:
     /**
      * @brief constructs a new empty object.
      */
-    inline Slice() noexcept {}
+    inline constexpr Slice() noexcept = default;
 
     /**
      * @brief constructs a new object.
      * @param pointer the pointer where this slice starts
      * @param size the number of slice size in bytes
      */
-    inline Slice(void const* pointer, std::size_t size) noexcept
-        : data_(reinterpret_cast<std::byte const*>(pointer))  // NOLINT
+    inline constexpr Slice(  // NOLINT
+            void const* pointer,
+            std::size_t size) noexcept
+        : data_(pointer)
         , size_(size)
     {}
 
@@ -54,9 +56,8 @@ public:
      * @brief constructs a new object.
      * @param pointer the null-terminated string
      */
-    inline Slice(char const* pointer) noexcept
-        : data_(reinterpret_cast<std::byte const*>(pointer))  // NOLINT
-        , size_(strlen(pointer))
+    inline Slice(char const* pointer) noexcept  // NOLINT
+        : Slice(pointer, strlen(pointer))
     {}
 
     /**
@@ -64,34 +65,24 @@ public:
      * If the source string was changed, then this slice may not point valid range.
      * @param string the source string
      */
-    inline Slice(std::string const& string) noexcept
-        : data_(reinterpret_cast<std::byte const*>(string.data()))  // NOLINT
-        , size_(string.length())
+    inline Slice(std::string const& string) noexcept  // NOLINT
+        : Slice(string.data(), string.length())
     {}
 
     /**
      * @brief constructs a new object.
      * @param string the source string
      */
-    inline Slice(std::string_view string) noexcept
-        : data_(reinterpret_cast<std::byte const*>(string.data()))  // NOLINT
-        , size_(string.length())
+    inline constexpr Slice(std::string_view string) noexcept  // NOLINT
+        : Slice(string.data(), string.length())
     {}
-
-    /**
-     * @brief returns the base pointer of this slice.
-     * @return a pointer which points the beginning of this slice
-     */
-    inline std::byte const* data() const {
-        return data_;
-    }
 
     /**
      * @brief returns the base pointer of this slice.
      * @tparam T the content type
      * @return a pointer which points the beginning of this slice
      */
-    template<class T>
+    template<class T = std::byte>
     inline T const* data() const {
         return reinterpret_cast<T const*>(data_);  // NOLINT
     }
@@ -100,7 +91,7 @@ public:
      * @brief returns the byte size of this slice.
      * @return the number of slice size in bytes
      */
-    inline std::size_t size() const {
+    inline constexpr std::size_t size() const {
         return size_;
     }
 
@@ -109,17 +100,8 @@ public:
      * @return true if this slice is empty
      * @return false if this slice is not empty
      */
-    inline bool empty() const {
+    inline constexpr bool empty() const {
         return size_ == 0;
-    }
-
-    /**
-     * @brief returns a content of this slice.
-     * @param offset the content offset from beginning of the slice, must be <= size() - 1
-     * @return a content of the slice
-     */
-    inline std::byte const& at(std::size_t offset) const {
-        return data_[offset];
     }
 
     /**
@@ -128,9 +110,9 @@ public:
      * @param offset the content offset (in bytes) from beginning of the slice, must be <= size() - sizeof(T)
      * @return a content of the slice
      */
-    template<class T>
+    template<class T = std::byte>
     inline T const& at(std::size_t offset) const {
-        return *reinterpret_cast<T const*>(&data_[offset]);  // NOLINT
+        return *reinterpret_cast<T const*>(&data<std::byte>()[offset]);  // NOLINT
     }
 
     /**
@@ -305,11 +287,11 @@ public:
      * @return the output stream
      */
     inline friend std::ostream& operator<<(std::ostream& out, Slice const& value) {
-        out << "Slice("
+        return out
+            << "Slice("
             << "size=" << value.size()
             << ")"
             ;
-        return out;
     }
 };
 
