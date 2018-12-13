@@ -75,7 +75,7 @@
   * `Slice`
     * メモリの特定範囲を表すクラス
     * 以下の特性により、compatibleなstructをLLVM (JIT)から作れば操作できる
-      * standard layout - `{ std::byte*, std::size_t }`
+      * standard layout - `{ void const*, std::size_t }`
       * trivially constructible
       * trivially copyable
       * trivially destructible
@@ -144,11 +144,13 @@
   * `content_scan_range`
     * 指定のキー範囲を反復するイテレータハンドルを返す
 * 備考
+  * ここでの引数は `TransactionHandle`, `StorageHandle` のペア
+    * スレッド安全性は `TransactionHandle` が確保する想定
   * `Slice` を返すだけでなく、 `std::string` に書き出す仕組みがあっても良いかもしれない
     * in-memory db なのでできるだけゼロコピーでやりたい、という気持ちから現在はこの形
-  * TBD: スレッド安全性
   * TBD: `put` は `insert`, `update`, `insert or update` を区別できるようにするか
     * `get` -> `put` で同等の操作が可能
+  * TBD: `get`, `put` はペイドードの一部を参照、更新できるようにするか
 
 ### iterator_*
 
@@ -168,4 +170,7 @@
   * イテレータを作成後にデータベースの内容が変わっても、そのイテレータは正しく動作する
     * 例えば、 `iterator_get_key` の結果を `content_delete` しても `iterator_next` は正しく現在の次の値を返す
     * 場合によっては `iterator_{put, delete}` を用意し、それのみ許すというのはありそう
+  * TBD: `iterator_skip` を利用するか
   * TBD: スレッド安全性
+    * イテレータに関してはスレッド安全性を確保しなくてもよいか
+    * イテレータを作成する箇所だけスレッド安全であれば、API的には十分に見える
