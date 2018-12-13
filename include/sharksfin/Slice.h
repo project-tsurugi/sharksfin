@@ -54,7 +54,7 @@ public:
      * @param pointer C-style string
      */
     inline constexpr Slice(std::string::value_type const* string) noexcept  // NOLINT
-        : Slice(string, std::char_traits<std::string::value_type>::length(string))
+        : Slice(string, std::string::traits_type::length(string))
     {}
 
     /**
