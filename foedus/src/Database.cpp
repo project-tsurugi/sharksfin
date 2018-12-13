@@ -141,11 +141,9 @@ StatusCode Database::exec_transaction(
 }
 
 StatusCode Database::get(Transaction* tx, Slice key, std::string &buffer) {
-    (void)tx;
-    (void)key;
-    (void)buffer;
     ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
     ::foedus::storage::masstree::PayloadLength capacity = buffer.capacity();
+    buffer.resize(buffer.capacity()); // set length long enough otherwise calling resize() again accidentally fills nulls
     auto ret = resolve(tree.get_record(tx->context(), key.data(), key.size(), buffer.data(), &capacity, false));
     buffer.resize(capacity);
     return ret;
