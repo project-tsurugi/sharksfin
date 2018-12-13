@@ -4,7 +4,48 @@ pipeline {
         docker {
             image 'nautilus/oltp-sandbox'
             label 'docker'
+            args '--privileged --ulimit memlock=-1:-1 --ulimit nofile=655360:655360 --ulimit nproc=655360:655360 --ulimit rtprio=99:99 --sysctl kernel.shmmax=9223372036854775807 --sysctl kernel.shmall=1152921504606846720 --sysctl kernel.shmmni=409600'
         }
+    }
+    environment {
+        BUILD_PARALLEL_NUM="8"
+    }
+    stages {
+        stage ('Prepare env') {
+            steps {
+                sh '''
+                    ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
+                    ssh-keyscan -t rsa asakusa-private-repos >> ~/.ssh/known_hosts
+                '''
+            }
+        }
+        stage ('checkout master') {
+            steps {
+                checkout scm
+                sh '''
+                    git clean -dfx
+                    git submodule update --init --recursive
+                '''
+            }
+        }
+        stage ('Install shakujo-front') {
+            steps {
+                sh '''
+                    mkdir ${WORKSPACE}/.local
+                    cd third_party/shakujo-front
+                    git log -n 1 --format=%H
+                    # git clean -dfx
+                    mkdir -p build
+                    cd build
+                    # clean up cache variables from previous build
+                    rm -f CMakeCache.txt
+                    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=${WORKSPACE}/.local ..
+                    make all install -j${BUILD_PARALLEL_NUM}
+                '''
+            }
+        }
+        stage ('Install foedus') {
+            steps {
     }
     environment {
         GITHUB_URL = 'https://github.com/project-tsurugi/sharksfin'
