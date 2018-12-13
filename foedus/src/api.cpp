@@ -42,8 +42,6 @@ StatusCode database_open(
         DatabaseOptions const& options,
         DatabaseHandle* result) {
     *result = new foedus::Database(options);
-
-
     if (options.open_mode() == DatabaseOptions::OpenMode::CREATE_OR_RESTORE) {
         //TODO
     }

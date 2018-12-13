@@ -38,7 +38,7 @@ static const std::string KEY_LOCATION { "location" };  // NOLINT
 std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions const& dboptions) {
     ::foedus::EngineOptions options;
     options.debugging_.debug_log_min_threshold_ =
-        ::foedus::debugging::DebuggingOptions::kDebugLogInfo;
+        ::foedus::debugging::DebuggingOptions::kDebugLogWarning;
     options.memory_.use_numa_alloc_ = true;
     options.memory_.page_pool_size_mb_per_node_ = 32;
     options.memory_.private_page_pool_initial_grab_ = 8;
@@ -63,8 +63,8 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     const int use_nodes = (threads - 1) / cpus + 1;
     const int threads_per_node = (threads + (use_nodes - 1)) / use_nodes;
 
-    options.thread_.group_count_ = (uint16_t) use_nodes;
-    options.thread_.thread_count_per_group_ = (::foedus::thread::ThreadLocalOrdinal) threads_per_node;
+    options.thread_.group_count_ = static_cast<uint16_t>(use_nodes);
+    options.thread_.thread_count_per_group_ = static_cast<::foedus::thread::ThreadLocalOrdinal>(threads_per_node);
 
     options.log_.log_buffer_kb_ = 512;
     options.log_.flush_at_shutdown_ = true;
@@ -96,14 +96,13 @@ struct Input {
     std::memcpy(&ptr, arg.input_buffer_, sizeof(Input*));
     TransactionCallback callback(ptr->callback_);
     auto tx = std::make_unique<foedus::Transaction>(ptr->db_, arg.context_, ptr->engine_);
-
-    FOEDUS_WRAP_ERROR_CODE(tx->begin());
+    FOEDUS_WRAP_ERROR_CODE(tx->begin());  //NOLINT
     auto status = callback(tx.get(), ptr->arguments_);
     if (status == TransactionOperation::COMMIT) {
-        FOEDUS_WRAP_ERROR_CODE(tx->commit());
+        FOEDUS_WRAP_ERROR_CODE(tx->commit());  //NOLINT
     } else {
-        FOEDUS_WRAP_ERROR_CODE(tx->abort());
-        FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeXctUserAbort);
+        FOEDUS_WRAP_ERROR_CODE(tx->abort());  //NOLINT
+        FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeXctUserAbort);  //NOLINT
     }
     return ::foedus::kRetOk;
 }
@@ -151,7 +150,7 @@ StatusCode Database::get(Transaction* tx, Slice key, std::string &buffer) {
 
 StatusCode Database::put(Transaction* tx, Slice key, Slice value) {
     ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    return resolve(tree.insert_record(tx->context(), key.data(), key.size(), value.data(), value.size()));
+    return resolve(tree.upsert_record(tx->context(), key.data(), key.size(), value.data(), value.size()));
 }
 
 StatusCode Database::remove(Slice key) {
@@ -197,7 +196,7 @@ StatusCode Database::resolve(::foedus::ErrorStack const& result) {
 
 StatusCode Database::resolve(::foedus::ErrorCode const& code) {
     if (code != ::foedus::kErrorCodeOk) {
-        return resolve(FOEDUS_ERROR_STACK(code));
+        return resolve(FOEDUS_ERROR_STACK(code));  //NOLINT
     }
     return StatusCode::OK;
 }

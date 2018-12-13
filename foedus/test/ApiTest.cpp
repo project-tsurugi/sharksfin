@@ -67,7 +67,7 @@ TEST_F(FoedusApiTest, simple) {
             return TransactionOperation::COMMIT;
         }
     };
-//    EXPECT_EQ(transaction_exec(handle, &S::f1), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(handle, &S::f1), StatusCode::OK);
     EXPECT_EQ(transaction_exec(handle, &S::f2), StatusCode::OK);
     EXPECT_EQ(database_close(handle), StatusCode::OK);
 }

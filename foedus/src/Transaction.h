@@ -60,7 +60,6 @@ public:
     }
 
     inline ::foedus::ErrorCode commit() {
-        std::cout << "FOEDUS commit" << std::endl;
         auto* xct_manager = engine_->get_xct_manager();
         ::foedus::Epoch commit_epoch;
         auto ret = xct_manager->precommit_xct(context_, &commit_epoch);
@@ -76,7 +75,6 @@ public:
     }
 
     inline ::foedus::ErrorCode abort() {
-        std::cout << "FOEDUS abort" << std::endl;
         auto* xct_manager = engine_->get_xct_manager();
         auto ret = xct_manager->abort_xct(context_);
         if (ret != ::foedus::kErrorCodeOk) {
