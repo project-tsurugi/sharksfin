@@ -53,7 +53,7 @@ public:
     /**
      * @brief constructs a new object.
      */
-    Database(DatabaseOptions const& options) noexcept;
+    explicit Database(DatabaseOptions const& options) noexcept;
 
     /**
      * @brief shutdown this database.

@@ -32,7 +32,7 @@ pipeline {
                 sh '''
                     mkdir build
                     cd build
-                    cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+                    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_FOEDUS_BRIDGE=ON -DENABLE_COVERAGE=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
                     make all -j${BUILD_PARALLEL_NUM}
                 '''
             }

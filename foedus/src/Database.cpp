@@ -141,21 +141,26 @@ StatusCode Database::exec_transaction(
 
 StatusCode Database::get(Transaction* tx, Slice key, std::string &buffer) {
     ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    ::foedus::storage::masstree::PayloadLength capacity = buffer.capacity();
+    auto capacity = static_cast<::foedus::storage::masstree::PayloadLength>(buffer.capacity());
     buffer.resize(buffer.capacity()); // set length long enough otherwise calling resize() again accidentally fills nulls
-    auto ret = resolve(tree.get_record(tx->context(), key.data(), key.size(), buffer.data(), &capacity, false));
+    auto ret = resolve(tree.get_record(tx->context(),
+        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
+        buffer.data(), &capacity, false));
     buffer.resize(capacity);
     return ret;
 }
 
 StatusCode Database::put(Transaction* tx, Slice key, Slice value) {
     ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    return resolve(tree.upsert_record(tx->context(), key.data(), key.size(), value.data(), value.size()));
+    return resolve(tree.upsert_record(tx->context(),
+        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
+        value.data(), static_cast<::foedus::storage::masstree::PayloadLength>(value.size())));
 }
 
 StatusCode Database::remove(Transaction* tx, Slice key) {
     ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    return resolve(tree.delete_record(tx->context(), key.data(), key.size()));
+    return resolve(tree.delete_record(tx->context(),
+        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size())));
 }
 
 std::unique_ptr<Iterator> Database::scan_prefix(Transaction* tx, Slice prefix_key) {

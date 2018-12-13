@@ -56,7 +56,7 @@ StatusCode database_close(DatabaseHandle handle) {
 
 StatusCode database_dispose(DatabaseHandle handle) {
     auto db = unwrap_database(handle);
-    delete db;
+    delete db; // NOLINT
     return StatusCode::OK;
 }
 
@@ -167,7 +167,7 @@ StatusCode iterator_get_value(
 StatusCode iterator_dispose(
         IteratorHandle handle) {
     auto iter = unwrap_iterator(handle);
-    delete iter;
+    delete iter;  // NOLINT
     return StatusCode::OK;
 }
 }  // namespace sharksfin

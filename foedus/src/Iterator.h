@@ -36,7 +36,8 @@ public:
         BODY,
         SAW_EOF,
     };
-    inline Iterator(::foedus::storage::masstree::MasstreeStorage storage,
+
+    inline Iterator(::foedus::storage::masstree::MasstreeStorage const& storage,
              ::foedus::thread::Thread* context,
              Slice begin_key, bool begin_exclusive,
              Slice end_key, bool end_exclusive
@@ -53,7 +54,7 @@ public:
         }
     }
 
-    StatusCode next() {
+    inline StatusCode next() {
         if (state_ == State::INIT) {
             // do nothing for init
             state_ = test();
@@ -77,6 +78,7 @@ public:
         }
         return State::SAW_EOF;
     }
+
     inline Slice key() {
         buffer_.assign(cursor_.get_combined_key());
         return Slice(buffer_);
