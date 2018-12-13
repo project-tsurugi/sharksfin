@@ -21,8 +21,7 @@
 #include "Iterator.h"
 #include "TransactionLock.h"
 
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 class DatabaseTest : public testing::TestRoot {
 public:
@@ -125,5 +124,4 @@ TEST_F(DatabaseTest, lifecycle) {
     ASSERT_FALSE(db.is_alive());
 }
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock

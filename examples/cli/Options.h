@@ -22,8 +22,7 @@
 
 #include "command.h"
 
-namespace sharksfin {
-namespace cli {
+namespace sharksfin::cli {
 
 struct Options {
     struct Command {
@@ -91,7 +90,6 @@ struct Options {
     std::vector<Command> commands;
 };
 
-}  // namespace cli
-}  // namespace sharksfin
+}  // namespace sharksfin::cli
 
 #endif  // SHARKSFIN_CLI_OPTIONS_H_

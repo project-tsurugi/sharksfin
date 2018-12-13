@@ -25,9 +25,7 @@
 #include "leveldb/db.h"
 #include "leveldb/slice.h"
 
-
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 /**
  * @brief a storage identifier.
@@ -148,8 +146,6 @@ private:
     }
 };
 
-
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock
 
 #endif  // SHARKSFIN_MOCK_STORAGE_H_

@@ -21,8 +21,7 @@
 #include "Iterator.h"
 #include "TransactionLock.h"
 
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 class StorageTest : public testing::TestRoot {
 public:
@@ -154,5 +153,4 @@ TEST_F(StorageTest, scan_range_exclusive) {
     ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
 }
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock

@@ -51,7 +51,7 @@ public:
 
     /**
      * @brief constructs a new object.
-     * @param pointer C-style string
+     * @param string C-style string
      */
     inline constexpr Slice(std::string::value_type const* string) noexcept  // NOLINT
         : Slice(string, std::string::traits_type::length(string))

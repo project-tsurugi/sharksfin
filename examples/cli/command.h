@@ -22,8 +22,7 @@
 
 #include "sharksfin/api.h"
 
-namespace sharksfin {
-namespace cli {
+namespace sharksfin::cli {
 
 using CommandFunction = std::add_pointer_t<void(TransactionHandle, StorageHandle, std::vector<std::string> const&)>;
 
@@ -40,7 +39,6 @@ void put(TransactionHandle tx, StorageHandle storage, std::vector<std::string> c
 void remove(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
 void scan(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
 
-}  // namespace cli
-}  // namespace sharksfin
+}  // namespace sharksfin::cli
 
 #endif  // SHARKSFIN_CLI_COMMAND_H_

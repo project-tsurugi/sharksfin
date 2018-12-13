@@ -23,8 +23,7 @@
 
 #include "sharksfin/api.h"
 
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 /**
  * @brief a transaction lock.
@@ -120,10 +119,9 @@ private:
     Database* owner_;
     id_type id_;
     std::unique_lock<Database::transaction_mutex_type> lock_;
-    alignas(16) std::string buffer_;
+    std::string buffer_;
 };
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock
 
 #endif  // SHARKSFIN_MOCK_TRANSACTIONLOCK_H_

@@ -27,8 +27,7 @@
 #include "leveldb/db.h"
 #include "leveldb/slice.h"
 
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 class Storage;
 class TransactionLock;
@@ -114,7 +113,6 @@ private:
     std::atomic_size_t transaction_id_sequence_ = { 1U };
 };
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock
 
 #endif  // SHARKSFIN_MOCK_DATABASE_H_

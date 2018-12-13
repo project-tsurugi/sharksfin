@@ -23,8 +23,7 @@
 
 #include "sharksfin/api.h"
 
-namespace sharksfin {
-namespace cli {
+namespace sharksfin::cli {
 
 std::vector<CommandSpec> const command_list {
     { "get", &get, { "key" } },
@@ -95,5 +94,4 @@ void scan(TransactionHandle transaction, StorageHandle storage, std::vector<std:
     }
 }
 
-}  // namespace cli
-}  // namespace sharksfin
+}  // namespace sharksfin::cli

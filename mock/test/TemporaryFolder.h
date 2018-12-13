@@ -20,8 +20,7 @@
 
 #include "boost/filesystem.hpp"
 
-namespace sharksfin {
-namespace testing {
+namespace sharksfin::testing {
 
 class TemporaryFolder {
 public:
@@ -55,7 +54,6 @@ private:
     boost::filesystem::path path_;
 };
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::testing
 
 #endif  // SHARKSFIN_TESTING_TEMPORARYFOLDER_H_

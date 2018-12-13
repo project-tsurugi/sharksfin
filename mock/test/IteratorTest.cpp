@@ -19,8 +19,7 @@
 
 #include "TestRoot.h"
 
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 class IteratorTest : public testing::TestRoot {
 public:
@@ -166,5 +165,4 @@ TEST_F(IteratorTest, range_ex_empty) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock

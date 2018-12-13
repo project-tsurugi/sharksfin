@@ -21,8 +21,7 @@
 #include "Database.h"
 #include "Iterator.h"
 
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 thread_local std::string bless_buffer;
 
@@ -79,5 +78,4 @@ void Storage::purge() {
     }
 }
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock

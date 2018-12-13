@@ -22,8 +22,7 @@
 
 #include "sharksfin/api.h"
 
-namespace sharksfin {
-namespace cli {
+namespace sharksfin::cli {
 
 extern "C" int main(int argc, char* argv[]) {
     auto options = Options::parse(argc, argv);
@@ -91,5 +90,4 @@ extern "C" int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-}  // namespace cli
-}  // namespace sharksfin
+}  // namespace sharksfin::cli

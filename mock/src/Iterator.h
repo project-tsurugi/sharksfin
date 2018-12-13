@@ -24,8 +24,7 @@
 #include "leveldb/iterator.h"
 #include "leveldb/slice.h"
 
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 /**
  * @brief an iterator over LevelDB.
@@ -203,7 +202,6 @@ private:
     }
 };
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock
 
 #endif  // SHARKSFIN_MOCK_ITERATOR_H_

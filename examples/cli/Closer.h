@@ -20,8 +20,7 @@
 #include <memory>
 #include <utility>
 
-namespace sharksfin {
-namespace cli {
+namespace sharksfin::cli {
 
 class Closer {
 public:
@@ -31,7 +30,6 @@ private:
     std::function<void()> closer_;
 };
 
-}  // namespace cli
-}  // namespace sharksfin
+}  // namespace sharksfin::cli
 
 #endif  // SHARKSFIN_CLI_CLOSER_H_

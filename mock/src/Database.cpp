@@ -21,8 +21,7 @@
 #include "Iterator.h"
 #include "TransactionLock.h"
 
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 void Database::shutdown() {
     std::unique_lock lock { transaction_mutex_ };
@@ -116,5 +115,4 @@ void Database::delete_storage(Storage& storage) {
     }
 }
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock

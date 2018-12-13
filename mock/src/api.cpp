@@ -274,4 +274,5 @@ StatusCode iterator_dispose(
     delete iterator;  // NOLINT
     return StatusCode::OK;
 }
+
 }  // namespace sharksfin

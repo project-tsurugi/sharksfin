@@ -26,8 +26,7 @@
 
 #include "leveldb/db.h"
 
-namespace sharksfin {
-namespace testing {
+namespace sharksfin::testing {
 
 class TestRoot : public ::testing::Test {
 public:
@@ -60,7 +59,6 @@ private:
     TemporaryFolder temporary_;
 };
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::testing
 
 #endif  // SHARKSFIN_TESTING_TESTROOT_H_

@@ -19,8 +19,7 @@
 
 #include "TestRoot.h"
 
-namespace sharksfin {
-namespace mock {
+namespace sharksfin::mock {
 
 class TransactionLockTest : public testing::TestRoot {};
 
@@ -69,5 +68,4 @@ TEST_F(TransactionLockTest, block) {
     }
 }
 
-}  // namespace mock
-}  // namespace sharksfin
+}  // namespace sharksfin::mock
