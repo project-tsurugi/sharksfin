@@ -101,6 +101,7 @@ public:
     inline ::foedus::thread::Thread* context() {
         return context_;
     }
+
 private:
     Database* owner_;
     ::foedus::thread::Thread* context_;

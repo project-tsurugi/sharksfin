@@ -118,4 +118,128 @@ TEST_F(FoedusApiTest, contents) {
     EXPECT_EQ(transaction_exec(db, &S::get_miss), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
+TEST_F(FoedusApiTest, scan_prefix) {
+    DatabaseOptions options;
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void*) {
+            if (content_put(tx, "a", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "a/", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "a/c", "AC") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "b", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void*) {
+            IteratorHandle iter;
+            if (content_scan_prefix(tx, "a/", &iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            Closer closer { [&]{ iterator_dispose(iter); } };
+
+            Slice s;
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "a/") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "A") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "a/c") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "AC") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, &S::prepare), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::test), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, scan_range) {
+    DatabaseOptions options;
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void*) {
+            if (content_put(tx, "a", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "b", "B") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "c", "C") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "d", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void*) {
+            IteratorHandle iter;
+            if (content_scan_range(tx, "b", false, "c", false, &iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            Closer closer { [&]{ iterator_dispose(iter); } };
+
+            Slice s;
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "b") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "B") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "c") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "C") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, &S::prepare), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::test), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
 }  // namespace sharksfin

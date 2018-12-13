@@ -21,6 +21,7 @@
 #include "foedus/engine_options.hpp"
 #include "Database.h"
 #include "Transaction.h"
+#include "Iterator.h"
 
 namespace sharksfin {
 
@@ -116,9 +117,13 @@ StatusCode content_scan_prefix(
         TransactionHandle handle,
         Slice prefix_key,
         IteratorHandle* result) {
-    (void)handle;
-    (void)prefix_key;
-    (void)result;
+    auto tx = unwrap_transaction(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto iter = database->scan_prefix(tx, prefix_key);
+    *result = iter.release();
     return StatusCode::OK;
 }
 
@@ -127,41 +132,42 @@ StatusCode content_scan_range(
         Slice begin_key, bool begin_exclusive,
         Slice end_key, bool end_exclusive,
         IteratorHandle* result) {
-    (void)handle;
-    (void)begin_key;
-    (void)begin_exclusive;
-    (void)end_key;
-    (void)end_exclusive;
-    (void)result;
+    auto tx = unwrap_transaction(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto iter = database->scan_range(tx, begin_key, begin_exclusive, end_key, end_exclusive);
+    *result = iter.release();
     return StatusCode::OK;
 }
 
 StatusCode iterator_next(
         IteratorHandle handle) {
-    (void)handle;
-    (void)unwrap_iterator(handle);
-    return StatusCode::OK;
+    auto iter = unwrap_iterator(handle);
+    return iter->next();
 }
 
 StatusCode iterator_get_key(
         IteratorHandle handle,
         Slice* result) {
-    (void)handle;
-    (void)result;
+    auto iter = unwrap_iterator(handle);
+    *result = iter->key();
     return StatusCode::OK;
 }
 
 StatusCode iterator_get_value(
         IteratorHandle handle,
         Slice* result) {
-    (void)handle;
-    (void)result;
+    auto iter = unwrap_iterator(handle);
+    *result = iter->value();
     return StatusCode::OK;
 }
 
 StatusCode iterator_dispose(
         IteratorHandle handle) {
-    (void)handle;
+    auto iter = unwrap_iterator(handle);
+    delete iter;
     return StatusCode::OK;
 }
 }  // namespace sharksfin

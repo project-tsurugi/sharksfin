@@ -23,7 +23,6 @@
 
 #include "sharksfin/api.h"
 #include "sharksfin/Slice.h"
-#include "Iterator.h"
 
 #include "foedus/engine.hpp"
 #include "foedus/storage/masstree/masstree_storage.hpp"
@@ -99,7 +98,7 @@ public:
      * @param prefix_key the prefix key
      * @return the created iterator
      */
-    std::unique_ptr<Iterator> scan_prefix(Slice prefix_key);
+    std::unique_ptr<Iterator> scan_prefix(Transaction* tx, Slice prefix_key);
 
     /**
      * @brief creates an iterator over the key range.
@@ -111,14 +110,14 @@ public:
      * @param end_exclusive whether or not ending position is exclusive
      * @return the created iterator
      */
-    std::unique_ptr<Iterator> scan_range(
+    std::unique_ptr<Iterator> scan_range(Transaction* tx,
             Slice begin_key, bool begin_exclusive,
             Slice end_key, bool end_exclusive);
 
 
-    StatusCode resolve(::foedus::ErrorStack const& result);
-    StatusCode resolve(::foedus::ErrorCode const& code);
-private:
+    static StatusCode resolve(::foedus::ErrorStack const& result);
+    static StatusCode resolve(::foedus::ErrorCode const& code);
+
     std::unique_ptr<::foedus::storage::masstree::MasstreeStorage> masstree_;
     std::unique_ptr<::foedus::Engine> engine_;
     std::atomic_size_t transaction_id_sequence_ = { 1U };

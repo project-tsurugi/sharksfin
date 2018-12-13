@@ -158,29 +158,22 @@ StatusCode Database::remove(Transaction* tx, Slice key) {
     return resolve(tree.delete_record(tx->context(), key.data(), key.size()));
 }
 
-std::unique_ptr<Iterator> Database::scan_prefix(Slice prefix_key) {
-    (void)prefix_key;
-//    leveldb::ReadOptions options;
-//    std::unique_ptr<leveldb::Iterator> iter { leveldb_->NewIterator(options) };
-//    return std::make_unique<Iterator>(this, std::move(iter), prefix_key);
-    return std::make_unique<Iterator>();
+std::unique_ptr<Iterator> Database::scan_prefix(Transaction* tx, Slice prefix_key) {
+    auto database = tx->owner();
+    std::string end_key{prefix_key.to_string()};
+    end_key[end_key.size()-1] += 1;
+    return std::make_unique<Iterator>(*database->masstree_, tx->context(),
+        prefix_key, false,
+        end_key, true);
 }
 
-std::unique_ptr<Iterator> Database::scan_range(
+std::unique_ptr<Iterator> Database::scan_range(Transaction* tx,
         Slice begin_key, bool begin_exclusive,
         Slice end_key, bool end_exclusive) {
-    (void)begin_key;
-    (void)begin_exclusive;
-    (void)end_key;
-    (void)end_exclusive;
-//    leveldb::ReadOptions options;
-//    std::unique_ptr<leveldb::Iterator> iter { leveldb_->NewIterator(options) };
-//    return StatusCode::OK;
-//    return std::make_unique<Iterator>(
-//            this, std::move(iter),
-//            begin_key, begin_exclusive,
-//            end_key, end_exclusive);
-    return std::make_unique<Iterator>();
+    auto database = tx->owner();
+    return std::make_unique<Iterator>(*database->masstree_, tx->context(),
+        begin_key, begin_exclusive,
+        end_key, end_exclusive);
 }
 
 StatusCode Database::resolve(::foedus::ErrorStack const& result) {
