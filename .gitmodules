@@ -1,3 +1,6 @@
 [submodule "third_party/googletest"]
 	path = third_party/googletest
 	url = https://github.com/google/googletest.git
+[submodule "third_party/foedus_code"]
+	path = third_party/foedus
+	url = git@github.com:large-scale-oltp-team/foedus_code.git

@@ -27,12 +27,26 @@ pipeline {
                 '''
             }
         }
+        stage ('Install foedus') {
+            steps {
+                sh '''
+                    cd third_party/foedus
+                    git log -n 1 --format=%H
+                    # git clean -dfx
+                    mkdir -p build
+                    cd build
+                    rm -f CMakeCache.txt
+                    cmake -DCMAKE_BUILD_TYPE=Debug -DGFLAGS_INTTYPES_FORMAT=C99 -DCMAKE_INSTALL_PREFIX=${WORKSPACE}/.local ..
+                    make all install -j${BUILD_PARALLEL_NUM}
+                '''
+            }
+        }
         stage ('Build') {
             steps {
                 sh '''
                     mkdir build
                     cd build
-                    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_FOEDUS_BRIDGE=ON -DENABLE_COVERAGE=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+                    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_FOEDUS_BRIDGE=ON -DENABLE_COVERAGE=ON -DCMAKE_PREFIX_PATH=${WORKSPACE}/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
                     make all -j${BUILD_PARALLEL_NUM}
                 '''
             }
