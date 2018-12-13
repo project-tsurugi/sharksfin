@@ -90,7 +90,7 @@ public:
      * @param key the entry key
      * @return the operation status
      */
-    StatusCode remove(Slice key);
+    StatusCode remove(Transaction* tx, Slice key);
 
     /**
      * @brief creates an iterator over the prefix key range.

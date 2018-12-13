@@ -71,5 +71,51 @@ TEST_F(FoedusApiTest, simple) {
     EXPECT_EQ(transaction_exec(handle, &S::f2), StatusCode::OK);
     EXPECT_EQ(database_close(handle), StatusCode::OK);
 }
+TEST_F(FoedusApiTest, contents) {
+    DatabaseOptions options;
 
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation get_miss(TransactionHandle tx, void*) {
+            Slice s;
+            if (content_get(tx, "a", &s) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation get_exists(TransactionHandle tx, void*) {
+            Slice s;
+            if (content_get(tx, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation put(TransactionHandle tx, void*) {
+            if (content_put(tx, "a", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation delete_(TransactionHandle tx, void*) {
+            if (content_delete(tx, "a") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, &S::get_miss), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::delete_), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::put), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::put), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::get_exists), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::delete_), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::get_miss), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
 }  // namespace sharksfin

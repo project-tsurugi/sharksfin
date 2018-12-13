@@ -153,12 +153,9 @@ StatusCode Database::put(Transaction* tx, Slice key, Slice value) {
     return resolve(tree.upsert_record(tx->context(), key.data(), key.size(), value.data(), value.size()));
 }
 
-StatusCode Database::remove(Slice key) {
-    (void)key;
-//    leveldb::WriteOptions options;
-//    auto status = leveldb_->Delete(options, resolve(key));
-//    return handle(status);
-    return StatusCode::OK;
+StatusCode Database::remove(Transaction* tx, Slice key) {
+    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
+    return resolve(tree.delete_record(tx->context(), key.data(), key.size()));
 }
 
 std::unique_ptr<Iterator> Database::scan_prefix(Slice prefix_key) {
@@ -195,6 +192,9 @@ StatusCode Database::resolve(::foedus::ErrorStack const& result) {
 }
 
 StatusCode Database::resolve(::foedus::ErrorCode const& code) {
+    if (code == ::foedus::kErrorCodeStrKeyNotFound) {
+        return StatusCode::NOT_FOUND;
+    }
     if (code != ::foedus::kErrorCodeOk) {
         return resolve(FOEDUS_ERROR_STACK(code));  //NOLINT
     }

@@ -99,9 +99,17 @@ StatusCode content_put(
 StatusCode content_delete(
         TransactionHandle handle,
         Slice key) {
-    (void)handle;
-    (void)key;
-    return StatusCode::OK;
+    auto tx = unwrap_transaction(handle);
+    auto database = tx->owner();
+    if (!database) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto ret = database->remove(tx, key);
+    if (ret == StatusCode::NOT_FOUND) {
+         // foedus returns error on deleting missing record, but ignore it for now
+         ret = StatusCode::OK;
+    }
+    return ret;
 }
 
 StatusCode content_scan_prefix(
