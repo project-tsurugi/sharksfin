@@ -66,8 +66,11 @@ public:
         auto ret = xct_manager->precommit_xct(context_, &commit_epoch);
         if (ret != ::foedus::kErrorCodeOk) {
             std::cout << ret << "\n";
-        } else {
-            std::cout << "success.\n";
+            return ret;
+        }
+        ret = xct_manager->wait_for_commit(commit_epoch);
+        if (ret != ::foedus::kErrorCodeOk) {
+            std::cout << ret << "\n";
         }
         return ret;
     }
@@ -78,8 +81,6 @@ public:
         auto ret = xct_manager->abort_xct(context_);
         if (ret != ::foedus::kErrorCodeOk) {
             std::cout << ret << "\n";
-        } else {
-            std::cout << "success.\n";
         }
         return ret;
     }

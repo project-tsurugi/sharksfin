@@ -38,7 +38,7 @@ static const std::string KEY_LOCATION { "location" };  // NOLINT
 std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions const& dboptions) {
     ::foedus::EngineOptions options;
     options.debugging_.debug_log_min_threshold_ =
-        ::foedus::debugging::DebuggingOptions::kDebugLogError;
+        ::foedus::debugging::DebuggingOptions::kDebugLogInfo;
     options.memory_.use_numa_alloc_ = true;
     options.memory_.page_pool_size_mb_per_node_ = 32;
     options.memory_.private_page_pool_initial_grab_ = 8;
@@ -145,8 +145,10 @@ StatusCode Database::get(Transaction* tx, Slice key, std::string &buffer) {
     (void)key;
     (void)buffer;
     ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    ::foedus::storage::masstree::PayloadLength capacity;
-    return resolve(tree.get_record(tx->context(), key.data(), key.size(), buffer.data(), &capacity, false));
+    ::foedus::storage::masstree::PayloadLength capacity = buffer.capacity();
+    auto ret = resolve(tree.get_record(tx->context(), key.data(), key.size(), buffer.data(), &capacity, false));
+    buffer.resize(capacity);
+    return ret;
 }
 
 StatusCode Database::put(Transaction* tx, Slice key, Slice value) {
