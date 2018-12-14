@@ -20,6 +20,7 @@
 #include <foedus/thread/thread.hpp>
 #include "foedus/storage/masstree/masstree_cursor.hpp"
 #include "Database.h"
+#include "Error.h"
 
 #include "sharksfin/api.h"
 
@@ -37,7 +38,7 @@ public:
         SAW_EOF,
     };
 
-    inline Iterator(::foedus::storage::masstree::MasstreeStorage const& storage,
+    inline Iterator(::foedus::storage::masstree::MasstreeStorage storage,
              ::foedus::thread::Thread* context,
              Slice begin_key, bool begin_exclusive,
              Slice end_key, bool end_exclusive
@@ -60,7 +61,7 @@ public:
             state_ = test();
             return StatusCode::OK;
         }
-        auto ret = Database::resolve(cursor_.next());
+        auto ret = resolve(cursor_.next());
         state_ = test();
         if (state_ == State::SAW_EOF) {
             return StatusCode::NOT_FOUND;

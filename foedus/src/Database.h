@@ -35,15 +35,7 @@ namespace foedus {
 
 class Transaction;
 class Iterator;
-
-
-// due to namespace conflict, these macros are copied from foedus
-#define FOEDUS_ERROR_STACK(e) ::foedus::ErrorStack(__FILE__, __FUNCTION__, __LINE__, e)
-#define FOEDUS_WRAP_ERROR_CODE(x)\
-{\
-  ::foedus::ErrorCode __e = x;\
-  if (UNLIKELY(__e != ::foedus::kErrorCodeOk)) {return FOEDUS_ERROR_STACK(__e);}\
-}
+class Storage;
 
 /**
  * @brief a foedus wrapper.
@@ -69,58 +61,28 @@ public:
         void *arguments);
 
     /**
-     * @brief obtains an entry and write its value into the given buffer.
-     * @param key the entry key
-     * @param buffer the destination buffer
-     * @return the operation status
+     * @brief creates a new storage space.
+     * @param key the storage key
+     * @return non empty pointer if the storage was successfully created
+     * @return otherwise if the storage space with the key already exists
      */
-    StatusCode get(Transaction* tx, Slice key, std::string& buffer);
+    std::unique_ptr<Storage> create_storage(Slice key);
 
     /**
-     * @brief creates or overwrites an entry.
-     * @param key the entry key
-     * @param value the entry value
-     * @return the operation status
+     * @brief returns a storage space.
+     * @param key the storage key
+     * @return non empty pointer if it exists
+     * @return otherwise if it does not exist
      */
-    StatusCode put(Transaction* tx, Slice key, Slice value);
+    std::unique_ptr<Storage> get_storage(Slice key);
 
     /**
-     * @brief removes an entry.
-     * @param key the entry key
-     * @return the operation status
+     * @brief deletes storage.
+     * @param storage the target storage
      */
-    StatusCode remove(Transaction* tx, Slice key);
+    void delete_storage(Storage& storage);
 
-    /**
-     * @brief creates an iterator over the prefix key range.
-     * The content of prefix key must not be changed while using the returned iterator.
-     * The returned iterator is still available even if database content was changed.
-     * @param prefix_key the prefix key
-     * @return the created iterator
-     */
-    std::unique_ptr<Iterator> scan_prefix(Transaction* tx, Slice prefix_key);
-
-    /**
-     * @brief creates an iterator over the key range.
-     * The content of begin/end key pair must not be changed while using the returned iterator.
-     * The returned iterator is still available even if database content was changed.
-     * @param begin_key the content key of beginning position
-     * @param begin_exclusive whether or not beginning position is exclusive
-     * @param end_key the content key of ending position
-     * @param end_exclusive whether or not ending position is exclusive
-     * @return the created iterator
-     */
-    std::unique_ptr<Iterator> scan_range(Transaction* tx,
-            Slice begin_key, bool begin_exclusive,
-            Slice end_key, bool end_exclusive);
-
-
-    static StatusCode resolve(::foedus::ErrorStack const& result);
-    static StatusCode resolve(::foedus::ErrorCode const& code);
-
-    std::unique_ptr<::foedus::storage::masstree::MasstreeStorage> masstree_;
     std::unique_ptr<::foedus::Engine> engine_;
-    std::atomic_size_t transaction_id_sequence_ = { 1U };
 };
 
 }  // namespace foedus

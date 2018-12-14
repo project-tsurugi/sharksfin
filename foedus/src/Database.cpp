@@ -20,6 +20,10 @@
 
 #include "Iterator.h"
 #include "Transaction.h"
+#include "Error.h"
+#include "Storage.h"
+
+#include "sharksfin/api.h"
 
 #include "foedus/thread/thread.hpp"
 #include "foedus/error_stack.hpp"
@@ -27,12 +31,12 @@
 #include "foedus/proc/proc_manager.hpp"
 #include "foedus/thread/thread_pool.hpp"
 #include "foedus/error_code.hpp"
+#include "foedus/storage/storage_id.hpp"
 
 namespace sharksfin {
 namespace foedus {
 
 char const* kProc = "foedusCallback";
-static const char* kStorageName = "sharksfin_tree";
 static const std::string KEY_LOCATION { "location" };  // NOLINT
 static const std::string KEY_THREADS { "threads" };  // NOLINT
 
@@ -102,7 +106,7 @@ struct Input {
     TransactionCallback callback(ptr->callback_);
     auto tx = std::make_unique<foedus::Transaction>(ptr->db_, arg.context_, ptr->engine_);
     FOEDUS_WRAP_ERROR_CODE(tx->begin());  //NOLINT
-    auto status = callback(tx.get(), ptr->arguments_);
+    auto status = callback(reinterpret_cast<TransactionHandle>(tx.get()), ptr->arguments_);
     if (status == TransactionOperation::COMMIT) {
         FOEDUS_WRAP_ERROR_CODE(tx->commit());  //NOLINT
     } else {
@@ -121,13 +125,6 @@ Database::Database(DatabaseOptions const& options) noexcept {
         std::cout << "*** failed to initialize engine ***" << e << std::endl;
         return;
     }
-    masstree_ = std::make_unique<::foedus::storage::masstree::MasstreeStorage>(engine_.get(), kStorageName);
-    ::foedus::storage::masstree::MasstreeMetadata meta(kStorageName);
-    if (!engine_->get_storage_manager()->get_pimpl()->exists(kStorageName)) {
-        ::foedus::Epoch create_epoch;
-        engine_->get_storage_manager()
-                ->create_storage(&meta, &create_epoch);
-    }
 }
 StatusCode Database::shutdown() {
     return resolve(engine_->uninitialize());
@@ -137,8 +134,6 @@ StatusCode Database::exec_transaction(
     TransactionCallback callback,
     void *arguments) {
     Input in{callback, arguments, this, engine_.get()};
-    auto id = transaction_id_sequence_.fetch_add(1U);
-    (void)id;
     Input* in_ptr = &in;
 
     // TODO create option to set retry count. currently retry infinitely
@@ -154,64 +149,31 @@ StatusCode Database::exec_transaction(
     return resolve(result);
 }
 
-StatusCode Database::get(Transaction* tx, Slice key, std::string &buffer) {
-    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    auto capacity = static_cast<::foedus::storage::masstree::PayloadLength>(buffer.capacity());
-    buffer.resize(buffer.capacity()); // set length long enough otherwise calling resize() again accidentally fills nulls
-    auto ret = resolve(tree.get_record(tx->context(),
-        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
-        buffer.data(), &capacity, false));
-    buffer.resize(capacity);
-    return ret;
-}
-
-StatusCode Database::put(Transaction* tx, Slice key, Slice value) {
-    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    return resolve(tree.upsert_record(tx->context(),
-        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
-        value.data(), static_cast<::foedus::storage::masstree::PayloadLength>(value.size())));
-}
-
-StatusCode Database::remove(Transaction* tx, Slice key) {
-    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    return resolve(tree.delete_record(tx->context(),
-        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size())));
-}
-
-std::unique_ptr<Iterator> Database::scan_prefix(Transaction* tx, Slice prefix_key) {
-    auto database = tx->owner();
-    std::string end_key{prefix_key.to_string()};
-    end_key[end_key.size()-1] += 1;
-    return std::make_unique<Iterator>(*database->masstree_, tx->context(),
-        prefix_key, false,
-        end_key, true);
-}
-
-std::unique_ptr<Iterator> Database::scan_range(Transaction* tx,
-        Slice begin_key, bool begin_exclusive,
-        Slice end_key, bool end_exclusive) {
-    auto database = tx->owner();
-    return std::make_unique<Iterator>(*database->masstree_, tx->context(),
-        begin_key, begin_exclusive,
-        end_key, end_exclusive);
-}
-
-StatusCode Database::resolve(::foedus::ErrorStack const& result) {
-    if (!result.is_error()) {
-        return StatusCode::OK;
+std::unique_ptr<Storage> Database::create_storage(Slice key) {
+    ::foedus::storage::StorageName name{key.data<char>(), static_cast<uint32_t>(key.size())};
+    ::foedus::storage::masstree::MasstreeMetadata meta(name);
+    if (!engine_->get_storage_manager()->get_pimpl()->exists(name)) {
+        ::foedus::Epoch create_epoch;
+        engine_->get_storage_manager()->create_storage(&meta, &create_epoch);
     }
-    std::cout << "Foedus error : " << result << std::endl;
-    return StatusCode::ERR_UNKNOWN;
+    ::foedus::storage::masstree::MasstreeStorage masstree{engine_.get(), name};
+    return std::make_unique<Storage>(this, key, masstree);
 }
 
-StatusCode Database::resolve(::foedus::ErrorCode const& code) {
-    if (code == ::foedus::kErrorCodeStrKeyNotFound) {
-        return StatusCode::NOT_FOUND;
-    }
-    if (code != ::foedus::kErrorCodeOk) {
-        return resolve(FOEDUS_ERROR_STACK(code));  //NOLINT
-    }
-    return StatusCode::OK;
+std::unique_ptr<Storage> Database::get_storage(Slice key) {
+    ::foedus::storage::StorageName name{key.data<char>(), static_cast<uint32_t>(key.size())};
+    ::foedus::storage::masstree::MasstreeStorage masstree{engine_.get(), name};
+    return std::make_unique<Storage>(this, key, masstree);
 }
+
+void Database::delete_storage(Storage& storage) {
+    ::foedus::storage::StorageName name{storage.prefix().data<char>(), static_cast<uint32_t>(storage.prefix().size())};
+    if (engine_->get_storage_manager()->get_pimpl()->exists(name)) {
+        ::foedus::storage::masstree::MasstreeStorage masstree{engine_.get(), name};
+        ::foedus::Epoch drop_epoch;
+        engine_->get_storage_manager()->drop_storage(masstree.get_id(), &drop_epoch);
+    }
+}
+
 }  // namespace foedus
 }  // namespace sharksfin

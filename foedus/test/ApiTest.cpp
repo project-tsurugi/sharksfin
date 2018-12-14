@@ -20,75 +20,44 @@
 #include <future>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <thread>
-#include <numa.h>
 
-#include <gtest/gtest.h>
+#include "TestRoot.h"
 
-#include "foedus/engine.hpp"
-#include "foedus/engine_options.hpp"
-#include "foedus/error_stack.hpp"
-
-#include "Database.h"
+#include "sharksfin/HandleHolder.h"
 
 namespace sharksfin {
 
-class Closer {
-public:
-    Closer(std::function<void()>&& closer) : closer_(std::move(closer)) {}
-    ~Closer() { closer_(); }
-private:
-    std::function<void()> closer_;
-};
+static constexpr std::string_view KEY_LOCATION { "location" };
 
-class FoedusApiTest : public ::testing::Test {};
+class FoedusApiTest : public testing::TestRoot {};
+
+template<class T>
+static StorageHandle extract(void* args) {
+    return reinterpret_cast<T*>(args)->st;
+}
 
 TEST_F(FoedusApiTest, simple) {
     DatabaseOptions options;
-    DatabaseHandle handle;
-    ASSERT_EQ(database_open(options, &handle), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(handle); } };
-
-    struct S {
-        static TransactionOperation f1(TransactionHandle tx, void*) {
-            if (content_put(tx, "key1", "A") != StatusCode::OK) {
-                return TransactionOperation::ERROR;
-            }
-            return TransactionOperation::COMMIT;
-        }
-        static TransactionOperation f2(TransactionHandle tx, void*) {
-            Slice s;
-            if (content_get(tx, "key1", &s) != StatusCode::OK) {
-                return TransactionOperation::ERROR;
-            }
-            if (s != "A") {
-                return TransactionOperation::ERROR;
-            }
-            return TransactionOperation::COMMIT;
-        }
-    };
-    EXPECT_EQ(transaction_exec(handle, &S::f1), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(handle, &S::f2), StatusCode::OK);
-    EXPECT_EQ(database_close(handle), StatusCode::OK);
-}
-TEST_F(FoedusApiTest, contents) {
-    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
-        static TransactionOperation get_miss(TransactionHandle tx, void*) {
-            Slice s;
-            if (content_get(tx, "a", &s) != StatusCode::NOT_FOUND) {
+        static TransactionOperation f1(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation get_exists(TransactionHandle tx, void*) {
+        static TransactionOperation f2(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
             Slice s;
-            if (content_get(tx, "a", &s) != StatusCode::OK) {
+            if (content_get(tx, st, "a", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             if (s != "A") {
@@ -96,58 +65,333 @@ TEST_F(FoedusApiTest, contents) {
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation put(TransactionHandle tx, void*) {
-            if (content_put(tx, "a", "A") != StatusCode::OK) {
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::f1, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f2, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, database_restore) {
+    {
+        DatabaseOptions options;
+        options.attribute(KEY_LOCATION, path());
+        DatabaseHandle db;
+        ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+        HandleHolder dbh { db };
+
+        struct S {
+            static TransactionOperation f(TransactionHandle tx, void* args) {
+                auto st = extract<S>(args);
+                if (content_put(tx, st, "a", "A") != StatusCode::OK) {
+                    return TransactionOperation::ERROR;
+                }
+                return TransactionOperation::COMMIT;
+            }
+            StorageHandle st;
+        };
+        S s;
+        ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+        HandleHolder sth { s.st };
+
+        EXPECT_EQ(transaction_exec(db, {}, &S::f, &s), StatusCode::OK);
+        EXPECT_EQ(database_close(db), StatusCode::OK);
+    }
+    {
+        DatabaseOptions options;
+        options.attribute(KEY_LOCATION, path());
+        DatabaseHandle db;
+        options.open_mode(DatabaseOptions::OpenMode::RESTORE);
+        ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+        HandleHolder dbh { db };
+
+        struct S {
+            static TransactionOperation f(TransactionHandle tx, void* args) {
+                auto st = extract<S>(args);
+                Slice s;
+                if (content_get(tx, st, "a", &s) != StatusCode::OK) {
+                    return TransactionOperation::ERROR;
+                }
+                if (s != "A") {
+                    return TransactionOperation::ERROR;
+                }
+                return TransactionOperation::COMMIT;
+            }
+            StorageHandle st;
+        };
+        S s;
+        ASSERT_EQ(storage_get(db, "s", &s.st), StatusCode::OK);
+        HandleHolder sth { s.st };
+
+        EXPECT_EQ(transaction_exec(db, {}, &S::f, &s), StatusCode::OK);
+        EXPECT_EQ(database_close(db), StatusCode::OK);
+    }
+}
+
+TEST_F(FoedusApiTest, database_not_found) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+    options.open_mode(DatabaseOptions::OpenMode::RESTORE);
+
+    DatabaseHandle db = nullptr;
+    EXPECT_NE(database_open(options, &db), StatusCode::OK);
+    if (db != nullptr) {
+        database_dispose(db);
+    }
+}
+
+TEST_F(FoedusApiTest, storage_create) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation f(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            return TransactionOperation::COMMIT;
-        }
-        static TransactionOperation delete_(TransactionHandle tx, void*) {
-            if (content_delete(tx, "a") != StatusCode::OK) {
+            StorageHandle st;
+            if (auto s = storage_create(borrowed, "testing", &st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
+            if (content_put(tx, st, "a", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            Slice s;
+            if (content_get(tx, st, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
     };
-    EXPECT_EQ(transaction_exec(db, &S::get_miss), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, &S::delete_), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, &S::put), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, &S::put), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, &S::get_exists), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, &S::delete_), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, &S::get_miss), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, storage_create_exists) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation f(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            StorageHandle st = nullptr;
+            if (auto s = storage_create(borrowed, "testing", &st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
+            StorageHandle s2 = nullptr;
+            if (auto s = storage_create(borrowed, "testing", &s2); s != StatusCode::OK) {
+                if (s == StatusCode::ALREADY_EXISTS) {
+                    return TransactionOperation::COMMIT;
+                }
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder stc2 { s2 };
+            return TransactionOperation::ERROR;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, {}, &S::f), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, storage_get) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation f_create(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            StorageHandle st;
+            if (auto s = storage_create(borrowed, "testing", &st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
+            if (content_put(tx, st, "a", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation f_get(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            StorageHandle st;
+            if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
+            Slice s;
+            if (content_get(tx, st, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_create), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_get), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, storage_get_missing) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation f(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            StorageHandle st;
+            if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
+                if (s == StatusCode::NOT_FOUND) {
+                    return TransactionOperation::COMMIT;
+                }
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
+            return TransactionOperation::ERROR;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, {}, &S::f), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, storage_delete) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation f_create(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            StorageHandle st;
+            if (auto s = storage_create(borrowed, "testing", &st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
+            if (content_put(tx, st, "a", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation f_get(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            StorageHandle st;
+            if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
+            Slice s;
+            if (content_get(tx, st, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation f_delete(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            StorageHandle st;
+            if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
+            if (auto s = storage_delete(st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_create), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_get), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_delete), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_create), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
 TEST_F(FoedusApiTest, transaction_wait) {
     DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
-        static TransactionOperation prepare(TransactionHandle tx, void*) {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
             std::int8_t v = 0;
-            if (content_put(tx, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+            if (content_put(tx, st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation run(TransactionHandle tx, void*) {
+        static TransactionOperation run(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
             Slice s;
-            if (content_get(tx, "k", &s) != StatusCode::OK) {
+            if (content_get(tx, st, "k", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             std::int8_t v = static_cast<std::int8_t>(*s.data<std::int8_t>() + 1);
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            if (content_put(tx, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+            if (content_put(tx, st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation validate(TransactionHandle tx, void*) {
+        static TransactionOperation validate(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
             Slice s;
-            if (content_get(tx, "k", &s) != StatusCode::OK) {
+            if (content_get(tx, st, "k", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             if (*s.data<std::int8_t>() != 10) {
@@ -155,72 +399,196 @@ TEST_F(FoedusApiTest, transaction_wait) {
             }
             return TransactionOperation::COMMIT;
         }
+        StorageHandle st;
     };
-    ASSERT_EQ(transaction_exec(db, &S::prepare), StatusCode::OK);
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    ASSERT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
     auto r1 = std::async(std::launch::async, [&] {
-      StatusCode ret;
       for (std::size_t i = 0U; i < 5U; ++i) {
-          ret = transaction_exec(db, &S::run);
-          if (ret != StatusCode::OK) {
-              break;
+          if (auto c = transaction_exec(db, {}, &S::run, &s); c != StatusCode::OK) {
+              return c;
           }
       }
-      return ret;
+      return StatusCode::OK;
     });
     for (std::size_t i = 0U; i < 5U; ++i) {
-        EXPECT_EQ(transaction_exec(db, &S::run), StatusCode::OK);
+        EXPECT_EQ(transaction_exec(db, {}, &S::run, &s), StatusCode::OK);
     }
     EXPECT_EQ(r1.get(), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, &S::validate), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::validate, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
 TEST_F(FoedusApiTest, transaction_failed) {
     DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation f(TransactionHandle, void*) {
             return TransactionOperation::ERROR;
         }
+        StorageHandle st;
     };
-    EXPECT_NE(transaction_exec(db, &S::f), StatusCode::OK);
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_NE(transaction_exec(db, {}, &S::f, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-
-TEST_F(FoedusApiTest, scan_prefix) {
+TEST_F(FoedusApiTest, transaction_borrow_owner) {
     DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
-        static TransactionOperation prepare(TransactionHandle tx, void*) {
-            if (content_put(tx, "a", "NG") != StatusCode::OK) {
+        static TransactionOperation f1(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            if (content_put(tx, "a/", "A") != StatusCode::OK) {
+            StorageHandle st;
+            if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            if (content_put(tx, "a/c", "AC") != StatusCode::OK) {
-                return TransactionOperation::ERROR;
-            }
-            if (content_put(tx, "b", "NG") != StatusCode::OK) {
+            HandleHolder sth { st };
+            if (content_put(tx, st, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation test(TransactionHandle tx, void*) {
-            IteratorHandle iter;
-            if (content_scan_prefix(tx, "a/", &iter) != StatusCode::OK) {
+        static TransactionOperation f2(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer closer { [&]{ iterator_dispose(iter); } };
+            StorageHandle st;
+            if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
+            Slice s;
+            if (content_get(tx, st, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "testing", &st), StatusCode::OK);
+    HandleHolder sth { st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::f1), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f2), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, contents) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation get_miss(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_get(tx, st, "a", &s) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation get_exists(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_get(tx, st, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation put(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation delete_(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            // NOTE: LevelDB does not support to detect whether or not delete target actually exists
+            if (content_delete(tx, st, "a") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::get_miss, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::delete_, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::put, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::put, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::get_exists, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::delete_, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::get_miss, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, scan_prefix) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "a/", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "a/c", "AC") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "b", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            IteratorHandle iter;
+            if (content_scan_prefix(tx, st, "a/", &iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder closer { iter };
 
             Slice s;
             if (iterator_next(iter) != StatusCode::OK) {
@@ -248,41 +616,49 @@ TEST_F(FoedusApiTest, scan_prefix) {
             }
             return TransactionOperation::COMMIT;
         }
+        StorageHandle st;
     };
-    EXPECT_EQ(transaction_exec(db, &S::prepare), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, &S::test), StatusCode::OK);
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
 TEST_F(FoedusApiTest, scan_range) {
     DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
-        static TransactionOperation prepare(TransactionHandle tx, void*) {
-            if (content_put(tx, "a", "NG") != StatusCode::OK) {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "NG") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            if (content_put(tx, "b", "B") != StatusCode::OK) {
+            if (content_put(tx, st, "b", "B") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            if (content_put(tx, "c", "C") != StatusCode::OK) {
+            if (content_put(tx, st, "c", "C") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            if (content_put(tx, "d", "NG") != StatusCode::OK) {
+            if (content_put(tx, st, "d", "NG") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
-        static TransactionOperation test(TransactionHandle tx, void*) {
+        static TransactionOperation test(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
             IteratorHandle iter;
-            if (content_scan_range(tx, "b", false, "c", false, &iter) != StatusCode::OK) {
+            if (content_scan_range(tx, st, "b", false, "c", false, &iter) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer closer { [&]{ iterator_dispose(iter); } };
+            HandleHolder closer { iter };
 
             Slice s;
             if (iterator_next(iter) != StatusCode::OK) {
@@ -310,9 +686,15 @@ TEST_F(FoedusApiTest, scan_range) {
             }
             return TransactionOperation::COMMIT;
         }
+        StorageHandle st;
     };
-    EXPECT_EQ(transaction_exec(db, &S::prepare), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, &S::test), StatusCode::OK);
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
 }  // namespace sharksfin
