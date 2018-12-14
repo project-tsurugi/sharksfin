@@ -383,16 +383,14 @@ TEST_F(ApiTest, transaction_wait) {
         }
         static TransactionOperation run(TransactionHandle tx, void* args) {
             auto st = extract<S>(args);
-            for (std::size_t i = 0U; i < 5U; ++i) {
-                Slice s;
-                if (content_get(tx, st, "k", &s) != StatusCode::OK) {
-                    return TransactionOperation::ERROR;
-                }
-                std::int8_t v = static_cast<std::int8_t>(*s.data<std::int8_t>() + 1);
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                if (content_put(tx, st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
-                    return TransactionOperation::ERROR;
-                }
+            Slice s;
+            if (content_get(tx, st, "k", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            std::int8_t v = static_cast<std::int8_t>(*s.data<std::int8_t>() + 1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            if (content_put(tx, st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
         }
@@ -415,9 +413,16 @@ TEST_F(ApiTest, transaction_wait) {
 
     ASSERT_EQ(transaction_exec(db, &S::prepare, &s), StatusCode::OK);
     auto r1 = std::async(std::launch::async, [&] {
-        return transaction_exec(db, &S::run, &s);
+        for (std::size_t i = 0U; i < 5U; ++i) {
+            if (auto c = transaction_exec(db, &S::run, &s); c != StatusCode::OK) {
+                return c;
+            }
+        }
+        return StatusCode::OK;
     });
-    EXPECT_EQ(transaction_exec(db, &S::run, &s), StatusCode::OK);
+    for (std::size_t i = 0U; i < 5U; ++i) {
+        EXPECT_EQ(transaction_exec(db, &S::run, &s), StatusCode::OK);
+    }
     EXPECT_EQ(r1.get(), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, &S::validate, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
