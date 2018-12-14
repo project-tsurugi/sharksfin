@@ -119,6 +119,79 @@ TEST_F(FoedusApiTest, contents) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(FoedusApiTest, transaction_wait) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void*) {
+            std::int8_t v = 0;
+            if (content_put(tx, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation run(TransactionHandle tx, void*) {
+            Slice s;
+            if (content_get(tx, "k", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            std::int8_t v = static_cast<std::int8_t>(*s.data<std::int8_t>() + 1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            if (content_put(tx, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation validate(TransactionHandle tx, void*) {
+            Slice s;
+            if (content_get(tx, "k", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (*s.data<std::int8_t>() != 10) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    ASSERT_EQ(transaction_exec(db, &S::prepare), StatusCode::OK);
+    auto r1 = std::async(std::launch::async, [&] {
+      StatusCode ret;
+      for (std::size_t i = 0U; i < 5U; ++i) {
+          ret = transaction_exec(db, &S::run);
+          if (ret != StatusCode::OK) {
+              break;
+          }
+      }
+      return ret;
+    });
+    for (std::size_t i = 0U; i < 5U; ++i) {
+        EXPECT_EQ(transaction_exec(db, &S::run), StatusCode::OK);
+    }
+    EXPECT_EQ(r1.get(), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::validate), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, transaction_failed) {
+    DatabaseOptions options;
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation f(TransactionHandle, void*) {
+            return TransactionOperation::ERROR;
+        }
+    };
+    EXPECT_NE(transaction_exec(db, &S::f), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+
 TEST_F(FoedusApiTest, scan_prefix) {
     DatabaseOptions options;
 

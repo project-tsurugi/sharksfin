@@ -34,6 +34,7 @@ namespace foedus {
 char const* kProc = "foedusCallback";
 static const char* kStorageName = "sharksfin_tree";
 static const std::string KEY_LOCATION { "location" };  // NOLINT
+static const std::string KEY_THREADS { "threads" };  // NOLINT
 
 std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions const& dboptions) {
     ::foedus::EngineOptions options;
@@ -51,6 +52,11 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     if (path[path.size() - 1] != '/') {
         path += "/";
     }
+    int threads = 2; // default # of thread is min for tests
+    auto threads_option = dboptions.attribute(KEY_THREADS);
+    if (threads_option.has_value()) {
+        threads  = std::atoi(threads_option.value().data());
+    }
     const std::string snapshot_folder_path_pattern = path + "snapshots/node_$NODE$";
     options.snapshot_.folder_path_pattern_ = snapshot_folder_path_pattern.c_str();
     const std::string log_folder_path_pattern = path + "logs/node_$NODE$/logger_$LOGGER$";
@@ -58,7 +64,6 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     const std::string savepoint_path = path + "savepoint.xml";
     options.savepoint_.savepoint_path_ = savepoint_path.c_str();
 
-    int threads = 1;
     const int cpus = numa_num_task_cpus();
     const int use_nodes = (threads - 1) / cpus + 1;
     const int threads_per_node = (threads + (use_nodes - 1)) / use_nodes;
@@ -135,7 +140,17 @@ StatusCode Database::exec_transaction(
     auto id = transaction_id_sequence_.fetch_add(1U);
     (void)id;
     Input* in_ptr = &in;
-    ::foedus::ErrorStack result = engine_->get_thread_pool()->impersonate_synchronous(kProc, &in_ptr, sizeof(Input*));
+
+    // TODO create option to set retry count. currently retry infinitely
+    bool retry;
+    ::foedus::ErrorStack result;
+    do {
+        retry = false;
+        result = engine_->get_thread_pool()->impersonate_synchronous(kProc, &in_ptr, sizeof(Input*));
+        if (result.is_error() && result.get_error_code() == ::foedus::kErrorCodeXctRaceAbort) {
+            retry = true;
+        }
+    } while (retry);
     return resolve(result);
 }
 
