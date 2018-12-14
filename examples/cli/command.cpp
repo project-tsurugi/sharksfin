@@ -19,9 +19,8 @@
 #include <string>
 #include <stdexcept>
 
-#include "Closer.h"
-
 #include "sharksfin/api.h"
+#include "sharksfin/HandleHolder.h"
 
 namespace sharksfin::cli {
 
@@ -82,7 +81,7 @@ void scan(TransactionHandle transaction, StorageHandle storage, std::vector<std:
     std::cout << "scan: " << begin << " ... " << end << std::endl;
     IteratorHandle iter;
     check(content_scan_range(transaction, storage, begin, false, end, false, &iter));
-    Closer closer { [&]{ iterator_dispose(iter); } };
+    HandleHolder closer { iter };
     for (;;) {
         if (!check_exists(iterator_next(iter))) {
             break;

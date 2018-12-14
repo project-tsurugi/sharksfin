@@ -25,19 +25,13 @@
 
 #include "TestRoot.h"
 
+#include "sharksfin/HandleHolder.h"
+
 namespace sharksfin {
 
 static constexpr std::string_view KEY_LOCATION { "location" };
 
 class ApiTest : public testing::TestRoot {};
-
-class Closer {
-public:
-    Closer(std::function<void()>&& closer) : closer_(std::move(closer)) {}
-    ~Closer() { closer_(); }
-private:
-    std::function<void()> closer_;
-};
 
 template<class T>
 static StorageHandle extract(void* args) {
@@ -50,7 +44,7 @@ TEST_F(ApiTest, simple) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation f1(TransactionHandle tx, void* args) {
@@ -75,7 +69,7 @@ TEST_F(ApiTest, simple) {
     };
     S s;
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
-    Closer stc { [&]() { storage_dispose(s.st); } };
+    HandleHolder sth { s.st };
 
     EXPECT_EQ(transaction_exec({}, db, &S::f1, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec({}, db, &S::f2, &s), StatusCode::OK);
@@ -88,7 +82,7 @@ TEST_F(ApiTest, database_restore) {
         options.attribute(KEY_LOCATION, path());
         DatabaseHandle db;
         ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-        Closer dbc { [&]() { database_dispose(db); } };
+        HandleHolder dbh { db };
 
         struct S {
             static TransactionOperation f(TransactionHandle tx, void* args) {
@@ -102,7 +96,7 @@ TEST_F(ApiTest, database_restore) {
         };
         S s;
         ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
-        Closer stc { [&]() { storage_dispose(s.st); } };
+        HandleHolder sth { s.st };
 
         EXPECT_EQ(transaction_exec({}, db, &S::f, &s), StatusCode::OK);
         EXPECT_EQ(database_close(db), StatusCode::OK);
@@ -113,7 +107,7 @@ TEST_F(ApiTest, database_restore) {
         DatabaseHandle db;
         options.open_mode(DatabaseOptions::OpenMode::RESTORE);
         ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-        Closer dbc { [&]() { database_dispose(db); } };
+        HandleHolder dbh { db };
 
         struct S {
             static TransactionOperation f(TransactionHandle tx, void* args) {
@@ -131,7 +125,7 @@ TEST_F(ApiTest, database_restore) {
         };
         S s;
         ASSERT_EQ(storage_get(db, "s", &s.st), StatusCode::OK);
-        Closer stc { [&]() { storage_dispose(s.st); } };
+        HandleHolder sth { s.st };
 
         EXPECT_EQ(transaction_exec({}, db, &S::f, &s), StatusCode::OK);
         EXPECT_EQ(database_close(db), StatusCode::OK);
@@ -156,7 +150,7 @@ TEST_F(ApiTest, storage_create) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation f(TransactionHandle tx, void*) {
@@ -168,7 +162,7 @@ TEST_F(ApiTest, storage_create) {
             if (auto s = storage_create(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             if (content_put(tx, st, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
@@ -192,7 +186,7 @@ TEST_F(ApiTest, storage_create_exists) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation f(TransactionHandle tx, void*) {
@@ -204,7 +198,7 @@ TEST_F(ApiTest, storage_create_exists) {
             if (auto s = storage_create(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             StorageHandle s2 = nullptr;
             if (auto s = storage_create(borrowed, "testing", &s2); s != StatusCode::OK) {
                 if (s == StatusCode::ALREADY_EXISTS) {
@@ -212,7 +206,7 @@ TEST_F(ApiTest, storage_create_exists) {
                 }
                 return TransactionOperation::ERROR;
             }
-            Closer stc2 { [&]() { storage_dispose(s2); } };
+            HandleHolder stc2 { s2 };
             return TransactionOperation::ERROR;
         }
     };
@@ -226,7 +220,7 @@ TEST_F(ApiTest, storage_get) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation f_create(TransactionHandle tx, void*) {
@@ -238,7 +232,7 @@ TEST_F(ApiTest, storage_get) {
             if (auto s = storage_create(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             if (content_put(tx, st, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
@@ -253,7 +247,7 @@ TEST_F(ApiTest, storage_get) {
             if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             Slice s;
             if (content_get(tx, st, "a", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -275,7 +269,7 @@ TEST_F(ApiTest, storage_get_missing) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation f(TransactionHandle tx, void*) {
@@ -290,7 +284,7 @@ TEST_F(ApiTest, storage_get_missing) {
                 }
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             return TransactionOperation::ERROR;
         }
     };
@@ -304,7 +298,7 @@ TEST_F(ApiTest, storage_delete) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation f_create(TransactionHandle tx, void*) {
@@ -316,7 +310,7 @@ TEST_F(ApiTest, storage_delete) {
             if (auto s = storage_create(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             if (content_put(tx, st, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
@@ -331,7 +325,7 @@ TEST_F(ApiTest, storage_delete) {
             if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             Slice s;
             if (content_get(tx, st, "a", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -350,7 +344,7 @@ TEST_F(ApiTest, storage_delete) {
             if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             if (auto s = storage_delete(st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
@@ -370,7 +364,7 @@ TEST_F(ApiTest, transaction_wait) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation prepare(TransactionHandle tx, void* args) {
@@ -409,7 +403,7 @@ TEST_F(ApiTest, transaction_wait) {
     };
     S s;
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
-    Closer stc { [&]() { storage_dispose(s.st); } };
+    HandleHolder sth { s.st };
 
     ASSERT_EQ(transaction_exec({}, db, &S::prepare, &s), StatusCode::OK);
     auto r1 = std::async(std::launch::async, [&] {
@@ -434,7 +428,7 @@ TEST_F(ApiTest, transaction_failed) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation f(TransactionHandle, void*) {
@@ -444,7 +438,7 @@ TEST_F(ApiTest, transaction_failed) {
     };
     S s;
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
-    Closer stc { [&]() { storage_dispose(s.st); } };
+    HandleHolder sth { s.st };
 
     EXPECT_NE(transaction_exec({}, db, &S::f, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
@@ -456,7 +450,7 @@ TEST_F(ApiTest, transaction_borrow_owner) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation f1(TransactionHandle tx, void*) {
@@ -468,7 +462,7 @@ TEST_F(ApiTest, transaction_borrow_owner) {
             if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             if (content_put(tx, st, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
@@ -483,7 +477,7 @@ TEST_F(ApiTest, transaction_borrow_owner) {
             if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer stc { [&]() { storage_dispose(st); } };
+            HandleHolder sth { st };
             Slice s;
             if (content_get(tx, st, "a", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -497,7 +491,7 @@ TEST_F(ApiTest, transaction_borrow_owner) {
     };
     StorageHandle st;
     ASSERT_EQ(storage_create(db, "testing", &st), StatusCode::OK);
-    Closer stc { [&]() { storage_dispose(st); } };
+    HandleHolder sth { st };
 
     EXPECT_EQ(transaction_exec({}, db, &S::f1), StatusCode::OK);
     EXPECT_EQ(transaction_exec({}, db, &S::f2), StatusCode::OK);
@@ -510,7 +504,7 @@ TEST_F(ApiTest, contents) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation get_miss(TransactionHandle tx, void* args) {
@@ -551,7 +545,7 @@ TEST_F(ApiTest, contents) {
     };
     S s;
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
-    Closer stc { [&]() { storage_dispose(s.st); } };
+    HandleHolder sth { s.st };
 
     EXPECT_EQ(transaction_exec({}, db, &S::get_miss, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec({}, db, &S::delete_, &s), StatusCode::OK);
@@ -569,7 +563,7 @@ TEST_F(ApiTest, scan_prefix) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation prepare(TransactionHandle tx, void* args) {
@@ -594,7 +588,7 @@ TEST_F(ApiTest, scan_prefix) {
             if (content_scan_prefix(tx, st, "a/", &iter) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer closer { [&]{ iterator_dispose(iter); } };
+            HandleHolder closer { iter };
 
             Slice s;
             if (iterator_next(iter) != StatusCode::OK) {
@@ -626,7 +620,7 @@ TEST_F(ApiTest, scan_prefix) {
     };
     S s;
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
-    Closer stc { [&]() { storage_dispose(s.st); } };
+    HandleHolder sth { s.st };
 
     EXPECT_EQ(transaction_exec({}, db, &S::prepare, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec({}, db, &S::test, &s), StatusCode::OK);
@@ -639,7 +633,7 @@ TEST_F(ApiTest, scan_range) {
 
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
-    Closer dbc { [&]() { database_dispose(db); } };
+    HandleHolder dbh { db };
 
     struct S {
         static TransactionOperation prepare(TransactionHandle tx, void* args) {
@@ -664,7 +658,7 @@ TEST_F(ApiTest, scan_range) {
             if (content_scan_range(tx, st, "b", false, "c", false, &iter) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
-            Closer closer { [&]{ iterator_dispose(iter); } };
+            HandleHolder closer { iter };
 
             Slice s;
             if (iterator_next(iter) != StatusCode::OK) {
@@ -696,7 +690,7 @@ TEST_F(ApiTest, scan_range) {
     };
     S s;
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
-    Closer stc { [&]() { storage_dispose(s.st); } };
+    HandleHolder sth { s.st };
 
     EXPECT_EQ(transaction_exec({}, db, &S::prepare, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec({}, db, &S::test, &s), StatusCode::OK);

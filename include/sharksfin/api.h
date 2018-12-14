@@ -330,36 +330,6 @@ extern "C" StatusCode iterator_get_value(
 extern "C" StatusCode iterator_dispose(
         IteratorHandle handle);
 
-/**
- * @brief C++ style alias of database_dispose().
- * @param handle the target database handle
- * @return the operation status
- * @see database_dispose()
- */
-inline StatusCode dispose(DatabaseHandle handle) {
-    return database_dispose(handle);
-}
-
-/**
- * @brief C++ style alias of storage_dispose().
- * @param handle the target storage handle
- * @return operation status
- * @see storage_dispose()
- */
-inline StatusCode dispose(StorageHandle handle) {
-    return storage_dispose(handle);
-}
-
-/**
- * @brief C++ style alias of iterator_dispose().
- * @param handle the target iterator handle
- * @return the operation status
- * @see iterator_dispose()
- */
-inline StatusCode dispose(IteratorHandle handle) {
-    return iterator_dispose(handle);
-}
-
 }  // namespace sharksfin
 
 #endif  // SHARKSFIN_API_H_

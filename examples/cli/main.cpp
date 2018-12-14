@@ -17,10 +17,10 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "Closer.h"
 #include "Options.h"
 
 #include "sharksfin/api.h"
+#include "sharksfin/HandleHolder.h"
 
 namespace sharksfin::cli {
 
@@ -35,12 +35,7 @@ extern "C" int main(int argc, char* argv[]) {
         std::cerr << "cannot open database: " << s << std::endl;
         return EXIT_FAILURE;
     }
-    Closer dbc { [&]{
-        if (auto s = database_close(db); s != StatusCode::OK) {
-            std::cerr << "failed to shutdown database: " << s << std::endl;
-        }
-        database_dispose(db);
-    }};
+    HandleHolder dbh { db };
 
     struct CommandParam {
         CommandParam(
@@ -81,7 +76,7 @@ extern "C" int main(int argc, char* argv[]) {
             }
         }
         CommandParam param { &options, storage };
-        Closer stc { [&]{ storage_dispose(storage); }};
+        HandleHolder stc { storage };
         if (auto s = transaction_exec({}, db, Callback::f, &param); s != StatusCode::OK) {
             std::cerr << "failed to execute transaction: " << s << std::endl;
             return EXIT_FAILURE;
