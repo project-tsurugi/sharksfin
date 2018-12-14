@@ -19,7 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
-#include <string>
+#include <cstring>
 #include <string_view>
 #include <type_traits>
 
