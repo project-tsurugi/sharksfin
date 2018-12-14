@@ -60,26 +60,25 @@ public:
     }
 
     inline ::foedus::ErrorCode commit() {
-        std::cout << "FOEDUS commit" << std::endl;
         auto* xct_manager = engine_->get_xct_manager();
         ::foedus::Epoch commit_epoch;
         auto ret = xct_manager->precommit_xct(context_, &commit_epoch);
         if (ret != ::foedus::kErrorCodeOk) {
             std::cout << ret << "\n";
-        } else {
-            std::cout << "success.\n";
+            return ret;
+        }
+        ret = xct_manager->wait_for_commit(commit_epoch);
+        if (ret != ::foedus::kErrorCodeOk) {
+            std::cout << ret << "\n";
         }
         return ret;
     }
 
     inline ::foedus::ErrorCode abort() {
-        std::cout << "FOEDUS abort" << std::endl;
         auto* xct_manager = engine_->get_xct_manager();
         auto ret = xct_manager->abort_xct(context_);
         if (ret != ::foedus::kErrorCodeOk) {
             std::cout << ret << "\n";
-        } else {
-            std::cout << "success.\n";
         }
         return ret;
     }
@@ -102,6 +101,7 @@ public:
     inline ::foedus::thread::Thread* context() {
         return context_;
     }
+
 private:
     Database* owner_;
     ::foedus::thread::Thread* context_;

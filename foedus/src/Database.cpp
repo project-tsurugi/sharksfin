@@ -34,11 +34,12 @@ namespace foedus {
 char const* kProc = "foedusCallback";
 static const char* kStorageName = "sharksfin_tree";
 static const std::string KEY_LOCATION { "location" };  // NOLINT
+static const std::string KEY_THREADS { "threads" };  // NOLINT
 
 std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions const& dboptions) {
     ::foedus::EngineOptions options;
     options.debugging_.debug_log_min_threshold_ =
-        ::foedus::debugging::DebuggingOptions::kDebugLogError;
+        ::foedus::debugging::DebuggingOptions::kDebugLogWarning;
     options.memory_.use_numa_alloc_ = true;
     options.memory_.page_pool_size_mb_per_node_ = 32;
     options.memory_.private_page_pool_initial_grab_ = 8;
@@ -51,6 +52,11 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     if (path[path.size() - 1] != '/') {
         path += "/";
     }
+    int threads = 2; // default # of thread is min for tests
+    auto threads_option = dboptions.attribute(KEY_THREADS);
+    if (threads_option.has_value()) {
+        threads  = std::atoi(threads_option.value().data());
+    }
     const std::string snapshot_folder_path_pattern = path + "snapshots/node_$NODE$";
     options.snapshot_.folder_path_pattern_ = snapshot_folder_path_pattern.c_str();
     const std::string log_folder_path_pattern = path + "logs/node_$NODE$/logger_$LOGGER$";
@@ -58,13 +64,12 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     const std::string savepoint_path = path + "savepoint.xml";
     options.savepoint_.savepoint_path_ = savepoint_path.c_str();
 
-    int threads = 1;
     const int cpus = numa_num_task_cpus();
     const int use_nodes = (threads - 1) / cpus + 1;
     const int threads_per_node = (threads + (use_nodes - 1)) / use_nodes;
 
-    options.thread_.group_count_ = (uint16_t) use_nodes;
-    options.thread_.thread_count_per_group_ = (::foedus::thread::ThreadLocalOrdinal) threads_per_node;
+    options.thread_.group_count_ = static_cast<uint16_t>(use_nodes);
+    options.thread_.thread_count_per_group_ = static_cast<::foedus::thread::ThreadLocalOrdinal>(threads_per_node);
 
     options.log_.log_buffer_kb_ = 512;
     options.log_.flush_at_shutdown_ = true;
@@ -96,14 +101,13 @@ struct Input {
     std::memcpy(&ptr, arg.input_buffer_, sizeof(Input*));
     TransactionCallback callback(ptr->callback_);
     auto tx = std::make_unique<foedus::Transaction>(ptr->db_, arg.context_, ptr->engine_);
-
-    FOEDUS_WRAP_ERROR_CODE(tx->begin());
+    FOEDUS_WRAP_ERROR_CODE(tx->begin());  //NOLINT
     auto status = callback(tx.get(), ptr->arguments_);
     if (status == TransactionOperation::COMMIT) {
-        FOEDUS_WRAP_ERROR_CODE(tx->commit());
+        FOEDUS_WRAP_ERROR_CODE(tx->commit());  //NOLINT
     } else {
-        FOEDUS_WRAP_ERROR_CODE(tx->abort());
-        FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeXctUserAbort);
+        FOEDUS_WRAP_ERROR_CODE(tx->abort());  //NOLINT
+        FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeXctUserAbort);  //NOLINT
     }
     return ::foedus::kRetOk;
 }
@@ -136,55 +140,60 @@ StatusCode Database::exec_transaction(
     auto id = transaction_id_sequence_.fetch_add(1U);
     (void)id;
     Input* in_ptr = &in;
-    ::foedus::ErrorStack result = engine_->get_thread_pool()->impersonate_synchronous(kProc, &in_ptr, sizeof(Input*));
+
+    // TODO create option to set retry count. currently retry infinitely
+    bool retry;
+    ::foedus::ErrorStack result;
+    do {
+        retry = false;
+        result = engine_->get_thread_pool()->impersonate_synchronous(kProc, &in_ptr, sizeof(Input*));
+        if (result.is_error() && result.get_error_code() == ::foedus::kErrorCodeXctRaceAbort) {
+            retry = true;
+        }
+    } while (retry);
     return resolve(result);
 }
 
 StatusCode Database::get(Transaction* tx, Slice key, std::string &buffer) {
-    (void)tx;
-    (void)key;
-    (void)buffer;
     ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    ::foedus::storage::masstree::PayloadLength capacity;
-    return resolve(tree.get_record(tx->context(), key.data(), key.size(), buffer.data(), &capacity, false));
+    auto capacity = static_cast<::foedus::storage::masstree::PayloadLength>(buffer.capacity());
+    buffer.resize(buffer.capacity()); // set length long enough otherwise calling resize() again accidentally fills nulls
+    auto ret = resolve(tree.get_record(tx->context(),
+        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
+        buffer.data(), &capacity, false));
+    buffer.resize(capacity);
+    return ret;
 }
 
 StatusCode Database::put(Transaction* tx, Slice key, Slice value) {
     ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
-    return resolve(tree.insert_record(tx->context(), key.data(), key.size(), value.data(), value.size()));
+    return resolve(tree.upsert_record(tx->context(),
+        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
+        value.data(), static_cast<::foedus::storage::masstree::PayloadLength>(value.size())));
 }
 
-StatusCode Database::remove(Slice key) {
-    (void)key;
-//    leveldb::WriteOptions options;
-//    auto status = leveldb_->Delete(options, resolve(key));
-//    return handle(status);
-    return StatusCode::OK;
+StatusCode Database::remove(Transaction* tx, Slice key) {
+    ::foedus::storage::masstree::MasstreeStorage tree = engine_->get_storage_manager()->get_masstree(kStorageName);
+    return resolve(tree.delete_record(tx->context(),
+        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size())));
 }
 
-std::unique_ptr<Iterator> Database::scan_prefix(Slice prefix_key) {
-    (void)prefix_key;
-//    leveldb::ReadOptions options;
-//    std::unique_ptr<leveldb::Iterator> iter { leveldb_->NewIterator(options) };
-//    return std::make_unique<Iterator>(this, std::move(iter), prefix_key);
-    return std::make_unique<Iterator>();
+std::unique_ptr<Iterator> Database::scan_prefix(Transaction* tx, Slice prefix_key) {
+    auto database = tx->owner();
+    std::string end_key{prefix_key.to_string()};
+    end_key[end_key.size()-1] += 1;
+    return std::make_unique<Iterator>(*database->masstree_, tx->context(),
+        prefix_key, false,
+        end_key, true);
 }
 
-std::unique_ptr<Iterator> Database::scan_range(
+std::unique_ptr<Iterator> Database::scan_range(Transaction* tx,
         Slice begin_key, bool begin_exclusive,
         Slice end_key, bool end_exclusive) {
-    (void)begin_key;
-    (void)begin_exclusive;
-    (void)end_key;
-    (void)end_exclusive;
-//    leveldb::ReadOptions options;
-//    std::unique_ptr<leveldb::Iterator> iter { leveldb_->NewIterator(options) };
-//    return StatusCode::OK;
-//    return std::make_unique<Iterator>(
-//            this, std::move(iter),
-//            begin_key, begin_exclusive,
-//            end_key, end_exclusive);
-    return std::make_unique<Iterator>();
+    auto database = tx->owner();
+    return std::make_unique<Iterator>(*database->masstree_, tx->context(),
+        begin_key, begin_exclusive,
+        end_key, end_exclusive);
 }
 
 StatusCode Database::resolve(::foedus::ErrorStack const& result) {
@@ -196,8 +205,11 @@ StatusCode Database::resolve(::foedus::ErrorStack const& result) {
 }
 
 StatusCode Database::resolve(::foedus::ErrorCode const& code) {
+    if (code == ::foedus::kErrorCodeStrKeyNotFound) {
+        return StatusCode::NOT_FOUND;
+    }
     if (code != ::foedus::kErrorCodeOk) {
-        return resolve(FOEDUS_ERROR_STACK(code));
+        return resolve(FOEDUS_ERROR_STACK(code));  //NOLINT
     }
     return StatusCode::OK;
 }

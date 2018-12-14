@@ -68,8 +68,251 @@ TEST_F(FoedusApiTest, simple) {
         }
     };
     EXPECT_EQ(transaction_exec(handle, &S::f1), StatusCode::OK);
-//    EXPECT_EQ(transaction_exec(handle, &S::f2), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(handle, &S::f2), StatusCode::OK);
     EXPECT_EQ(database_close(handle), StatusCode::OK);
 }
+TEST_F(FoedusApiTest, contents) {
+    DatabaseOptions options;
 
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation get_miss(TransactionHandle tx, void*) {
+            Slice s;
+            if (content_get(tx, "a", &s) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation get_exists(TransactionHandle tx, void*) {
+            Slice s;
+            if (content_get(tx, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation put(TransactionHandle tx, void*) {
+            if (content_put(tx, "a", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation delete_(TransactionHandle tx, void*) {
+            if (content_delete(tx, "a") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, &S::get_miss), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::delete_), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::put), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::put), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::get_exists), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::delete_), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::get_miss), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, transaction_wait) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void*) {
+            std::int8_t v = 0;
+            if (content_put(tx, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation run(TransactionHandle tx, void*) {
+            Slice s;
+            if (content_get(tx, "k", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            std::int8_t v = static_cast<std::int8_t>(*s.data<std::int8_t>() + 1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            if (content_put(tx, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation validate(TransactionHandle tx, void*) {
+            Slice s;
+            if (content_get(tx, "k", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (*s.data<std::int8_t>() != 10) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    ASSERT_EQ(transaction_exec(db, &S::prepare), StatusCode::OK);
+    auto r1 = std::async(std::launch::async, [&] {
+      StatusCode ret;
+      for (std::size_t i = 0U; i < 5U; ++i) {
+          ret = transaction_exec(db, &S::run);
+          if (ret != StatusCode::OK) {
+              break;
+          }
+      }
+      return ret;
+    });
+    for (std::size_t i = 0U; i < 5U; ++i) {
+        EXPECT_EQ(transaction_exec(db, &S::run), StatusCode::OK);
+    }
+    EXPECT_EQ(r1.get(), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::validate), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, transaction_failed) {
+    DatabaseOptions options;
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation f(TransactionHandle, void*) {
+            return TransactionOperation::ERROR;
+        }
+    };
+    EXPECT_NE(transaction_exec(db, &S::f), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+
+TEST_F(FoedusApiTest, scan_prefix) {
+    DatabaseOptions options;
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void*) {
+            if (content_put(tx, "a", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "a/", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "a/c", "AC") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "b", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void*) {
+            IteratorHandle iter;
+            if (content_scan_prefix(tx, "a/", &iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            Closer closer { [&]{ iterator_dispose(iter); } };
+
+            Slice s;
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "a/") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "A") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "a/c") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "AC") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, &S::prepare), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::test), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, scan_range) {
+    DatabaseOptions options;
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    Closer dbc { [&]() { database_dispose(db); } };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void*) {
+            if (content_put(tx, "a", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "b", "B") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "c", "C") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, "d", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void*) {
+            IteratorHandle iter;
+            if (content_scan_range(tx, "b", false, "c", false, &iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            Closer closer { [&]{ iterator_dispose(iter); } };
+
+            Slice s;
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "b") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "B") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "c") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "C") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+    };
+    EXPECT_EQ(transaction_exec(db, &S::prepare), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, &S::test), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
 }  // namespace sharksfin
