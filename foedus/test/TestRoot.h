@@ -24,8 +24,6 @@
 
 #include "TemporaryFolder.h"
 
-#include "leveldb/db.h"
-
 namespace sharksfin::testing {
 
 class TestRoot : public ::testing::Test {
@@ -40,19 +38,6 @@ public:
 
     std::string path() const {
         return temporary_.path();
-    }
-
-    std::unique_ptr<leveldb::DB> open() {
-        leveldb::Options opts;
-        opts.create_if_missing = true;
-        leveldb::DB* ptr = nullptr;
-        auto status = leveldb::DB::Open(opts, path(), &ptr);
-        if (status.ok()) {
-            std::cout << "leveldb: " << path() << std::endl;
-            std::unique_ptr<leveldb::DB> leveldb { ptr };
-            return leveldb;
-        }
-        throw std::runtime_error(status.ToString());
     }
 
 private:
