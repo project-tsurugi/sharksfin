@@ -159,6 +159,7 @@ extern "C" StatusCode storage_dispose(
 /**
  * @brief executes the given callback function in a new transaction process.
  * The callback function may be called twice or more.
+ * @param options the transaction options
  * @param handle the target database
  * @param callback the operation to be processed in transaction
  * @param arguments extra arguments for the callback function
