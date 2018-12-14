@@ -68,11 +68,12 @@ enum class StatusCode : std::int64_t {
 };
 
 /**
- * @brief returns label of the given status code.
- * @return the corresponded label of status code.
+ * @brief returns the label of the given enum value.
+ * @param value the enum value
+ * @return the corresponded label
  */
-extern "C" inline char const* status_code_label(StatusCode code) {
-    switch (code) {
+inline constexpr std::string_view to_string_view(StatusCode value) {
+    switch (value) {
         case StatusCode::OK: return "OK";
         case StatusCode::NOT_FOUND: return "NOT_FOUND";
         case StatusCode::ALREADY_EXISTS: return "ALREADY_EXISTS";
@@ -86,14 +87,13 @@ extern "C" inline char const* status_code_label(StatusCode code) {
 }
 
 /**
- * @brief appends status code label into the given stream.
+ * @brief appends enum label into the given stream.
  * @param out the target stream
- * @param code the source status code
+ * @param value the source enum value
  * @return the target stream
  */
-inline std::ostream& operator<<(std::ostream& out, StatusCode code) {
-    out << status_code_label(code);
-    return out;
+inline std::ostream& operator<<(std::ostream& out, StatusCode value) {
+    return out << to_string_view(value).data();
 }
 
 }  // namespace sharksfin

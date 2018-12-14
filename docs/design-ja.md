@@ -11,6 +11,8 @@
   * 低レベルAPI
 * `include/DatabaseOptions.h`
   * データベース設定情報
+* `include/TransactionOptions.h`
+  * トランザクション設定情報
 * `include/Slice.h`
   * メモリスライス
   * メモリ上の連続領域に対する単なるビューであり、このオブジェクトを経由してメモリを変更しない

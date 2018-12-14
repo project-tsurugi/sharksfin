@@ -33,7 +33,7 @@ std::vector<CommandSpec> const command_list {
 };
 
 [[noreturn]] static void raise(StatusCode code) {
-    throw std::runtime_error(status_code_label(code));
+    throw std::runtime_error(to_string_view(code).data());
 }
 
 static void check(StatusCode code) {

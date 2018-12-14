@@ -17,6 +17,7 @@
 #define SHARKSFIN_DATABASEOPTIONS_H_
 
 #include <cstdint>
+#include <iostream>
 #include <map>
 #include <optional>
 #include <string>
@@ -102,6 +103,29 @@ private:
     std::map<std::string, std::string> attributes_ {};
     OpenMode open_mode_ = OpenMode::CREATE_OR_RESTORE;
 };
+
+/**
+ * @brief returns the label of the given enum value.
+ * @param value the enum value
+ * @return the corresponded label
+ */
+inline constexpr std::string_view to_string_view(DatabaseOptions::OpenMode value) {
+    switch (value) {
+        case DatabaseOptions::OpenMode::RESTORE: return "RESTORE";
+        case DatabaseOptions::OpenMode::CREATE_OR_RESTORE: return "CREATE_OR_RESTORE";
+        default: abort();
+    }
+}
+
+/**
+ * @brief appends enum label into the given stream.
+ * @param out the target stream
+ * @param value the source enum value
+ * @return the target stream
+ */
+inline std::ostream& operator<<(std::ostream& out, DatabaseOptions::OpenMode value) {
+    return out << to_string_view(value).data();
+}
 
 }  // namespace sharksfin
 

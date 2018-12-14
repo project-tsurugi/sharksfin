@@ -23,28 +23,59 @@
 #include "DatabaseOptions.h"
 #include "Slice.h"
 #include "StatusCode.h"
+#include "TransactionOperation.h"
+#include "TransactionOptions.h"
 
 namespace sharksfin {
 
 /**
+ * @brief a stub of database object type.
+ * The corresponded handle may not inherit this type.
+ */
+struct DatabaseStub {};
+
+/**
+ * @brief a stub of storage object type.
+ * The corresponded handle may not inherit this type.
+ */
+struct StorageStub {};
+
+/**
+ * @brief a stub of transaction object type.
+ * The corresponded handle may not inherit this type.
+ */
+struct TransactionStub {};
+
+/**
+ * @brief a stub of iterator object type.
+ * The corresponded handle may not inherit this type.
+ */
+struct IteratorStub {};
+
+/**
  * @brief a database handle type.
  */
-typedef struct DatabaseStub {} * DatabaseHandle;
+using DatabaseHandle = std::add_pointer_t<DatabaseStub>;
 
 /**
  * @brief a storage handle type.
  */
-typedef struct StorageStub {} * StorageHandle;
+using StorageHandle = std::add_pointer_t<StorageStub>;
 
 /**
  * @brief a transaction handle type.
  */
-typedef struct TransactionStub {} * TransactionHandle;
+using TransactionHandle = std::add_pointer_t<TransactionStub>;
 
 /**
  * @brief an iterator handle type.
  */
-typedef struct IteratorStub {} * IteratorHandle;
+using IteratorHandle = std::add_pointer_t<IteratorStub>;
+
+/**
+ * @brief transaction callback function type.
+ */
+using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionHandle, void*)>;
 
 /**
  * @brief opens a database and returns its handle.
@@ -126,56 +157,6 @@ extern "C" StatusCode storage_dispose(
         StorageHandle handle);
 
 /**
- * @brief the operation type of transactions.
- */
-enum class TransactionOperation : std::int32_t {
-
-    /**
-     * @brief commit the current transaction.
-     */
-    COMMIT = 1,
-
-    /**
-     * @brief abort and roll-back the current transaction.
-     */
-    ROLLBACK = 2,
-
-    /**
-     * @brief occur an unrecoverable error.
-     */
-    ERROR = -1,
-};
-
-/**
- * @brief returns label of the given transaction operation.
- * @return the corresponded label of transaction operation.
- */
-extern "C" inline char const* transaction_operation_label(TransactionOperation code) {
-    switch (code) {
-        case TransactionOperation::COMMIT: return "OK";
-        case TransactionOperation::ROLLBACK: return "ROLLBACK";
-        case TransactionOperation::ERROR: return "ERROR";
-        default: return "UNDEFINED";
-    }
-}
-
-/**
- * @brief appends transaction operation label into the given stream.
- * @param out the target stream
- * @param code the source status code
- * @return the target stream
- */
-inline std::ostream& operator<<(std::ostream& out, TransactionOperation code) {
-    out << transaction_operation_label(code);
-    return out;
-}
-
-/**
- * @brief transaction callback function type.
- */
-using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionHandle, void*)>;
-
-/**
  * @brief executes the given callback function in a new transaction process.
  * The callback function may be called twice or more.
  * @param handle the target database
@@ -184,6 +165,7 @@ using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionH
  * @return the operation status
  */
 extern "C" StatusCode transaction_exec(
+        TransactionOptions const& options,
         DatabaseHandle handle,
         TransactionCallback callback,
         void* arguments = nullptr);
@@ -346,6 +328,36 @@ extern "C" StatusCode iterator_get_value(
  */
 extern "C" StatusCode iterator_dispose(
         IteratorHandle handle);
+
+/**
+ * @brief C++ style alias of database_dispose().
+ * @param handle the target database handle
+ * @return the operation status
+ * @see database_dispose()
+ */
+inline StatusCode dispose(DatabaseHandle handle) {
+    return database_dispose(handle);
+}
+
+/**
+ * @brief C++ style alias of storage_dispose().
+ * @param handle the target storage handle
+ * @return operation status
+ * @see storage_dispose()
+ */
+inline StatusCode dispose(StorageHandle handle) {
+    return storage_dispose(handle);
+}
+
+/**
+ * @brief C++ style alias of iterator_dispose().
+ * @param handle the target iterator handle
+ * @return the operation status
+ * @see iterator_dispose()
+ */
+inline StatusCode dispose(IteratorHandle handle) {
+    return iterator_dispose(handle);
+}
 
 }  // namespace sharksfin
 

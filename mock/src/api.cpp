@@ -139,6 +139,7 @@ StatusCode storage_dispose(StorageHandle handle) {
 }
 
 StatusCode transaction_exec(
+        [[maybe_unused]] TransactionOptions const& options,
         DatabaseHandle handle,
         TransactionCallback callback,
         void *arguments) {

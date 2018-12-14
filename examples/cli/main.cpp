@@ -32,12 +32,12 @@ extern "C" int main(int argc, char* argv[]) {
 
     DatabaseHandle db;
     if (auto s = database_open(options.database, &db); s != StatusCode::OK) {
-        std::cerr << "cannot open database: " << status_code_label(s) << std::endl;
+        std::cerr << "cannot open database: " << s << std::endl;
         return EXIT_FAILURE;
     }
     Closer dbc { [&]{
         if (auto s = database_close(db); s != StatusCode::OK) {
-            std::cerr << "failed to shutdown database: " << status_code_label(s) << std::endl;
+            std::cerr << "failed to shutdown database: " << s << std::endl;
         }
         database_dispose(db);
     }};
@@ -72,18 +72,18 @@ extern "C" int main(int argc, char* argv[]) {
         if (auto s = storage_get(db, "main", &storage); s != StatusCode::OK) {
             if (s == StatusCode::NOT_FOUND) {
                 if (s = storage_create(db, "main", &storage); s != StatusCode::OK) {
-                    std::cerr << "failed to create storage: " << status_code_label(s) << std::endl;
+                    std::cerr << "failed to create storage: " << s << std::endl;
                     return EXIT_FAILURE;
                 }
             } else {
-                std::cerr << "failed to restore storage: " << status_code_label(s) << std::endl;
+                std::cerr << "failed to restore storage: " << s << std::endl;
                 return EXIT_FAILURE;
             }
         }
         CommandParam param { &options, storage };
         Closer stc { [&]{ storage_dispose(storage); }};
-        if (auto s = transaction_exec(db, Callback::f, &param); s != StatusCode::OK) {
-            std::cerr << "failed to execute transaction: " << status_code_label(s) << std::endl;
+        if (auto s = transaction_exec({}, db, Callback::f, &param); s != StatusCode::OK) {
+            std::cerr << "failed to execute transaction: " << s << std::endl;
             return EXIT_FAILURE;
         }
     }
