@@ -159,15 +159,15 @@ extern "C" StatusCode storage_dispose(
 /**
  * @brief executes the given callback function in a new transaction process.
  * The callback function may be called twice or more.
- * @param options the transaction options
  * @param handle the target database
+ * @param options the transaction options
  * @param callback the operation to be processed in transaction
  * @param arguments extra arguments for the callback function
  * @return the operation status
  */
 extern "C" StatusCode transaction_exec(
-        TransactionOptions const& options,
         DatabaseHandle handle,
+        TransactionOptions const& options,
         TransactionCallback callback,
         void* arguments = nullptr);
 // TODO: async (group) commit interface

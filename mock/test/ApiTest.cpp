@@ -71,8 +71,8 @@ TEST_F(ApiTest, simple) {
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
     HandleHolder sth { s.st };
 
-    EXPECT_EQ(transaction_exec({}, db, &S::f1, &s), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::f2, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f1, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f2, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -98,7 +98,7 @@ TEST_F(ApiTest, database_restore) {
         ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
         HandleHolder sth { s.st };
 
-        EXPECT_EQ(transaction_exec({}, db, &S::f, &s), StatusCode::OK);
+        EXPECT_EQ(transaction_exec(db, {}, &S::f, &s), StatusCode::OK);
         EXPECT_EQ(database_close(db), StatusCode::OK);
     }
     {
@@ -127,7 +127,7 @@ TEST_F(ApiTest, database_restore) {
         ASSERT_EQ(storage_get(db, "s", &s.st), StatusCode::OK);
         HandleHolder sth { s.st };
 
-        EXPECT_EQ(transaction_exec({}, db, &S::f, &s), StatusCode::OK);
+        EXPECT_EQ(transaction_exec(db, {}, &S::f, &s), StatusCode::OK);
         EXPECT_EQ(database_close(db), StatusCode::OK);
     }
 }
@@ -176,7 +176,7 @@ TEST_F(ApiTest, storage_create) {
             return TransactionOperation::COMMIT;
         }
     };
-    EXPECT_EQ(transaction_exec({}, db, &S::f), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -210,7 +210,7 @@ TEST_F(ApiTest, storage_create_exists) {
             return TransactionOperation::ERROR;
         }
     };
-    EXPECT_EQ(transaction_exec({}, db, &S::f), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -258,8 +258,8 @@ TEST_F(ApiTest, storage_get) {
             return TransactionOperation::COMMIT;
         }
     };
-    EXPECT_EQ(transaction_exec({}, db, &S::f_create), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::f_get), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_create), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_get), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -288,7 +288,7 @@ TEST_F(ApiTest, storage_get_missing) {
             return TransactionOperation::ERROR;
         }
     };
-    EXPECT_EQ(transaction_exec({}, db, &S::f), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -351,10 +351,10 @@ TEST_F(ApiTest, storage_delete) {
             return TransactionOperation::COMMIT;
         }
     };
-    EXPECT_EQ(transaction_exec({}, db, &S::f_create), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::f_get), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::f_delete), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::f_create), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_create), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_get), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_delete), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f_create), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -405,20 +405,20 @@ TEST_F(ApiTest, transaction_wait) {
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
     HandleHolder sth { s.st };
 
-    ASSERT_EQ(transaction_exec({}, db, &S::prepare, &s), StatusCode::OK);
+    ASSERT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
     auto r1 = std::async(std::launch::async, [&] {
         for (std::size_t i = 0U; i < 5U; ++i) {
-            if (auto c = transaction_exec({}, db, &S::run, &s); c != StatusCode::OK) {
+            if (auto c = transaction_exec(db, {}, &S::run, &s); c != StatusCode::OK) {
                 return c;
             }
         }
         return StatusCode::OK;
     });
     for (std::size_t i = 0U; i < 5U; ++i) {
-        EXPECT_EQ(transaction_exec({}, db, &S::run, &s), StatusCode::OK);
+        EXPECT_EQ(transaction_exec(db, {}, &S::run, &s), StatusCode::OK);
     }
     EXPECT_EQ(r1.get(), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::validate, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::validate, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -440,7 +440,7 @@ TEST_F(ApiTest, transaction_failed) {
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
     HandleHolder sth { s.st };
 
-    EXPECT_NE(transaction_exec({}, db, &S::f, &s), StatusCode::OK);
+    EXPECT_NE(transaction_exec(db, {}, &S::f, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -493,8 +493,8 @@ TEST_F(ApiTest, transaction_borrow_owner) {
     ASSERT_EQ(storage_create(db, "testing", &st), StatusCode::OK);
     HandleHolder sth { st };
 
-    EXPECT_EQ(transaction_exec({}, db, &S::f1), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::f2), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f1), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f2), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -547,13 +547,13 @@ TEST_F(ApiTest, contents) {
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
     HandleHolder sth { s.st };
 
-    EXPECT_EQ(transaction_exec({}, db, &S::get_miss, &s), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::delete_, &s), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::put, &s), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::put, &s), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::get_exists, &s), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::delete_, &s), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::get_miss, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::get_miss, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::delete_, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::put, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::put, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::get_exists, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::delete_, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::get_miss, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -622,8 +622,8 @@ TEST_F(ApiTest, scan_prefix) {
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
     HandleHolder sth { s.st };
 
-    EXPECT_EQ(transaction_exec({}, db, &S::prepare, &s), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -692,8 +692,8 @@ TEST_F(ApiTest, scan_range) {
     ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
     HandleHolder sth { s.st };
 
-    EXPECT_EQ(transaction_exec({}, db, &S::prepare, &s), StatusCode::OK);
-    EXPECT_EQ(transaction_exec({}, db, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 

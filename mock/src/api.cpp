@@ -139,8 +139,8 @@ StatusCode storage_dispose(StorageHandle handle) {
 }
 
 StatusCode transaction_exec(
-        [[maybe_unused]] TransactionOptions const& options,
         DatabaseHandle handle,
+        [[maybe_unused]] TransactionOptions const& options,
         TransactionCallback callback,
         void *arguments) {
     auto database = unwrap(handle);

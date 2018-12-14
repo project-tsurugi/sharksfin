@@ -77,7 +77,7 @@ extern "C" int main(int argc, char* argv[]) {
         }
         CommandParam param { &options, storage };
         HandleHolder stc { storage };
-        if (auto s = transaction_exec({}, db, Callback::f, &param); s != StatusCode::OK) {
+        if (auto s = transaction_exec(db, {}, Callback::f, &param); s != StatusCode::OK) {
             std::cerr << "failed to execute transaction: " << s << std::endl;
             return EXIT_FAILURE;
         }
