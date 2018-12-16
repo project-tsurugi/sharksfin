@@ -41,9 +41,14 @@ class Storage;
  */
 class Database {
 public:
+    /**
+     * @brief setup foedus engine and return Database.
+     */
     static StatusCode open(DatabaseOptions const& options, std::unique_ptr<Database>* result) noexcept;
+
     /**
      * @brief constructs a new object.
+     * @param engine foedus engine
      */
     explicit Database(std::unique_ptr<::foedus::Engine> engine) noexcept;
 
@@ -53,8 +58,8 @@ public:
     StatusCode shutdown();
 
     /**
-     * @brief creates a new transaction context.
-     * @return the created transaction context
+     * @brief execute a new transaction.
+     * @param callback callback that runs within transaction
      */
     StatusCode exec_transaction(
         TransactionCallback callback,
@@ -82,6 +87,7 @@ public:
      */
     void delete_storage(Storage& storage);
 
+private:
     std::unique_ptr<::foedus::Engine> engine_;
 };
 

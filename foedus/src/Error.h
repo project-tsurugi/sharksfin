@@ -16,31 +16,36 @@
 #ifndef SHARKSFIN_FOEDUS_ERROR_H_
 #define SHARKSFIN_FOEDUS_ERROR_H_
 
-#include <atomic>
-#include <memory>
-#include <mutex>
-#include <string>
+#include "sharksfin/StatusCode.h"
 
-#include "sharksfin/api.h"
-#include "sharksfin/Slice.h"
-
-#include "foedus/engine.hpp"
-#include "foedus/storage/masstree/masstree_storage.hpp"
-#include "foedus/storage/masstree/masstree_metadata.hpp"
-#include "foedus/storage/storage_manager.hpp"
-#include "foedus/storage/storage_manager_pimpl.hpp"
+#include "foedus/error_stack.hpp"
 
 namespace sharksfin::foedus {
 
-// due to namespace conflict, these macros are copied from foedus
+/**
+ * due to namespace conflict, these macros are copied from foedus
+ */
 #define FOEDUS_ERROR_STACK(e) ::foedus::ErrorStack(__FILE__, __FUNCTION__, __LINE__, e)
+
 #define FOEDUS_WRAP_ERROR_CODE(x)\
 {\
   ::foedus::ErrorCode __e = x;\
   if (UNLIKELY(__e != ::foedus::kErrorCodeOk)) {return FOEDUS_ERROR_STACK(__e);}\
 }
 
+/**
+ * @brief map foedus error stack to sharksfin StatusCode
+ * @param result the foedus error
+ * @return sharksfin status code
+ */
 StatusCode resolve(::foedus::ErrorStack const& result);
+
+
+/**
+ * @brief map foedus error code to sharksfin StatusCode
+ * @param result the foedus error code
+ * @return sharksfin status code
+ */
 StatusCode resolve(::foedus::ErrorCode const& code);
 
 }  // namespace sharksfin::foedus

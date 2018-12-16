@@ -30,7 +30,7 @@ class Database;
 class Iterator;
 
 /**
- * @brief a storage identifier.
+ * @brief a wrapper for foedus masstree storage.
  */
 class Storage {
 public:
@@ -38,7 +38,7 @@ public:
      * @brief constructs a new object.
      * @param owner the owner of this storage.
      * @param key the storage key
-     * @param leveldb the internal LevelDB object
+     * @param masstree the internal foedus masstree object
      */
     inline Storage(
             Database* owner,
@@ -66,6 +66,7 @@ public:
 
     /**
      * @brief obtains an entry and write its value into the given buffer.
+     * @param tx the transaction where the operation is executed
      * @param key the entry key
      * @param buffer the destination buffer
      * @return the operation status
@@ -74,6 +75,7 @@ public:
 
     /**
      * @brief creates or overwrites an entry.
+     * @param tx the transaction where the operation is executed
      * @param key the entry key
      * @param value the entry value
      * @return the operation status
@@ -82,6 +84,7 @@ public:
 
     /**
      * @brief removes an entry.
+     * @param tx the transaction where the operation is executed
      * @param key the entry key
      * @return the operation status
      */
