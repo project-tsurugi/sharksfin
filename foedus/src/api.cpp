@@ -60,11 +60,12 @@ static inline foedus::Iterator* unwrap(IteratorHandle handle) {
 StatusCode database_open(
         DatabaseOptions const& options,
         DatabaseHandle* result) {
-    *result = wrap(new foedus::Database(options));
-    if (options.open_mode() == DatabaseOptions::OpenMode::CREATE_OR_RESTORE) {
-        //TODO
+    std::unique_ptr<foedus::Database> db;
+    auto ret = foedus::Database::open(options, &db);
+    if (ret == StatusCode::OK) {
+        *result = wrap(db.release());
     }
-    return StatusCode::OK;
+    return ret;
 }
 
 StatusCode database_close(DatabaseHandle handle) {

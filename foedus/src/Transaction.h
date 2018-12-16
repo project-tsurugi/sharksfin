@@ -26,11 +26,10 @@
 #include "foedus/thread/thread.hpp"
 #include "foedus/xct/xct_manager.hpp"
 
-namespace sharksfin {
-namespace foedus {
+namespace sharksfin::foedus {
 
 /**
- * @brief a transaction lock.
+ * @brief a transaction
  */
 class Transaction {
 public:
@@ -109,7 +108,6 @@ private:
     std::string buffer_;
 };
 
-}  // namespace foedus
-}  // namespace sharksfin
+}  // namespace sharksfin::foedus
 
 #endif  // SHARKSFIN_FOEDUS_TRANSACTION_H_

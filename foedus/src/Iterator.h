@@ -24,8 +24,7 @@
 
 #include "sharksfin/api.h"
 
-namespace sharksfin {
-namespace foedus {
+namespace sharksfin::foedus {
 
 /**
  * @brief an iterator for foedus masstree.
@@ -96,7 +95,6 @@ private:
     std::string buffer_;
 };
 
-}  // namespace foedus
-}  // namespace sharksfin
+}  // namespace sharksfin::foedus
 
 #endif  // SHARKSFIN_FOEDUS_ITERATOR_H_

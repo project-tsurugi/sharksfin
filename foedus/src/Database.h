@@ -30,8 +30,7 @@
 #include "foedus/storage/storage_manager.hpp"
 #include "foedus/storage/storage_manager_pimpl.hpp"
 
-namespace sharksfin {
-namespace foedus {
+namespace sharksfin::foedus {
 
 class Transaction;
 class Iterator;
@@ -42,10 +41,11 @@ class Storage;
  */
 class Database {
 public:
+    static StatusCode open(DatabaseOptions const& options, std::unique_ptr<Database>* result) noexcept;
     /**
      * @brief constructs a new object.
      */
-    explicit Database(DatabaseOptions const& options) noexcept;
+    explicit Database(std::unique_ptr<::foedus::Engine> engine) noexcept;
 
     /**
      * @brief shutdown this database.
@@ -85,7 +85,6 @@ public:
     std::unique_ptr<::foedus::Engine> engine_;
 };
 
-}  // namespace foedus
-}  // namespace sharksfin
+}  // namespace sharksfin::foedus
 
 #endif  // SHARKSFIN_FOEDUS_DATABASE_H_

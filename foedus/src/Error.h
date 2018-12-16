@@ -30,8 +30,7 @@
 #include "foedus/storage/storage_manager.hpp"
 #include "foedus/storage/storage_manager_pimpl.hpp"
 
-namespace sharksfin {
-namespace foedus {
+namespace sharksfin::foedus {
 
 // due to namespace conflict, these macros are copied from foedus
 #define FOEDUS_ERROR_STACK(e) ::foedus::ErrorStack(__FILE__, __FUNCTION__, __LINE__, e)
@@ -44,7 +43,6 @@ namespace foedus {
 StatusCode resolve(::foedus::ErrorStack const& result);
 StatusCode resolve(::foedus::ErrorCode const& code);
 
-}  // namespace foedus
-}  // namespace sharksfin
+}  // namespace sharksfin::foedus
 
 #endif  // SHARKSFIN_FOEDUS_ERROR_H_
