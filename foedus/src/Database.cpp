@@ -65,7 +65,7 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     int threads = 2; // default # of thread is min for tests
     auto threads_option = dboptions.attribute(KEY_THREADS);
     if (threads_option.has_value()) {
-        threads = std::atoi(threads_option.value().data());
+        threads = static_cast<int>(std::strtol(threads_option.value().data(), nullptr, 10));
     }
     const std::string snapshot_folder_path_pattern = path + "snapshots/node_$NODE$";
     options.snapshot_.folder_path_pattern_ = snapshot_folder_path_pattern.c_str();
@@ -112,7 +112,7 @@ struct Input {
     TransactionCallback callback(ptr->callback_);
     auto tx = std::make_unique<foedus::Transaction>(ptr->db_, arg.context_, ptr->engine_);
     FOEDUS_WRAP_ERROR_CODE(tx->begin());  //NOLINT
-    auto status = callback(reinterpret_cast<TransactionHandle>(tx.get()), ptr->arguments_);
+    auto status = callback(reinterpret_cast<TransactionHandle>(tx.get()), ptr->arguments_); //NOLINT
     if (status == TransactionOperation::COMMIT) {
         FOEDUS_WRAP_ERROR_CODE(tx->commit());  //NOLINT
     } else {
