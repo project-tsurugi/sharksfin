@@ -16,9 +16,8 @@
 #ifndef SHARKSFIN_FOEDUS_ERROR_H_
 #define SHARKSFIN_FOEDUS_ERROR_H_
 
-#include "sharksfin/StatusCode.h"
-
 #include "foedus/error_stack.hpp"
+#include "sharksfin/StatusCode.h"
 
 namespace sharksfin::foedus {
 

@@ -18,13 +18,6 @@
 #include <memory>
 #include <utility>
 
-#include "Iterator.h"
-#include "Transaction.h"
-#include "Error.h"
-#include "Storage.h"
-
-#include "sharksfin/api.h"
-
 #include "foedus/thread/thread.hpp"
 #include "foedus/error_stack.hpp"
 #include "foedus/proc/proc_options.hpp"
@@ -35,6 +28,11 @@
 #include "foedus/fs/filesystem.hpp"
 #include "foedus/storage/masstree/masstree_storage.hpp"
 #include "foedus/storage/masstree/masstree_storage_pimpl.hpp"
+#include "sharksfin/api.h"
+#include "Iterator.h"
+#include "Transaction.h"
+#include "Error.h"
+#include "Storage.h"
 
 namespace sharksfin::foedus {
 

@@ -19,12 +19,10 @@
 #include <cstddef>
 #include <mutex>
 
-#include "Database.h"
-
-#include "sharksfin/api.h"
-
 #include "foedus/thread/thread.hpp"
 #include "foedus/xct/xct_manager.hpp"
+#include "sharksfin/api.h"
+#include "Database.h"
 
 namespace sharksfin::foedus {
 

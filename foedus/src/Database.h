@@ -16,19 +16,11 @@
 #ifndef SHARKSFIN_FOEDUS_DATABASE_H_
 #define SHARKSFIN_FOEDUS_DATABASE_H_
 
-#include <atomic>
 #include <memory>
-#include <mutex>
-#include <string>
-
-#include "sharksfin/api.h"
-#include "sharksfin/Slice.h"
 
 #include "foedus/engine.hpp"
-#include "foedus/storage/masstree/masstree_storage.hpp"
-#include "foedus/storage/masstree/masstree_metadata.hpp"
-#include "foedus/storage/storage_manager.hpp"
-#include "foedus/storage/storage_manager_pimpl.hpp"
+#include "sharksfin/api.h"
+#include "sharksfin/Slice.h"
 
 namespace sharksfin::foedus {
 

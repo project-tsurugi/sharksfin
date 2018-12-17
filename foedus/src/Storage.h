@@ -20,8 +20,8 @@
 #include <stdexcept>
 #include <memory>
 
-#include "sharksfin/api.h"
 #include "foedus/storage/masstree/masstree_storage.hpp"
+#include "sharksfin/api.h"
 
 namespace sharksfin::foedus {
 

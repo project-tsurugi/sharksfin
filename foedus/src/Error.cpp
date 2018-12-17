@@ -15,7 +15,9 @@
  */
 
 #include "Error.h"
+
 #include <iostream>
+
 #include "foedus/error_stack.hpp"
 #include "sharksfin/StatusCode.h"
 

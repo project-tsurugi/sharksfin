@@ -16,13 +16,12 @@
 #ifndef SHARKSFIN_FOEDUS_ITERATOR_H_
 #define SHARKSFIN_FOEDUS_ITERATOR_H_
 
-#include <foedus/storage/storage_manager.hpp>
-#include <foedus/thread/thread.hpp>
+#include "foedus/storage/storage_manager.hpp"
+#include "foedus/thread/thread.hpp"
 #include "foedus/storage/masstree/masstree_cursor.hpp"
+#include "sharksfin/api.h"
 #include "Database.h"
 #include "Error.h"
-
-#include "sharksfin/api.h"
 
 namespace sharksfin::foedus {
 
