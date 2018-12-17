@@ -35,6 +35,7 @@ public:
      * @brief creates a new instance.
      * @param owner the owner
      * @param context the transaction context thread
+     * @param engine the foedus engine
      */
     inline Transaction(
             Database* owner,
@@ -47,6 +48,10 @@ public:
         , engine_(engine)
     {}
 
+    /**
+     * @brief begin the transaction. This must be called at the beginning of the transaction.
+     * @return error code
+     */
     inline ::foedus::ErrorCode begin() {
         auto* xct_manager = engine_->get_xct_manager();
         auto ret = xct_manager->begin_xct(context_, ::foedus::xct::kSerializable);
@@ -56,6 +61,10 @@ public:
         return ret;
     }
 
+    /**
+     * @brief commit the transaction.
+     * @return error code
+     */
     inline ::foedus::ErrorCode commit() {
         auto* xct_manager = engine_->get_xct_manager();
         ::foedus::Epoch commit_epoch;
@@ -71,6 +80,10 @@ public:
         return ret;
     }
 
+    /**
+     * @brief abort the transaction.
+     * @return error code
+     */
     inline ::foedus::ErrorCode abort() {
         auto* xct_manager = engine_->get_xct_manager();
         auto ret = xct_manager->abort_xct(context_);
@@ -95,6 +108,10 @@ public:
         return buffer_;
     }
 
+    /**
+     * @brief returns the transaction thread.
+     * @return the thread where the transaction is running
+     */
     inline ::foedus::thread::Thread* context() {
         return context_;
     }

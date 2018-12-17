@@ -58,13 +58,6 @@ public:
     }
 
     /**
-     * @brief returns subkey of the given key.
-     * @param key the key which includes storage ID
-     * @return the subkey
-     */
-    Slice subkey(Slice key) const;
-
-    /**
      * @brief obtains an entry and write its value into the given buffer.
      * @param tx the transaction where the operation is executed
      * @param key the entry key
@@ -112,15 +105,6 @@ public:
     std::unique_ptr<Iterator> scan_range(Transaction* tx,
                                          Slice begin_key, bool begin_exclusive,
                                          Slice end_key, bool end_exclusive);
-
-    /**
-     * @brief returns whether or not this storage is alive.
-     * @return true if this is alive
-     * @return false if this is already purged
-     */
-    inline bool is_alive() {
-        return owner_;
-    }
 
     /**
      * @brief purges this storage from the related database.

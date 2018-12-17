@@ -36,6 +36,15 @@ public:
         SAW_EOF,
     };
 
+    /**
+     * @brief creates a new instance which iterates between the begin and end keys.
+     * @param storage the masstree where iterator works on
+     * @param context the foedus thread where iterator runs
+     * @param begin_key the content key of beginning position
+     * @param begin_exclusive whether or not beginning position is exclusive
+     * @param end_key the content key of ending position
+     * @param end_exclusive whether or not ending position is exclusive
+     */
     inline Iterator(::foedus::storage::masstree::MasstreeStorage storage,
              ::foedus::thread::Thread* context,
              Slice begin_key, bool begin_exclusive,
@@ -53,6 +62,12 @@ public:
         }
     }
 
+    /**
+     * @brief advances this iterator position.
+     * @return Status::OK if next entry exists
+     * @return Status::NOT_FOUND if next entry does not exist
+     * @return otherwise if error occurred
+     */
     inline StatusCode next() {
         if (state_ == State::INIT) {
             // do nothing for init
@@ -67,22 +82,26 @@ public:
         return ret;
     }
 
+    /**
+     * @brief return whether the iterator is pointing to valid record
+     * @return true if this points a valid entry
+     * @return false otherwise
+     */
     inline bool is_valid() const {
         return cursor_.is_valid_record();
     }
 
-    inline State test() {
-        if (cursor_.is_valid_record()) {
-            return State::BODY;
-        }
-        return State::SAW_EOF;
-    }
-
+    /**
+     * @return key on the current position
+     */
     inline Slice key() {
         buffer_.assign(cursor_.get_combined_key());
         return Slice(buffer_);
     }
 
+    /**
+     * @return value on the current position
+     */
     inline Slice value() {
         buffer_.assign(cursor_.get_payload());
         return Slice(buffer_);
@@ -92,6 +111,13 @@ private:
     ::foedus::storage::masstree::MasstreeCursor cursor_;
     State state_;
     std::string buffer_;
+
+    inline State test() {
+        if (cursor_.is_valid_record()) {
+            return State::BODY;
+        }
+        return State::SAW_EOF;
+    }
 };
 
 }  // namespace sharksfin::foedus
