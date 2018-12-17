@@ -53,7 +53,7 @@ public:
         /**
          * @brief transaction contains both read and write operations.
          */
-        READ_WRITE = READ_ONLY | WRITE_ONLY,
+        READ_WRITE = 0x03,
     };
 
     // FIXME: for more hints
