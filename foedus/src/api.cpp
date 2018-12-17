@@ -138,11 +138,11 @@ StatusCode transaction_borrow_owner(
 }
 
 StatusCode content_get(
-    TransactionHandle handle,
+    TransactionHandle transaction,
     StorageHandle storage,
     Slice key,
     Slice* result) {
-    auto tx = unwrap(handle);
+    auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
     auto database = tx->owner();
     if (!database) {
@@ -157,11 +157,11 @@ StatusCode content_get(
 }
 
 StatusCode content_put(
-    TransactionHandle handle,
+    TransactionHandle transaction,
     StorageHandle storage,
     Slice key,
     Slice value) {
-    auto tx = unwrap(handle);
+    auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
     auto database = tx->owner();
     if (!database) {
@@ -171,10 +171,10 @@ StatusCode content_put(
 }
 
 StatusCode content_delete(
-        TransactionHandle handle,
-        StorageHandle storage,
-        Slice key) {
-    auto tx = unwrap(handle);
+    TransactionHandle transaction,
+    StorageHandle storage,
+    Slice key) {
+    auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
     auto database = tx->owner();
     if (!database) {
@@ -189,11 +189,11 @@ StatusCode content_delete(
 }
 
 StatusCode content_scan_prefix(
-        TransactionHandle handle,
-        StorageHandle storage,
-        Slice prefix_key,
-        IteratorHandle* result) {
-    auto tx = unwrap(handle);
+    TransactionHandle transaction,
+    StorageHandle storage,
+    Slice prefix_key,
+    IteratorHandle* result) {
+    auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
     auto database = tx->owner();
     if (!database) {
@@ -205,12 +205,12 @@ StatusCode content_scan_prefix(
 }
 
 StatusCode content_scan_range(
-        TransactionHandle handle,
-        StorageHandle storage,
-        Slice begin_key, bool begin_exclusive,
-        Slice end_key, bool end_exclusive,
-        IteratorHandle* result) {
-    auto tx = unwrap(handle);
+    TransactionHandle transaction,
+    StorageHandle storage,
+    Slice begin_key, bool begin_exclusive,
+    Slice end_key, bool end_exclusive,
+    IteratorHandle* result) {
+    auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
     auto database = tx->owner();
     if (!database) {
