@@ -40,12 +40,12 @@ int main_ns(int argc, char* argv[]) {
 
     struct CommandParam {
         CommandParam(
-                Options* options,
+                Options::Command* command,
                 StorageHandle storage)
-            : options_(options)
+            : command_(command)
             , storage_(storage)
         {}
-        Options* options_;
+        Options::Command* command_;
         StorageHandle storage_;
     };
 
@@ -53,9 +53,7 @@ int main_ns(int argc, char* argv[]) {
         static TransactionOperation f(TransactionHandle handle, void* object) {
             auto param = reinterpret_cast<CommandParam*>(object);
             try {
-                for (auto& command : param->options_->commands) {
-                    command.function(handle, param->storage_, command.arguments);
-                }
+                param->command_->function(handle, param->storage_, param->command_->arguments);
                 return TransactionOperation::COMMIT;
             } catch (std::exception const& e) {
                 std::cerr << e.what() << std::endl;
@@ -76,11 +74,13 @@ int main_ns(int argc, char* argv[]) {
                 return EXIT_FAILURE;
             }
         }
-        CommandParam param { &options, storage };
         HandleHolder stc { storage };
-        if (auto s = transaction_exec(db, {}, Callback::f, &param); s != StatusCode::OK) {
-            std::cerr << "failed to execute transaction: " << s << std::endl;
-            return EXIT_FAILURE;
+        for (auto& command : options.commands) {
+            CommandParam param{ &command, storage };
+            if (auto s = transaction_exec(db, {}, Callback::f, &param); s != StatusCode::OK) {
+                std::cerr << "failed to execute transaction: " << s << std::endl;
+                return EXIT_FAILURE;
+            }
         }
     }
     if (auto s = database_close(db); s != StatusCode::OK) {
