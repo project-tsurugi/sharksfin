@@ -22,9 +22,10 @@
 #include "sharksfin/api.h"
 #include "sharksfin/HandleHolder.h"
 
+
 namespace sharksfin::cli {
 
-extern "C" int main(int argc, char* argv[]) {
+int main_ns(int argc, char* argv[]) {
     auto options = Options::parse(argc, argv);
     if (!options.valid) {
         return EXIT_FAILURE;
@@ -82,7 +83,15 @@ extern "C" int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
     }
+    if (auto s = database_close(db); s != StatusCode::OK) {
+        std::cerr << "error on database close: " << s << std::endl;
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 
 }  // namespace sharksfin::cli
+
+extern "C" int main(int argc, char* argv[]) {
+    return sharksfin::cli::main_ns(argc, argv);
+}
