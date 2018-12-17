@@ -153,7 +153,7 @@ TEST_F(ApiTest, storage_create) {
     HandleHolder dbh { db };
 
     struct S {
-        static TransactionOperation f(TransactionHandle tx, void*) {
+        static TransactionOperation f1(TransactionHandle tx, void*) {
             DatabaseHandle borrowed;
             if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -166,6 +166,18 @@ TEST_F(ApiTest, storage_create) {
             if (content_put(tx, st, "a", "A") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation f2(TransactionHandle tx, void*) {
+            DatabaseHandle borrowed;
+            if (auto s = transaction_borrow_owner(tx, &borrowed); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            StorageHandle st;
+            if (auto s = storage_get(borrowed, "testing", &st); s != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder sth { st };
             Slice s;
             if (content_get(tx, st, "a", &s) != StatusCode::OK) {
                 return TransactionOperation::ERROR;
@@ -176,7 +188,8 @@ TEST_F(ApiTest, storage_create) {
             return TransactionOperation::COMMIT;
         }
     };
-    EXPECT_EQ(transaction_exec(db, {}, &S::f), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f1), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f2), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
@@ -354,7 +367,7 @@ TEST_F(ApiTest, storage_delete) {
     EXPECT_EQ(transaction_exec(db, {}, &S::f_create), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::f_get), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::f_delete), StatusCode::OK);
-    EXPECT_EQ(transaction_exec(db, {}, &S::f_create), StatusCode::OK);
+    EXPECT_NE(transaction_exec(db, {}, &S::f_delete), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
