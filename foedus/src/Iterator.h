@@ -95,22 +95,23 @@ public:
      * @return key on the current position
      */
     inline Slice key() {
-        buffer_.assign(cursor_.get_combined_key());
-        return Slice(buffer_);
+        buffer_key_.assign(cursor_.get_combined_key());
+        return Slice(buffer_key_);
     }
 
     /**
      * @return value on the current position
      */
     inline Slice value() {
-        buffer_.assign(cursor_.get_payload());
-        return Slice(buffer_);
+        buffer_value_.assign(cursor_.get_payload());
+        return Slice(buffer_value_);
     }
 
 private:
     ::foedus::storage::masstree::MasstreeCursor cursor_;
     State state_;
-    std::string buffer_;
+    std::string buffer_key_;
+    std::string buffer_value_;
 
     inline State test() {
         if (cursor_.is_valid_record()) {
