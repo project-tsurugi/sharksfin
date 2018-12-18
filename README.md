@@ -4,7 +4,7 @@
 
 * CMake `>= 3.5`
 * C++ Compiler `>= C++17`
-* [foedus](https://github.com/large-scale-oltp-team/foedus_code) if you want to run this API with it.
+* [FOEDUS](https://github.com/large-scale-oltp-team/foedus_code) if you want to run this API with it.
 * and see *Dockerfile* section
 
 ```sh
@@ -17,25 +17,26 @@ git submodule update --init --recursive
 ```dockerfile
 FROM ubuntu:18.04
 
-RUN apt update -y && apt install -y git build-essential cmake ninja-build libleveldb-dev libboost-filesystem-dev doxygen graphviz
+RUN apt update -y && apt install -y git build-essential cmake ninja-build libleveldb-dev libboost-filesystem-dev doxygen
 ```
 
-## How to setup foedus
+## How to setup FOEDUS
 
-The API runs with leveldb mock by default. If you want to run it with foedus, install foedus before building the api code and specify `-DBUILD_FOEDUS_BRIDGE=ON` for cmake command line used in the build step (see the build step below). Follow the procedure to install foedus.
+The API runs with LevelDB mock by default. If you want to run it with FOEDUS, install FOEDUS before building the api code and specify `-DBUILD_FOEDUS_BRIDGE=ON` for cmake command line used in the build step (see the build step below). Follow the procedure to install FOEDUS.
 
 ```sh
 cd sharksfin/third_party/foedus
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=<installation directory> -DGFLAGS_INTTYPES_FORMAT=C99  ..
-make -j6
-make install
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=<installation directory> -DGFLAGS_INTTYPES_FORMAT=C99  ..
+ninja
+ninja install
 ```
-Here `-DDCMAKE_INSTALL_PREFIX` is the optional parameter to install foedus into custom direcory. `<installation directory>` can be any directory you like to install foedus library and header files.
-If it's not specified, foedus will be installed in /usr/local.
 
-For details of foedus environment setup, refer to the [guide](https://github.com/large-scale-oltp-team/foedus_code/tree/master/foedus-core).
+Here `-DCMAKE_INSTALL_PREFIX` is the optional parameter to install FOEDUS into custom directory. `<installation directory>` can be any directory you like to install FOEDUS library and header files.
+If it's not specified, FOEDUS will be installed in /usr/local.
+
+For details of FOEDUS environment setup, refer to the [guide](https://github.com/large-scale-oltp-team/foedus_code/tree/master/foedus-core).
 
 ## How to build
 
@@ -57,9 +58,9 @@ available options:
 * `-DEXAMPLE_IMPLEMENTATION=...` - link the specified target-name implementation to example programs
   * `mock` - link to mock implementation (default)
   * `foedus-bridge` - link to FOEDUS (requires `-DBUILD_FOEDUS_BRIDGE`)
-* `-DCMAKE_PREFIX_PATH=<installation directory>` - indicate foedus installation directory
+* `-DCMAKE_PREFIX_PATH=<installation directory>` - indicate FOEDUS installation directory
 
-### install 
+### install
 
 ```sh
 ninja install
