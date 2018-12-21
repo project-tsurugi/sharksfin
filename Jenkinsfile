@@ -113,7 +113,7 @@ pipeline {
             ]
             warnings parserConfigurations: [
                 [parserName: 'Clang (LLVM based)', pattern: 'build/clang-tidy.log'],
-            ], unstableTotalAll: '1'
+            ], unstableTotalAll: '0'
             warnings parserConfigurations: [
                 [parserName: 'Doxygen', pattern: 'build/doxygen.log'],
             ]
