@@ -120,7 +120,7 @@ pipeline {
             cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'build/gcovr-xml/sharksfin-gcovr.xml', failNoReports: false, failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, zoomCoverageChart: false
             archiveArtifacts allowEmptyArchive: true, artifacts: 'build/sharksfin-coverage-report.zip, build/sharksfin-doxygen.zip, build/clang-tidy-fix.yaml, build/dependency-graph/sharksfin.png', onlyIfSuccessful: true
             openTasks high: 'FIXME', normal: 'TODO', pattern: '**/*.md,**/*.txt,**/*.in,**/*.cmake,**/*.cpp,**/*.h', excludePattern: 'third_party/**'
-            notifySlack('shakujo-dev')
+            notifySlack('tsurugi-dev')
         }
     }
 }
