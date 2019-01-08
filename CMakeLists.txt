@@ -83,6 +83,14 @@ write_basic_package_version_file(
 install_custom(api ${export_name})
 
 install(
+        FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/${package_name}-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/${package_name}-config-version.cmake
+        DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
+)
+
+install(
     EXPORT ${package_name}
     NAMESPACE ${package_name}-
     FILE ${package_name}-targets.cmake
