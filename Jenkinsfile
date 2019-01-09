@@ -1,5 +1,4 @@
 pipeline {
-    triggers { pollSCM('H/5 * * * *') }
     agent {
         docker {
             image 'nautilus/oltp-sandbox'
@@ -9,6 +8,7 @@ pipeline {
     }
     environment {
         GITHUB_URL = 'https://github.com/project-tsurugi/sharksfin'
+        GITHUB_CHECKS = 'tsurugi-check'
         BUILD_PARALLEL_NUM="8"
     }
     stages {
