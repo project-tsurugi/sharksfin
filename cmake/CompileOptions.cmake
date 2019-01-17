@@ -20,18 +20,21 @@ function(set_compile_options target_name)
     else()
         target_compile_options(${target_name}
             PRIVATE -Wall -Wextra -Werror)
-        if (upper_CMAKE_BUILD_TYPE STREQUAL "DEBUG"
-                AND CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|AppleClang)$")
+        if (upper_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+            if (CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|AppleClang)$")
+                set(clang_only_sanitizers ",integer,nullability")
+            endif()
+            set(sanitizers "address,undefined${clang_only_sanitizers}")
             target_compile_options(${target_name}
                 PRIVATE
-                    -fsanitize=address,undefined,integer,nullability
+                    -fsanitize=${sanitizers}
                     -fno-sanitize=alignment
-                    -fno-sanitize-recover=address,undefined,integer,nullability)
+                    -fno-sanitize-recover=${sanitizers})
             target_link_libraries(${target_name}
                 PRIVATE
-                    -fsanitize=address,undefined,integer,nullability
+                    -fsanitize=${sanitizers}
                     -fno-sanitize=alignment
-                    -fno-sanitize-recover=address,undefined,integer,nullability)
+                    -fno-sanitize-recover=${sanitizers})
         endif()
     endif()
     set_target_properties(${target_name}
