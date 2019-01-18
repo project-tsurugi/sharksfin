@@ -1,5 +1,6 @@
 # CMake
 /build
+/build-*
 
 # ANTLR build
 /dist
