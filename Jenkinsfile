@@ -24,6 +24,7 @@ pipeline {
                 checkout scm
                 sh '''
                     git clean -dfx
+                    git submodule sync
                     git submodule update --init --recursive
                 '''
             }
