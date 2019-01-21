@@ -55,7 +55,7 @@ struct Options {
             Command command;
             for (auto& spec : command_list) {
                 if (s == spec.name) {
-                    if (i + 1 + spec.arguments.size() > argc) {
+                    if (i + 1 + spec.arguments.size() > static_cast<std::size_t>(argc)) {
                         std::cerr << "usage: " << argv[0] << " [options...] " << spec.name;
                         for (auto& a : spec.arguments) {
                             std::cerr << " <" << a << ">";

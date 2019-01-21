@@ -34,6 +34,7 @@ target_link_libraries(cli
     PRIVATE ${EXAMPLE_IMPLEMENTATION}
 )
 
+set_compile_options(cli)
 if(INSTALL_EXAMPLES)
     install_custom(cli ${export_name})
 endif()
