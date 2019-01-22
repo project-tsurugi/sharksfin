@@ -19,10 +19,6 @@ project(sharksfin
     DESCRIPTION "Shark's fin - minimal API for transactional key-value stores"
     LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 option(BUILD_TESTS "Build test programs" ON)
@@ -32,6 +28,10 @@ option(BUILD_EXAMPLES "Build and test example programs" ON)
 option(BUILD_DOCUMENTS "Build documents" ON)
 option(INSTALL_EXAMPLES "Install example programs" OFF)
 option(FORCE_INSTALL_RPATH "Force add lib dir of custom prefixes to INSTALL_RPATH" OFF)
+
+option(ENABLE_SANITIZER "enable sanitizer on debug build" ON)
+option(ENABLE_UB_SANITIZER "enable undefined behavior sanitizer on debug build" OFF)
+option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 
 if(NOT EXAMPLE_IMPLEMENTATION)
     set(
