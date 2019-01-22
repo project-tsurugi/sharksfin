@@ -19,7 +19,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(sanitizers "address")
 if(ENABLE_UB_SANITIZER)
     # NOTE: UB check requires instrumented libstdc++
-    set(sanitizers "$(sanitizers},undefined")
+    set(sanitizers "${sanitizers},undefined")
 endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # do nothing for gcc
