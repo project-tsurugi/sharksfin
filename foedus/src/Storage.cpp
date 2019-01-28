@@ -49,7 +49,7 @@ StatusCode Storage::remove(Transaction* tx, Slice key) {
 
 std::unique_ptr<Iterator> Storage::scan_prefix(Transaction* tx, Slice prefix_key) {
     std::string end_key{prefix_key.to_string()};
-    if (end_key.size() > 0) {
+    if (!end_key.empty()) {
         end_key[end_key.size()-1] += 1;
     } else {
         // If prefix length is zero, then both begin/end prefix should be zero as well.
