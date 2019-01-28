@@ -43,7 +43,7 @@ public:
     inline Storage(
             Database* owner,
             Slice key,
-            ::foedus::storage::masstree::MasstreeStorage masstree)
+            ::foedus::storage::masstree::MasstreeStorage masstree)  // NOLINT(performance-unnecessary-value-param)
         : owner_(owner)
         , key_prefix_(key.to_string_view())
         , masstree_(masstree)

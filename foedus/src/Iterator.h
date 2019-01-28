@@ -45,7 +45,7 @@ public:
      * @param end_key the content key of ending position
      * @param end_exclusive whether or not ending position is exclusive
      */
-    inline Iterator(::foedus::storage::masstree::MasstreeStorage storage,
+    inline Iterator(::foedus::storage::masstree::MasstreeStorage storage,  // NOLINT(performance-unnecessary-value-param)
              ::foedus::thread::Thread* context,
              Slice begin_key, bool begin_exclusive,
              Slice end_key, bool end_exclusive
