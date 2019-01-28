@@ -710,4 +710,67 @@ TEST_F(FoedusApiTest, scan_range) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(FoedusApiTest, scan_empty_prefix) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "a/", "A/") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            IteratorHandle iter;
+            if (content_scan_prefix(tx, st, "", &iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder closer { iter };
+
+            Slice s;
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "a") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "A") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "a/") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "A/") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin

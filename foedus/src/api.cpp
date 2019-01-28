@@ -231,6 +231,9 @@ StatusCode iterator_get_key(
         IteratorHandle handle,
         Slice* result) {
     auto iter = unwrap(handle);
+    if (!iter->is_valid()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
     *result = iter->key();
     return StatusCode::OK;
 }
@@ -239,6 +242,9 @@ StatusCode iterator_get_value(
         IteratorHandle handle,
         Slice* result) {
     auto iter = unwrap(handle);
+    if (!iter->is_valid()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
     *result = iter->value();
     return StatusCode::OK;
 }
