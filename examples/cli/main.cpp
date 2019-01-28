@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 #include "Options.h"
 
@@ -25,8 +26,8 @@
 
 namespace sharksfin::cli {
 
-int main_ns(int argc, char* argv[]) {
-    auto options = Options::parse(argc, argv);
+static int run(std::vector<char*> const& args) {
+    auto options = Options::parse(args);
     if (!options.valid) {
         return EXIT_FAILURE;
     }
@@ -93,5 +94,10 @@ int main_ns(int argc, char* argv[]) {
 }  // namespace sharksfin::cli
 
 extern "C" int main(int argc, char* argv[]) {
-    return sharksfin::cli::main_ns(argc, argv);
+    try {
+        return sharksfin::cli::run(std::vector<char*> { argv, argv + argc });  // NOLINT
+    } catch (std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return -1;
+    }
 }

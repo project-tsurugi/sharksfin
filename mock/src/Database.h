@@ -31,7 +31,6 @@ namespace sharksfin::mock {
 
 class Storage;
 class TransactionLock;
-class Iterator;
 
 /**
  * @brief a LevelDB wrapper.
@@ -47,7 +46,7 @@ public:
      * @brief constructs a new object.
      * @param leveldb the target LevelDB instance
      */
-    inline Database(std::unique_ptr<leveldb::DB> leveldb) noexcept
+    explicit inline Database(std::unique_ptr<leveldb::DB> leveldb) noexcept
         : leveldb_(std::move(leveldb))
     {};
 

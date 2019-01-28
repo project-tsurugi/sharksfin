@@ -27,6 +27,8 @@
 
 namespace sharksfin::mock {
 
+class Iterator;
+
 /**
  * @brief a storage identifier.
  */
@@ -113,8 +115,8 @@ public:
      * @return true if this is alive
      * @return false if this is already purged
      */
-    inline bool is_alive() {
-        return owner_;
+    inline bool is_alive() noexcept {
+        return owner_ != nullptr;
     }
 
     /**
@@ -128,7 +130,7 @@ public:
      * @return the corresponded status code in shark's fin API
      */
     inline StatusCode handle(leveldb::Status const& status) {
-        if (owner_) {
+        if (is_alive()) {
             return owner_->handle(status);
         }
         return Database::resolve(status);

@@ -32,5 +32,5 @@ readability-*,\
 CheckOptions:
   - key: readability-implicit-bool-conversion.AllowPointerConditions
     value: 1
-HeaderFilterRegex: '.*/(include|src)/.*\.h$'
+HeaderFilterRegex: '.*/(include|src|examples)/.*\.h$'
 ...

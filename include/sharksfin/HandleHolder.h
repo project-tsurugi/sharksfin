@@ -38,7 +38,7 @@ public:
     /**
      * @brief constructs a new empty object.
      */
-    constexpr HandleHolder() noexcept : handle_(nullptr) {}  // NOLINT
+    constexpr HandleHolder() noexcept {}  // NOLINT
 
     /**
      * @brief constructs a new object.
@@ -95,7 +95,7 @@ public:
     }
 
 private:
-    DatabaseHandle handle_;
+    DatabaseHandle handle_ {};
 };
 
 /**
@@ -107,7 +107,7 @@ public:
     /**
      * @brief constructs a new empty object.
      */
-    constexpr HandleHolder() noexcept : handle_(nullptr) {}  // NOLINT
+    constexpr HandleHolder() noexcept {}  // NOLINT
 
     /**
      * @brief constructs a new object.
@@ -164,7 +164,7 @@ public:
     }
 
 private:
-    StorageHandle handle_;
+    StorageHandle handle_ {};
 };
 
 /**
@@ -176,7 +176,7 @@ public:
     /**
      * @brief constructs a new empty object.
      */
-    constexpr HandleHolder() noexcept : handle_(nullptr) {}  // NOLINT
+    constexpr HandleHolder() noexcept {}  // NOLINT
 
     /**
      * @brief constructs a new object.
@@ -233,7 +233,7 @@ public:
     }
 
 private:
-    IteratorHandle handle_;
+    IteratorHandle handle_ {};
 };
 
 /**
