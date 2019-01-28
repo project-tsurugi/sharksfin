@@ -34,10 +34,10 @@ struct CommandSpec {
 
 extern std::vector<CommandSpec> const command_list;
 
-void get(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
-void put(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
-void remove(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
-void scan(TransactionHandle tx, StorageHandle storage, std::vector<std::string> const& arguments);
+void get(TransactionHandle, StorageHandle, std::vector<std::string> const&);
+void put(TransactionHandle, StorageHandle, std::vector<std::string> const&);
+void remove(TransactionHandle, StorageHandle, std::vector<std::string> const&);
+void scan(TransactionHandle, StorageHandle, std::vector<std::string> const&);
 
 }  // namespace sharksfin::cli
 

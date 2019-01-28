@@ -24,7 +24,7 @@
 
 namespace sharksfin::cli {
 
-std::vector<CommandSpec> const command_list {
+std::vector<CommandSpec> const command_list {  // NOLINT
     { "get", &get, { "key" } },
     { "put", &put, { "key", "value" } },
     { "delete", &remove, { "key" } },

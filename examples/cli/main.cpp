@@ -51,7 +51,7 @@ int main_ns(int argc, char* argv[]) {
 
     struct Callback {
         static TransactionOperation f(TransactionHandle handle, void* object) {
-            auto param = reinterpret_cast<CommandParam*>(object);
+            auto param = reinterpret_cast<CommandParam*>(object);  // NOLINT
             try {
                 param->command_->function(handle, param->storage_, param->command_->arguments);
                 return TransactionOperation::COMMIT;
