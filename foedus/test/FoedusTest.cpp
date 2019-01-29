@@ -26,9 +26,9 @@ const char* kProcU = "myprocU";
 const char* kProcD = "myprocD";
 
 struct Output {
-    char buf[kPayload];
-    int buf_length;
-    foedus::ErrorCode error;
+    char buf[kPayload] = {};
+    int buf_length = kPayload;
+    foedus::ErrorCode error = foedus::kErrorCodeOk;
 };
 struct Input {
     Input(std::string_view key, std::string_view value, bool notFoundTest = false) {
@@ -36,14 +36,14 @@ struct Input {
         key_length_ = key.length();
         memcpy(buf_, value.data(), value.length());
         buf_length_ = value.length();
-	notFoundTest_ = notFoundTest;
+        notFoundTest_ = notFoundTest;
     }
-    char key_[kKeyLength];
-    int key_length_;
-    char buf_[kPayload];
-    int buf_length_;
-    Output* output_;
-    bool notFoundTest_;
+    char key_[kKeyLength]{};
+    int key_length_{};
+    char buf_[kPayload]{};
+    int buf_length_{};
+    Output* output_{};
+    bool notFoundTest_{};
 };
 
 foedus::ErrorStack proc_create(const foedus::proc::ProcArguments& args) {
@@ -76,7 +76,7 @@ foedus::ErrorStack proc_read(const foedus::proc::ProcArguments& args) {
   foedus::storage::masstree::MasstreeStorage tree = engine->get_storage_manager()->get_masstree(kName);
   foedus::xct::XctManager* xct_manager = engine->get_xct_manager();
   WRAP_ERROR_CODE(xct_manager->begin_xct(context, foedus::xct::kSerializable));
-  foedus::storage::masstree::PayloadLength capacity;
+  foedus::storage::masstree::PayloadLength capacity = input->output_->buf_length;
   if(!input->notFoundTest_) {
     WRAP_ERROR_CODE(input->output_->error = tree.get_record(context, input->key_, input->key_length_, input->output_->buf, &capacity, false));
     input->output_->buf_length = capacity;
@@ -256,7 +256,7 @@ TEST_F(FoedusTest, write1) {
 
 TEST_F(FoedusTest, read1) {
   Input input_data("key1"sv, ""sv);
-  Output output_data;
+  Output output_data = {};
   input_data.output_ = &output_data;
   foedus::ErrorStack result = engine->get_thread_pool()->impersonate_synchronous(kProcR, &input_data, sizeof(input_data));
   std::cout << "result=" << result << std::endl;
@@ -275,7 +275,7 @@ TEST_F(FoedusTest, update2) {
 
 TEST_F(FoedusTest, read2) {
   Input input_data("key1"sv, ""sv);
-  Output output_data;
+  Output output_data{};
   input_data.output_ = &output_data;
   foedus::ErrorStack result = engine->get_thread_pool()->impersonate_synchronous(kProcR, &input_data, sizeof(input_data));
   std::cout << "result=" << result << std::endl;
@@ -294,8 +294,9 @@ TEST_F(FoedusTest, delete3) {
 
 TEST_F(FoedusTest, read3) {
   Input input_data("key1"sv, ""sv, true);
-  Output output_data;
+  Output output_data{};
   input_data.output_ = &output_data;
+
   foedus::ErrorStack result = engine->get_thread_pool()->impersonate_synchronous(kProcR, &input_data, sizeof(input_data));
   std::cout << "result=" << result << std::endl;
   ASSERT_FALSE(result.is_error());
