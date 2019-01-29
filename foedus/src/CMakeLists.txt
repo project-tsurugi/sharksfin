@@ -21,7 +21,7 @@ target_include_directories(foedus-bridge
 
 target_link_libraries(foedus-bridge
     PUBLIC api
-    PUBLIC foedus-core
+    PRIVATE foedus-core
 )
 
 set_compile_options(foedus-bridge)

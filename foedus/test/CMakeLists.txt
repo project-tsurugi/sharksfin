@@ -23,8 +23,8 @@ file(GLOB TEST_SOURCES
 register_tests(
     TARGET foedus-bridge
     DEPENDS
-        numa
         bridge-impl
+        foedus-core
         Boost::filesystem
     SOURCES ${TEST_SOURCES}
 )
