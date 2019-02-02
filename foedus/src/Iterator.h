@@ -103,7 +103,7 @@ public:
      * @return value on the current position
      */
     inline Slice value() {
-        buffer_value_.assign(cursor_.get_payload());
+        buffer_value_.assign(cursor_.get_payload(), cursor_.get_payload_length());
         return Slice(buffer_value_);
     }
 
