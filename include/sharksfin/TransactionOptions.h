@@ -33,7 +33,7 @@ public:
     /**
      * @brief retries infinite times.
      */
-    static inline constexpr std::size_t INFINITY = std::numeric_limits<std::size_t>::max();
+    static inline constexpr std::size_t INF = std::numeric_limits<std::size_t>::max();
 
     /**
      * @brief transaction operation kind.
@@ -68,7 +68,7 @@ public:
      * - user requested RETRY operation in a transaction process
      * On the other words, the transaction engine never retry if a user was requested either ROLLBACK or ERROR.
      * @return 0 if never retry
-     * @return TransactionOptions::INFINITY to try retry until fatal error was occurred
+     * @return TransactionOptions::INF to try retry until fatal error was occurred
      * @return otherwise maximum retry count
      * @see TransactionOperation
      */
@@ -87,7 +87,7 @@ public:
     /**
      * @brief sets the maximum number of transaction retry attempts.
      * The default value is 0.
-     * @param count the retry count; 0 - never, TransactionOptions::INFINITY - infinity
+     * @param count the retry count; 0 - never, TransactionOptions::INF - infinity
      * @return this
      */
     inline TransactionOptions& retry_count(std::size_t count) {
