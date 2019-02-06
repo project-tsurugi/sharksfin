@@ -28,6 +28,7 @@
 #include "foedus/fs/filesystem.hpp"
 #include "foedus/storage/masstree/masstree_storage.hpp"
 #include "foedus/storage/masstree/masstree_storage_pimpl.hpp"
+#include "foedus/storage/storage_manager_pimpl.hpp"
 #include "sharksfin/api.h"
 #include "Iterator.h"
 #include "Transaction.h"
@@ -184,6 +185,10 @@ std::unique_ptr<Storage> Database::create_storage(Slice key) {
 
 std::unique_ptr<Storage> Database::get_storage(Slice key) {
     ::foedus::storage::StorageName name{key.data<char>(), static_cast<uint32_t>(key.size())};
+    // First check existence to suppress not found warnings.
+    if (!engine_->get_storage_manager()->get_pimpl()->exists(name)) {
+        return {};
+    }
     auto masstree = engine_->get_storage_manager()->get_masstree(name);
     if (!masstree.exists()) {
         return {};
