@@ -80,6 +80,7 @@ pipeline {
         stage ('Coverage') {
             environment {
                 GCOVR_COMMON_OPTION='-e ../third_party/ -e ../.*/test.* -e ../.*/examples.* -e .*/antlr.*'
+                BUILD_PARALLEL_NUM=4
             }
             steps {
                 sh '''
