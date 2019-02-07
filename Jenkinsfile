@@ -9,7 +9,10 @@ pipeline {
     environment {
         GITHUB_URL = 'https://github.com/project-tsurugi/sharksfin'
         GITHUB_CHECKS = 'tsurugi-check'
-        BUILD_PARALLEL_NUM="8"
+        BUILD_PARALLEL_NUM="""${sh(
+                returnStdout: true,
+                script: 'grep processor /proc/cpuinfo | wc -l'
+            )}"""
     }
     stages {
         stage ('Prepare env') {
