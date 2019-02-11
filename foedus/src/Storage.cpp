@@ -26,14 +26,24 @@
 namespace sharksfin::foedus {
 
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
-    auto capacity = static_cast<::foedus::storage::masstree::PayloadLength>(buffer.capacity());
-    buffer.resize(buffer.capacity()); // set length long enough otherwise calling resize() again accidentally fills nulls
-    auto ret = resolve(masstree_.get_record(tx->context(),
-        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
-        buffer.data(), &capacity, false
-    ));
-    buffer.resize(capacity);
-    return ret;
+    bool retry = true;
+    ::foedus::ErrorCode rc{};
+    while(retry) {
+        auto capacity = static_cast<::foedus::storage::masstree::PayloadLength>(buffer.capacity());
+        buffer.resize(buffer.capacity()); // set length long enough otherwise calling resize() again accidentally fills nulls
+        rc = masstree_.get_record(tx->context(),
+                                  key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
+                                  buffer.data(), &capacity, false
+        );
+        if (rc == ::foedus::kErrorCodeStrTooSmallPayloadBuffer) {
+            // extend buffer and try again
+            buffer.reserve(capacity*2UL);
+            continue;
+        }
+        buffer.resize(capacity);
+        retry = false;
+    }
+    return resolve(rc);
 }
 
 StatusCode Storage::put(Transaction* tx, Slice key, Slice value) {

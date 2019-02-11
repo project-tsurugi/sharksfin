@@ -45,8 +45,9 @@ public:
         :
         owner_(owner)
         , context_(context)
-        , engine_(engine)
-    {}
+        , engine_(engine) {
+        buffer_.reserve(1024); // default size (=16) is too small to store record
+    }
 
     /**
      * @brief begin the transaction. This must be called at the beginning of the transaction.
@@ -117,10 +118,10 @@ public:
     }
 
 private:
-    Database* owner_;
-    ::foedus::thread::Thread* context_;
-    ::foedus::Engine* engine_;
-    std::string buffer_;
+    Database* owner_{};
+    ::foedus::thread::Thread* context_{};
+    ::foedus::Engine* engine_{};
+    std::string buffer_{};
 };
 
 }  // namespace sharksfin::foedus
