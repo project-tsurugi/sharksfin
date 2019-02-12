@@ -42,6 +42,11 @@ enum class StatusCode : std::int64_t {
     ALREADY_EXISTS = 2,
 
     /**
+     * @brief transaction operation is rollbacked by user.
+     */
+    USER_ROLLBACK = 3,
+
+    /**
      * @brief unknown errors.
      */
     ERR_UNKNOWN = -1,
@@ -65,6 +70,11 @@ enum class StatusCode : std::int64_t {
      * @brief operation is unsupported.
      */
     ERR_UNSUPPORTED = -5,
+
+    /**
+     * @brief transaction operation met an user-defined error.
+     */
+    ERR_USER_ERROR = -6,
 };
 
 /**
@@ -77,11 +87,13 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::OK: return "OK";
         case StatusCode::NOT_FOUND: return "NOT_FOUND";
         case StatusCode::ALREADY_EXISTS: return "ALREADY_EXISTS";
+        case StatusCode::USER_ROLLBACK: return "USER_ROLLBACK";
         case StatusCode::ERR_UNKNOWN: return "ERR_UNKNOWN";
         case StatusCode::ERR_IO_ERROR: return "ERR_IO_ERROR";
         case StatusCode::ERR_INVALID_ARGUMENT: return "ERR_INVALID_ARGUMENT";
         case StatusCode::ERR_INVALID_STATE: return "ERR_INVALID_STATE";
         case StatusCode::ERR_UNSUPPORTED: return "ERR_UNSUPPORTED";
+        case StatusCode::ERR_USER_ERROR: return "ERR_USER_ERROR";
         default: return "UNDEFINED";
     }
 }

@@ -27,14 +27,21 @@ StatusCode resolve(::foedus::ErrorStack const& result) {
     if (!result.is_error()) {
         return StatusCode::OK;
     }
+    switch(result.get_error_code()) {
+        case ::foedus::kErrorCodeStrKeyNotFound:
+            return StatusCode::NOT_FOUND;
+        case ::foedus::ErrorCode::kErrorCodeXctUserAbort:
+            return StatusCode::USER_ROLLBACK;
+        case ::foedus::ErrorCode::kErrorCodeUserDefined:
+            return StatusCode::ERR_USER_ERROR;
+        default:
+            break;
+    }
     std::cout << "Foedus error : " << result << std::endl;
     return StatusCode::ERR_UNKNOWN;
 }
 
 StatusCode resolve(::foedus::ErrorCode const& code) {
-    if (code == ::foedus::kErrorCodeStrKeyNotFound) {
-        return StatusCode::NOT_FOUND;
-    }
     if (code != ::foedus::kErrorCodeOk) {
         return resolve(FOEDUS_ERROR_STACK(code));  //NOLINT
     }

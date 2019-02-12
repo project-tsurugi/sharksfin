@@ -116,10 +116,17 @@ struct Input {
     auto status = callback(reinterpret_cast<TransactionHandle>(tx.get()), ptr->arguments_); //NOLINT
     if (status == TransactionOperation::COMMIT) {
         FOEDUS_WRAP_ERROR_CODE(tx->commit());  //NOLINT
-    } else {
+        return ::foedus::kRetOk;
+    }
+    if (status == TransactionOperation::ROLLBACK){
         FOEDUS_WRAP_ERROR_CODE(tx->abort());  //NOLINT
         FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeXctUserAbort);  //NOLINT
+    } else if (status == TransactionOperation::ERROR){
+        FOEDUS_WRAP_ERROR_CODE(tx->abort());  //NOLINT
+        FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeUserDefined);  //NOLINT
     }
+    // should never reach here
+    FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeInternalError);  //NOLINT
     return ::foedus::kRetOk;
 }
 
