@@ -151,7 +151,10 @@ StatusCode transaction_exec(
         return StatusCode::OK;
     }
     // NOTE: LevelDB may be broken because it does not support rollback operations
-    return StatusCode::ERR_UNSUPPORTED;
+    if (status == TransactionOperation::ROLLBACK) {
+        return StatusCode::USER_ROLLBACK;
+    }
+    return StatusCode::ERR_USER_ERROR;
 }
 
 StatusCode transaction_borrow_owner(
