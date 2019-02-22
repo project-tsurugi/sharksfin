@@ -15,6 +15,8 @@
  */
 #include "Iterator.h"
 
+#include <tuple>
+
 #include "Storage.h"
 
 #include "TestRoot.h"
@@ -33,6 +35,11 @@ public:
 
     void put(Slice key, Slice value) {
         EXPECT_EQ(storage_->put(key, value), StatusCode::OK);
+    }
+
+    template<class T>
+    void putv(Slice key, T&& value) {
+        put(key, { &value, sizeof(T) });
     }
 
     Storage* storage() {
@@ -163,6 +170,38 @@ TEST_F(IteratorTest, range_empty) {
 TEST_F(IteratorTest, range_ex_empty) {
     Iterator it { storage(), iter(), "b", true, "d", true };
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, join) {
+    putv("a/1", 1);
+    putv("a/2", 2);
+    putv("a/3", 3);
+
+    putv("b/1", 4);
+    putv("b/2", 5);
+    putv("b/3", 6);
+
+    std::vector<std::tuple<int, int>> results {};
+    Iterator left { storage(), iter(), "a/" };
+    while (left.next() == StatusCode::OK) {
+        auto left_v = *left.value().data<int>();
+        Iterator right { storage(), iter(), "b/" };
+        while (right.next() == StatusCode::OK) {
+            auto right_v = *right.value().data<int>();
+            results.emplace_back(left_v, right_v);
+        }
+    }
+
+    ASSERT_EQ(results.size(), 9U);
+    EXPECT_EQ(results[0], std::make_tuple(1, 4));
+    EXPECT_EQ(results[1], std::make_tuple(1, 5));
+    EXPECT_EQ(results[2], std::make_tuple(1, 6));
+    EXPECT_EQ(results[3], std::make_tuple(2, 4));
+    EXPECT_EQ(results[4], std::make_tuple(2, 5));
+    EXPECT_EQ(results[5], std::make_tuple(2, 6));
+    EXPECT_EQ(results[6], std::make_tuple(3, 4));
+    EXPECT_EQ(results[7], std::make_tuple(3, 5));
+    EXPECT_EQ(results[8], std::make_tuple(3, 6));
 }
 
 }  // namespace sharksfin::mock
