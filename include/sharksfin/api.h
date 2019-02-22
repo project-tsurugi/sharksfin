@@ -285,6 +285,7 @@ extern "C" StatusCode content_scan_range(
 /**
  * @brief advances the given iterator.
  * This will change the iterator state.
+ * Iterator position will become valid only if this operation returned StatusCode::OK.
  * @param handle the target iterator
  * @return StatusCode::OK if the iterator was successfully advanced
  * @return StatusCode::NOT_FOUND if the next content does not exist
@@ -295,12 +296,14 @@ extern "C" StatusCode iterator_next(
 
 /**
  * @brief returns the key on the current iterator position.
+ * This operation is only available if the target iterator position is valid by iterator_next().
  * The returned slice will be disabled after the iterator state was changed.
  * This never changes the iterator state.
  * @param handle the target iterator handle
  * @param result [OUT] the current key
  * @return StatusCode::OK if the key content was successfully obtained
  * @return otherwise if error was occurred
+ * @return undefined if the iterator position is not valid
  */
 extern "C" StatusCode iterator_get_key(
         IteratorHandle handle,
@@ -308,6 +311,7 @@ extern "C" StatusCode iterator_get_key(
 
 /**
  * @brief returns the value on the current iterator position.
+ * This operation is only available if the target iterator position is valid by iterator_next().
  * The returned slice will be disabled after the iterator status was changed.
  * This never changes the iterator state.
  * @param handle the target iterator handle
@@ -315,6 +319,7 @@ extern "C" StatusCode iterator_get_key(
  * @return StatusCode::OK if the value content was successfully obtained
  * @return StatusCode::NOT_FOUND if the pointing entry is already disabled
  * @return otherwise if error was occurred
+ * @return undefined if the iterator position is not valid
  */
 extern "C" StatusCode iterator_get_value(
         IteratorHandle handle,
