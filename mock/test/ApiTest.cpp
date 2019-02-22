@@ -772,6 +772,7 @@ TEST_F(ApiTest, scan_empty_prefix) {
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
 TEST_F(ApiTest, scan_data_variation) {
     using namespace std::literals::string_view_literals;
     DatabaseOptions options;
@@ -842,6 +843,7 @@ TEST_F(ApiTest, scan_data_variation) {
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
 TEST_F(ApiTest, long_data) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
@@ -879,4 +881,87 @@ TEST_F(ApiTest, long_data) {
     EXPECT_EQ(transaction_exec(db, {}, &S::f2, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
+TEST_F(ApiTest, scan_join) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a/1", "1") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "a/2", "2") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "b/1", "3") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "b/2", "4") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            std::vector<std::string> results {};
+
+            IteratorHandle left;
+            if (content_scan_prefix(tx, st, "a/", &left) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder left_close { left };
+            while (iterator_next(left) == StatusCode::OK) {
+                Slice s;
+                if (iterator_get_value(left, &s) != StatusCode::OK) {
+                    return TransactionOperation::ERROR;
+                }
+                auto left_value = s.to_string();
+
+                IteratorHandle right;
+                if (content_scan_prefix(tx, st, "b/", &right) != StatusCode::OK) {
+                    return TransactionOperation::ERROR;
+                }
+                HandleHolder right_close { right };
+                while (iterator_next(right) == StatusCode::OK) {
+                    if (iterator_get_value(right, &s) != StatusCode::OK) {
+                        return TransactionOperation::ERROR;
+                    }
+                    auto right_value = s.to_string();
+                    results.emplace_back(left_value + right_value);
+                }
+            }
+            if (results.size() != 4U) {
+                return TransactionOperation::ERROR;
+            }
+            if (results[0] != "13") {
+                return TransactionOperation::ERROR;
+            }
+            if (results[1] != "14") {
+                return TransactionOperation::ERROR;
+            }
+            if (results[2] != "23") {
+                return TransactionOperation::ERROR;
+            }
+            if (results[3] != "24") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s {};
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin
