@@ -144,7 +144,7 @@ StatusCode Database::open(DatabaseOptions const &options, std::unique_ptr<Databa
     engine->get_proc_manager()->pre_register(kProc, foedusCallback);
     ::foedus::ErrorStack e{engine->initialize()};
     if (e.is_error()) {
-        std::cout << "*** failed to initialize engine ***" << e << std::endl;
+        LOG(FATAL) << "*** failed to initialize engine ***" << e;
         return resolve(e);
     }
     *result = std::make_unique<Database>(std::move(engine));

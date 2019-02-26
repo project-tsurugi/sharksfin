@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <mutex>
 
+#include "glog/logging.h"
 #include "foedus/thread/thread.hpp"
 #include "foedus/xct/xct_manager.hpp"
 #include "sharksfin/api.h"
@@ -57,7 +58,7 @@ public:
         auto* xct_manager = engine_->get_xct_manager();
         auto ret = xct_manager->begin_xct(context_, ::foedus::xct::kSerializable);
         if (ret != ::foedus::kErrorCodeOk) {
-            std::cout << "foedus error:[begin_xct]: "<< ::foedus::get_error_message(ret) << "\n";
+            LOG(ERROR) << ::foedus::get_error_message(ret);
         }
         return ret;
     }
@@ -71,12 +72,12 @@ public:
         ::foedus::Epoch commit_epoch;
         auto ret = xct_manager->precommit_xct(context_, &commit_epoch);
         if (ret != ::foedus::kErrorCodeOk) {
-            std::cout << ret << "\n";
+            LOG(ERROR) << ::foedus::get_error_message(ret);
             return ret;
         }
         ret = xct_manager->wait_for_commit(commit_epoch);
         if (ret != ::foedus::kErrorCodeOk) {
-            std::cout << ret << "\n";
+            LOG(ERROR) << ::foedus::get_error_message(ret);
         }
         return ret;
     }
@@ -89,7 +90,7 @@ public:
         auto* xct_manager = engine_->get_xct_manager();
         auto ret = xct_manager->abort_xct(context_);
         if (ret != ::foedus::kErrorCodeOk) {
-            std::cout << ret << "\n";
+            LOG(ERROR) << ::foedus::get_error_message(ret);
         }
         return ret;
     }

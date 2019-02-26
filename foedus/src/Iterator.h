@@ -16,6 +16,7 @@
 #ifndef SHARKSFIN_FOEDUS_ITERATOR_H_
 #define SHARKSFIN_FOEDUS_ITERATOR_H_
 
+#include "glog/logging.h"
 #include "foedus/storage/storage_manager.hpp"
 #include "foedus/thread/thread.hpp"
 #include "foedus/storage/masstree/masstree_cursor.hpp"
@@ -58,7 +59,7 @@ public:
             !end_exclusive
             );
         if (ret != ::foedus::kErrorCodeOk) {
-            std::cout << "foedus error:[open_cursor]: " << ::foedus::get_error_message(ret) << "\n";
+            LOG(ERROR) << ::foedus::get_error_message(ret);
         }
     }
 

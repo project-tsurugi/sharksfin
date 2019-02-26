@@ -18,8 +18,10 @@
 
 #include <iostream>
 
+#include "glog/logging.h"
 #include "foedus/error_stack.hpp"
 #include "sharksfin/StatusCode.h"
+
 
 namespace sharksfin::foedus {
 
@@ -37,7 +39,7 @@ StatusCode resolve(::foedus::ErrorStack const& result) {
         default:
             break;
     }
-    std::cout << "Foedus error : " << result << std::endl;
+    LOG(ERROR) << "Foedus error : " << result;
     return StatusCode::ERR_UNKNOWN;
 }
 
