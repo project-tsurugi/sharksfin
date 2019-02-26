@@ -18,6 +18,7 @@
 #include <memory>
 #include <utility>
 
+#include "glog/logging.h"
 #include "foedus/thread/thread.hpp"
 #include "foedus/error_stack.hpp"
 #include "foedus/proc/proc_options.hpp"

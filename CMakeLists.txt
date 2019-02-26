@@ -47,6 +47,7 @@ find_package(LevelDB)
 find_package(FOEDUS)
 find_package(Boost
     COMPONENTS filesystem)
+find_package(glog)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)

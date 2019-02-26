@@ -33,10 +33,14 @@ function(register_tests)
 
     # collect non "*Test" source files: it must be linked from "*Test" files.
     set(TESTS_COMMON_SOURCES)
+    set(HAS_MAIN_SOURCE OFF)
     foreach(src IN LISTS TESTS_SOURCES)
         get_filename_component(fname "${src}" NAME_WE)
         if(NOT fname MATCHES "Test$")
             list(APPEND TESTS_COMMON_SOURCES ${src})
+        endif()
+        if(fname MATCHES "(^|_)main$")
+            set(HAS_MAIN_SOURCE ON)
         endif()
     endforeach()
 
@@ -56,10 +60,14 @@ function(register_tests)
             foreach(dep IN LISTS TESTS_DEPENDS)
                 target_link_libraries(${test_name} PRIVATE ${dep})
             endforeach()
-            target_link_libraries(${test_name}
-                PRIVATE gtest_main
-                PRIVATE Threads::Threads
-            )
+
+            # link "gtest" instead of "gtest_main" only if main.cpp or *_main.cpp exists
+            if(HAS_MAIN_SOURCE)
+                target_link_libraries(${test_name} PRIVATE gtest)
+            else()
+                target_link_libraries(${test_name} PRIVATE gtest_main)
+            endif()
+            target_link_libraries(${test_name} PRIVATE Threads::Threads)
 
             set_compile_options(${test_name})
 

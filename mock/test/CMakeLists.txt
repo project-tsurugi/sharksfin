@@ -25,6 +25,7 @@ register_tests(
     DEPENDS
         mock-impl
         Boost::filesystem
+        glog::glog
         leveldb
     SOURCES ${TEST_SOURCES}
 )

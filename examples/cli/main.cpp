@@ -22,7 +22,7 @@
 
 #include "sharksfin/api.h"
 #include "sharksfin/HandleHolder.h"
-
+#include "sharksfin/Environment.h"
 
 namespace sharksfin::cli {
 
@@ -31,6 +31,9 @@ static int run(std::vector<char*> const& args) {
     if (!options.valid) {
         return EXIT_FAILURE;
     }
+
+    Environment env{};
+    env.initialize();
 
     DatabaseHandle db;
     if (auto s = database_open(options.database, &db); s != StatusCode::OK) {
