@@ -29,6 +29,13 @@ private:
     std::unique_ptr<Impl> impl_;
 
 public:
+    enum class LogLevel {
+        Info = 0,
+        Warning,
+        Error,
+        Fatal,
+    };
+
     Environment() noexcept;
     ~Environment() noexcept;
     Environment(Environment const& other) = delete;
@@ -41,7 +48,7 @@ public:
      * Sharksfin client code must create Environment instance, call initialize() function,
      * and keep it until the client finishes using sharksfin. Typically this can be done in main() of the client.
      */
-    void initialize();
+    void initialize(LogLevel = LogLevel::Warning);
 };
 
 }  // namespace sharksfin

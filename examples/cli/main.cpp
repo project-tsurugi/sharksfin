@@ -95,7 +95,7 @@ static int run(std::vector<char*> const& args) {
 
 extern "C" int main(int argc, char* argv[]) {
     sharksfin::Environment env{};
-    env.initialize();
+    env.initialize(sharksfin::Environment::LogLevel::Warning);
     try {
         return sharksfin::cli::run(std::vector<char*> { argv, argv + argc });  // NOLINT
     } catch (std::exception& e) {

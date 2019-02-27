@@ -33,7 +33,7 @@ public:
     Impl& operator=(Impl const& other) = delete;
     Impl& operator=(Impl&& other) noexcept = default;
 
-    void initialize();
+    void initialize(LogLevel level);
 private:
     std::unique_ptr<::foedus::Engine> engine_;
     std::unique_ptr<::foedus::debugging::DebuggingSupports> debugging_supports_;
@@ -43,16 +43,17 @@ Environment::Environment() noexcept : impl_(std::make_unique<Impl>()) {}
 
 Environment::~Environment() noexcept = default;
 
-void Environment::Impl::initialize() {
+void Environment::Impl::initialize(LogLevel level) {
     // initialize glog in DebuggingSupports using dummy foedus engine
     ::foedus::EngineOptions engineOptions{};
     if (FLAGS_log_dir.empty()) {
-       engineOptions.debugging_.debug_log_to_stderr_ = true;
+        engineOptions.debugging_.debug_log_to_stderr_ = true;
     }
+    engineOptions.debugging_.debug_log_min_threshold_ = static_cast<::foedus::debugging::DebuggingOptions::DebugLogLevel>(level);
     engine_ = std::make_unique<::foedus::Engine>(engineOptions);
     debugging_supports_ = std::make_unique<::foedus::debugging::DebuggingSupports>(engine_.get());
     debugging_supports_->initialize_once();
-	::google::InstallFailureSignalHandler();
+    ::google::InstallFailureSignalHandler();
 
 }
 
@@ -60,8 +61,8 @@ Environment::Impl::~Impl() noexcept {
     debugging_supports_->uninitialize_once();
 }
 
-void Environment::initialize() {
-    impl_->initialize();
+void Environment::initialize(LogLevel level) {
+    impl_->initialize(level);
 }
 
 
