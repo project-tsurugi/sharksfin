@@ -32,14 +32,9 @@ target_include_directories(cli
 target_link_libraries(cli
     PRIVATE api
     PRIVATE ${EXAMPLE_IMPLEMENTATION}
+    PRIVATE glog::glog
 )
 
-# mock requires glog while foedus-bridge inherits from foedus
-if(${EXAMPLE_IMPLEMENTATION} STREQUAL "mock")
-    target_link_libraries(cli
-        PRIVATE glog::glog
-    )
-endif()
 
 set_compile_options(cli)
 if(INSTALL_EXAMPLES)

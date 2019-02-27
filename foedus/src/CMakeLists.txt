@@ -21,6 +21,7 @@ target_include_directories(foedus-bridge
 
 target_link_libraries(foedus-bridge
     PUBLIC api
+    PRIVATE glog::glog # need to be before foedus-core due to glog linkage problem in foedus
     PRIVATE foedus-core
 )
 

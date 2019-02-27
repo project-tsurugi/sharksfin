@@ -32,9 +32,6 @@ static int run(std::vector<char*> const& args) {
         return EXIT_FAILURE;
     }
 
-    Environment env{};
-    env.initialize();
-
     DatabaseHandle db;
     if (auto s = database_open(options.database, &db); s != StatusCode::OK) {
         std::cerr << "cannot open database: " << s << std::endl;
@@ -97,6 +94,8 @@ static int run(std::vector<char*> const& args) {
 }  // namespace sharksfin::cli
 
 extern "C" int main(int argc, char* argv[]) {
+    sharksfin::Environment env{};
+    env.initialize();
     try {
         return sharksfin::cli::run(std::vector<char*> { argv, argv + argc });  // NOLINT
     } catch (std::exception& e) {

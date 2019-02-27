@@ -52,6 +52,8 @@ void Environment::Impl::initialize() {
     engine_ = std::make_unique<::foedus::Engine>(engineOptions);
     debugging_supports_ = std::make_unique<::foedus::debugging::DebuggingSupports>(engine_.get());
     debugging_supports_->initialize_once();
+	::google::InstallFailureSignalHandler();
+
 }
 
 Environment::Impl::~Impl() noexcept {
