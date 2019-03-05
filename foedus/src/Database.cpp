@@ -87,13 +87,13 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     options.snapshot_.snapshot_interval_milliseconds_ = 100000000U;
 
     if (buffer != std::nullopt) {
-        options.log_.log_buffer_kb_ = std::stoi(buffer.value()) << 10;
+        options.log_.log_buffer_kb_ = std::stoi(buffer.value()) * 1024;
         LOG(INFO) << "log_buffer_mb=" << std::stoi(buffer.value()) << "MB per thread";
     }
-    options.log_.log_file_size_mb_ = 1 << 15;
+    options.log_.log_file_size_mb_ = 32768;
     if (pool != std::nullopt) {
         LOG(INFO) << "volatile_pool_size=" << std::stoi(pool.value()) << "GB per NUMA node";
-        options.memory_.page_pool_size_mb_per_node_ = (std::stoi(pool.value())) << 10;
+        options.memory_.page_pool_size_mb_per_node_ = (std::stoi(pool.value())) * 1024;
     }
 
     if (nodes != std::nullopt) {
