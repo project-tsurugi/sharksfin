@@ -28,8 +28,9 @@ public:
         return {};
     }
 
-    static inline Slice slice(char const* str) {
-        return { str };
+    template<class T>
+    static inline Slice slice(T&& str) {
+        return { std::forward<T>(str) };
     }
 };
 

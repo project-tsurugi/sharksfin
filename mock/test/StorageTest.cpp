@@ -75,6 +75,16 @@ TEST_F(StorageTest, remove) {
     ASSERT_EQ(st->get("K", buf), StatusCode::NOT_FOUND);
 }
 
+TEST_F(StorageTest, prefix_conflict) {
+    Database db { open() };
+    auto s0 = db.create_storage("a");
+    auto s1 = db.create_storage("b");
+    s1->put("a", "B");
+    auto it = s0->scan_prefix({});
+
+    EXPECT_EQ(it->next(), StatusCode::NOT_FOUND);
+}
+
 TEST_F(StorageTest, scan_prefix) {
     Database db { open() };
     auto st = db.create_storage("S");

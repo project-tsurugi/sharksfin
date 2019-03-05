@@ -51,10 +51,12 @@ public:
 
     /**
      * @brief constructs a new object.
+     * @tparam N C-style string size (including zero terminator)
      * @param string C-style string
      */
-    inline constexpr Slice(std::string::value_type const* string) noexcept  // NOLINT
-        : Slice(string, std::string::traits_type::length(string))
+    template<std::size_t N>
+    inline constexpr Slice(std::enable_if_t<N >= 1, char> const (&string)[N]) noexcept  // NOLINT
+        : Slice(&string[0], N-1)  // NOLINT
     {}
 
     /**

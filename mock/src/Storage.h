@@ -47,7 +47,9 @@ public:
         : owner_(owner)
         , key_prefix_(key.to_string_view())
         , leveldb_(leveldb)
-    {}
+    {
+        key_prefix_.append(1, '\0');
+    }
 
     /**
      * @brief returns key prefix.
@@ -138,7 +140,7 @@ public:
 
 private:
     Database* owner_;
-    std::string const key_prefix_;
+    std::string key_prefix_;
     leveldb::DB* leveldb_;
 
     leveldb::Slice qualify(Slice key);
