@@ -61,7 +61,7 @@ StatusCode Database::resolve(leveldb::Status const& status) {
     return StatusCode::ERR_UNKNOWN;
 }
 
-static constexpr Slice META_PREFIX = { "\0", 1 };
+static constexpr Slice META_PREFIX = { "\0" };
 
 static leveldb::Slice qualify_meta(Slice key, std::string& buffer) {
     META_PREFIX.assign_to(buffer);
@@ -70,29 +70,31 @@ static leveldb::Slice qualify_meta(Slice key, std::string& buffer) {
 }
 
 std::unique_ptr<Storage> Database::create_storage(Slice key) {
+    auto storage = std::make_unique<Storage>(this, key, leveldb_.get());
     std::string k, v;
-    qualify_meta(key, k);
+    qualify_meta(storage->prefix(), k);
     auto s = leveldb_->Get(leveldb::ReadOptions(), k, &v);
     if (s.ok()) {
         return {}; // already exists
     }
     if (s.IsNotFound()) {
         if (auto s2 = leveldb_->Put(leveldb::WriteOptions(), k, "!"); s2.ok()) {
-            return std::make_unique<Storage>(this, key, leveldb_.get());
+            return storage;
         }
     }
     throw std::runtime_error(s.ToString());
 }
 
 std::unique_ptr<Storage> Database::get_storage(Slice key) {
+    auto storage = std::make_unique<Storage>(this, key, leveldb_.get());
     std::string k, v;
-    qualify_meta(key, k);
+    qualify_meta(storage->prefix(), k);
     auto s = leveldb_->Get(leveldb::ReadOptions(), k, &v);
     if (s.IsNotFound()) {
         return {}; // not found
     }
     if (s.ok()) {
-        return std::make_unique<Storage>(this, key, leveldb_.get());
+        return storage;
     }
     throw std::runtime_error(s.ToString());
 }
