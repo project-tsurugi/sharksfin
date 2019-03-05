@@ -88,20 +88,20 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
 
     if (buffer != std::nullopt) {
         options.log_.log_buffer_kb_ = std::stoi(buffer.value()) << 10;
-        std::cout << "log_buffer_mb=" << std::stoi(buffer.value()) << "MB per thread" << std::endl;
+        LOG(INFO) << "log_buffer_mb=" << std::stoi(buffer.value()) << "MB per thread";
     }
     options.log_.log_file_size_mb_ = 1 << 15;
     if (pool != std::nullopt) {
-        std::cout << "volatile_pool_size=" << std::stoi(pool.value()) << "GB per NUMA node" << std::endl;
+        LOG(INFO) << "volatile_pool_size=" << std::stoi(pool.value()) << "GB per NUMA node";
         options.memory_.page_pool_size_mb_per_node_ = (std::stoi(pool.value())) << 10;
     }
 
     if (nodes != std::nullopt) {
-        std::cout << "numa_nodes=" << std::stoi(nodes.value()) << std::endl;
+        LOG(INFO) << "numa_nodes=" << std::stoi(nodes.value());
         options.thread_.group_count_ = std::stoi(nodes.value());
     }
     if (nthreads != std::nullopt) {
-        std::cout << "thread_per_node=" << std::stoi(nthreads.value()) << std::endl;
+        LOG(INFO) << "thread_per_node=" << std::stoi(nthreads.value());
         options.thread_.thread_count_per_group_ = std::stoi(nthreads.value());
     }
 
