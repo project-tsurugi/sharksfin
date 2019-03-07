@@ -166,16 +166,16 @@ struct Input {
         FOEDUS_WRAP_ERROR_CODE(tx->commit());  //NOLINT
         return ::foedus::kRetOk;
     }
+    FOEDUS_WRAP_ERROR_CODE(tx->abort());  //NOLINT
     if (status == TransactionOperation::ROLLBACK){
-        FOEDUS_WRAP_ERROR_CODE(tx->abort());  //NOLINT
         FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeXctUserAbort);  //NOLINT
-    } else if (status == TransactionOperation::ERROR){
-        FOEDUS_WRAP_ERROR_CODE(tx->abort());  //NOLINT
-        FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeUserDefined);  //NOLINT
+        std::abort();
     }
-    // should never reach here
-    FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeInternalError);  //NOLINT
-    return ::foedus::kRetOk;
+    if (status == TransactionOperation::ERROR){
+        FOEDUS_WRAP_ERROR_CODE(::foedus::kErrorCodeUserDefined);  //NOLINT
+        std::abort();
+    }
+    std::abort();
 }
 
 StatusCode Database::open(DatabaseOptions const &options, std::unique_ptr<Database> *result) noexcept {
