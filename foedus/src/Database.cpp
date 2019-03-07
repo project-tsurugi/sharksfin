@@ -95,7 +95,7 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     }
     LOG(INFO) << "numa_nodes=" << options.thread_.group_count_;
     options.thread_.thread_count_per_group_ = static_cast<::foedus::thread::ThreadLocalOrdinal>(threads_per_node);
-    LOG(INFO) << "thread_per_node=" << options.thread_.thread_count_per_group_;
+    LOG(INFO) << "thread_per_node=" << threads_per_node;
 
     options.prescreen(&std::cout);
 
@@ -124,6 +124,7 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     LOG(INFO) << "volatile_pool_size=" << options.log_.log_file_size_mb_ << "GB per NUMA node";
 
     options.xct_.max_write_set_size_ = 4096;
+    options.xct_.max_read_set_size_ = 4096;
     options.snapshot_.log_mapper_io_buffer_mb_ = 2;
     options.snapshot_.log_reducer_buffer_mb_ = 2;
     options.snapshot_.log_reducer_dump_io_buffer_mb_ = 4;
