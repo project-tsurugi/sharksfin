@@ -39,10 +39,12 @@ namespace sharksfin::foedus {
 
 static char const *kProc = "foedusCallback";
 static const std::string KEY_LOCATION{"location"};  // NOLINT
-static const std::string_view NUMA_NODES { "nodes" };  //NOLINT
-static const std::string_view VOLATILE_POOL_SIZE_GB { "pool" };  //NOLINT
-static const std::string_view LOGGERS_PER_NODE { "loggers" };  //NOLINT
-static const std::string_view LOG_BUFFER_MB { "buffer" };  //NOLINT
+static const std::string NUMA_NODES { "nodes" };  //NOLINT
+static const std::string VOLATILE_POOL_SIZE_GB { "pool" };  //NOLINT
+static const std::string LOGGERS_PER_NODE { "loggers" };  //NOLINT
+static const std::string READ_SET_SIZE { "readset" };  //NOLINT
+static const std::string WRITE_SET_SIZE { "writeset" };  //NOLINT
+static const std::string LOG_BUFFER_MB { "buffer" };  //NOLINT
 static const std::string KEY_THREADS{"threads"};  // NOLINT
 static const std::string SAVEPOINT_FILE{"savepoint.xml"};  // NOLINT
 
@@ -63,6 +65,8 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     auto nodes = dboptions.attribute(NUMA_NODES);
     auto pool = dboptions.attribute(VOLATILE_POOL_SIZE_GB);
     auto loggers = dboptions.attribute(LOGGERS_PER_NODE);
+    auto readset = dboptions.attribute(READ_SET_SIZE);
+    auto writeset = dboptions.attribute(WRITE_SET_SIZE);
     auto buffer = dboptions.attribute(LOG_BUFFER_MB);
 
     options.debugging_.debug_log_min_threshold_ =
@@ -123,8 +127,12 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     }
     LOG(INFO) << "volatile_pool_size=" << options.log_.log_file_size_mb_ << "GB per NUMA node";
 
-    options.xct_.max_write_set_size_ = 4096;
-    options.xct_.max_read_set_size_ = 4096;
+    if (readset.has_value()) {
+        options.xct_.max_read_set_size_ = std::stoi(readset.value());
+    }
+    if (writeset.has_value()) {
+        options.xct_.max_write_set_size_ = std::stoi(writeset.value());
+    }
     options.snapshot_.log_mapper_io_buffer_mb_ = 2;
     options.snapshot_.log_reducer_buffer_mb_ = 2;
     options.snapshot_.log_reducer_dump_io_buffer_mb_ = 4;
