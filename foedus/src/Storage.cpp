@@ -53,9 +53,13 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
                          key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
                          value.data(), static_cast<::foedus::storage::masstree::PayloadLength>(value.size())));
         case PutOperation::UPDATE:
-            return resolve(masstree_.overwrite_record(tx->context(),
+            if (auto rc = masstree_.overwrite_record(tx->context(),
                          key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
-                         value.data(), 0U, static_cast<::foedus::storage::masstree::PayloadLength>(value.size())));
+                         value.data(), 0U, static_cast<::foedus::storage::masstree::PayloadLength>(value.size()));
+                         rc != ::foedus::kErrorCodeStrTooShortPayload) {
+                return resolve(rc);
+            }
+            [[fallthrough]]; // overwrite failed because existing record payload is smaller than new one. Try upsert.
         default:
             return resolve(masstree_.upsert_record(tx->context(),
                          key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
