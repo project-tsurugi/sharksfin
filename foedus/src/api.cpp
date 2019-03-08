@@ -160,14 +160,15 @@ StatusCode content_put(
     TransactionHandle transaction,
     StorageHandle storage,
     Slice key,
-    Slice value) {
+    Slice value,
+    PutOperation operation) {
     auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
     auto database = tx->owner();
     if (!database) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    return stg->put(tx, key, value);
+    return stg->put(tx, key, value, operation);
 }
 
 StatusCode content_delete(

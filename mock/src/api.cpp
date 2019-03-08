@@ -189,13 +189,14 @@ StatusCode content_put(
         TransactionHandle transaction,
         StorageHandle storage,
         Slice key,
-        Slice value) {
+        Slice value,
+        PutOperation operation) {
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    return st->put(key, value);
+    return st->put(key, value, operation);
 }
 
 StatusCode content_delete(
