@@ -71,9 +71,10 @@ public:
      * @param tx the transaction where the operation is executed
      * @param key the entry key
      * @param value the entry value
+     * @param operation type of the put operation
      * @return the operation status
      */
-    StatusCode put(Transaction* tx, Slice key, Slice value);
+    StatusCode put(Transaction* tx, Slice key, Slice value, PutOperation operation);
 
     /**
      * @brief removes an entry.

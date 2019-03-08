@@ -80,7 +80,7 @@ public:
      * @param value the entry value
      * @return the operation status
      */
-    StatusCode put(Slice key, Slice value);
+    StatusCode put(Slice key, Slice value, PutOperation operation = PutOperation::CREATE_OR_UPDATE);
 
     /**
      * @brief removes an entry.

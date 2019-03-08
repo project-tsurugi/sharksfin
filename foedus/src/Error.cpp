@@ -32,6 +32,8 @@ StatusCode resolve(::foedus::ErrorStack const& result) {
     switch(result.get_error_code()) {
         case ::foedus::kErrorCodeStrKeyNotFound:
             return StatusCode::NOT_FOUND;
+        case ::foedus::kErrorCodeStrKeyAlreadyExists:
+            return StatusCode::ALREADY_EXISTS;
         case ::foedus::ErrorCode::kErrorCodeXctUserAbort:
             return StatusCode::USER_ROLLBACK;
         case ::foedus::ErrorCode::kErrorCodeUserDefined:
