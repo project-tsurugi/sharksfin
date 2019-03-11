@@ -73,8 +73,10 @@ public:
         auto ret = xct_manager->precommit_xct(context_, &commit_epoch);
         if (ret != ::foedus::kErrorCodeOk) {
             LOG(ERROR) << ::foedus::get_error_message(ret);
-            if (auto ret2 = xct_manager->abort_xct(context_); ret2 != ::foedus::kErrorCodeOk) {
-                LOG(ERROR) << ::foedus::get_error_message(ret2);
+            if (context_->is_running_xct()) {
+                if (auto ret2 = xct_manager->abort_xct(context_); ret2 != ::foedus::kErrorCodeOk) {
+                    LOG(ERROR) << ::foedus::get_error_message(ret2);
+                }
             }
             return ret;
         }
