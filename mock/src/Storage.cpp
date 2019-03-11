@@ -41,9 +41,32 @@ StatusCode Storage::get(Slice key, std::string &buffer) {
     return owner_->handle(status);
 }
 
-StatusCode Storage::put(Slice key, Slice value) {
-    leveldb::WriteOptions options;
+StatusCode Storage::put(Slice key, Slice value, PutOperation operation) {
     auto k = qualify(key);
+    if (operation != PutOperation::CREATE_OR_UPDATE) {
+        // first check the existence of entry
+        leveldb::ReadOptions options;
+        std::string v;
+        auto status = leveldb_->Get(options, k, &v);
+        if (operation == PutOperation::CREATE) {
+            if (status.ok()) {
+                return StatusCode::ALREADY_EXISTS;
+            }
+            if (!status.IsNotFound()){
+                // get failed for unknown reason
+                return owner_->handle(status);
+            }
+        } else { // operation == PutOperation::UPDATE
+            if (status.IsNotFound()) {
+                return StatusCode::NOT_FOUND;
+            }
+            if (!status.ok()){
+                // get failed for unknown reason
+                return owner_->handle(status);
+            }
+        }
+    }
+    leveldb::WriteOptions options;
     auto status = leveldb_->Put(options, k, resolve(value));
     return owner_->handle(status);
 }

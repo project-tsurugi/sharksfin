@@ -46,10 +46,25 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
     return resolve(rc);
 }
 
-StatusCode Storage::put(Transaction* tx, Slice key, Slice value) {
-    return resolve(masstree_.upsert_record(tx->context(),
-        key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
-        value.data(), static_cast<::foedus::storage::masstree::PayloadLength>(value.size())));
+StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {
+    switch(operation) {
+        case PutOperation::CREATE:
+            return resolve(masstree_.insert_record(tx->context(),
+                         key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
+                         value.data(), static_cast<::foedus::storage::masstree::PayloadLength>(value.size())));
+        case PutOperation::UPDATE:
+            if (auto rc = masstree_.overwrite_record(tx->context(),
+                         key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
+                         value.data(), 0U, static_cast<::foedus::storage::masstree::PayloadLength>(value.size()));
+                         rc != ::foedus::kErrorCodeStrTooShortPayload) {
+                return resolve(rc);
+            }
+            [[fallthrough]]; // overwrite failed because existing record payload is smaller than new one. Try upsert.
+        default:
+            return resolve(masstree_.upsert_record(tx->context(),
+                         key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size()),
+                         value.data(), static_cast<::foedus::storage::masstree::PayloadLength>(value.size())));
+    }
 }
 
 StatusCode Storage::remove(Transaction* tx, Slice key) {

@@ -214,19 +214,42 @@ extern "C" StatusCode content_get(
         Slice* result);
 
 /**
+ * @brief options for put operation
+ */
+enum class PutOperation : std::uint32_t {
+    /**
+     * @brief to update the existing entry, or create new one if the entry doesn't exist.
+     */
+    CREATE_OR_UPDATE = 0U,
+
+    /**
+     * @brief to create new entry. StatusCode::ALREADY_EXISTS is returned from put operation if the entry already exist.
+     */
+    CREATE,
+
+    /**
+     * @brief to update existing entry. StatusCode::NOT_FOUND is returned from put operation if the entry doesn't exist.
+     */
+    UPDATE,
+};
+
+/**
  * @brief puts a content onto the target key.
  * @param transaction the current transaction handle
  * @param storage the target storage
  * @param key the content key
  * @param value the content value
+ * @param operation indicates the behavior with the existing/new entry. See PutOperation.
  * @return Status::OK if the target content was successfully put
+ * @return warnings if the operation is not applicable to the entry. See PutOperation.
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_put(
         TransactionHandle transaction,
         StorageHandle storage,
         Slice key,
-        Slice value);
+        Slice value,
+        PutOperation operation = PutOperation::CREATE_OR_UPDATE);
 
 /**
  * @brief removes a content on the target key.
