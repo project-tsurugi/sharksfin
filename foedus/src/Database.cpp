@@ -47,6 +47,7 @@ static const std::string WRITE_SET_SIZE { "writeset" };  //NOLINT
 static const std::string LOG_BUFFER_MB { "buffer" };  //NOLINT
 static const std::string KEY_THREADS{"threads"};  // NOLINT
 static const std::string SAVEPOINT_FILE{"savepoint.xml"};  // NOLINT
+static const std::string BENCHMARK_MODE{"benchmark"};  // NOLINT
 
 std::string dbpath(DatabaseOptions const &dboptions) {
     std::string path = "./foedus.out/";
@@ -62,12 +63,13 @@ std::string dbpath(DatabaseOptions const &dboptions) {
 
 std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions const &dboptions) {
     ::foedus::EngineOptions options;
-    auto nodes = dboptions.attribute(NUMA_NODES);
-    auto pool = dboptions.attribute(VOLATILE_POOL_SIZE_GB);
-    auto loggers = dboptions.attribute(LOGGERS_PER_NODE);
-    auto readset = dboptions.attribute(READ_SET_SIZE);
-    auto writeset = dboptions.attribute(WRITE_SET_SIZE);
-    auto buffer = dboptions.attribute(LOG_BUFFER_MB);
+    auto nodes_option = dboptions.attribute(NUMA_NODES);
+    auto pool_option = dboptions.attribute(VOLATILE_POOL_SIZE_GB);
+    auto loggers_option = dboptions.attribute(LOGGERS_PER_NODE);
+    auto read_set_option = dboptions.attribute(READ_SET_SIZE);
+    auto write_set_option = dboptions.attribute(WRITE_SET_SIZE);
+    auto buffer_option = dboptions.attribute(LOG_BUFFER_MB);
+    auto benchmark_option = dboptions.attribute(BENCHMARK_MODE);
 
     options.debugging_.debug_log_min_threshold_ =
             ::foedus::debugging::DebuggingOptions::kDebugLogWarning;
@@ -79,7 +81,7 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     int threads = 2; // default # of thread is min for tests
     auto threads_option = dboptions.attribute(KEY_THREADS);
     if (threads_option.has_value()) {
-        threads = static_cast<int>(std::strtol(threads_option.value().data(), nullptr, 10));
+        threads = std::stoi(threads_option.value());
     }
     
     const std::string snapshot_folder_path_pattern = path + "snapshots/node_$NODE$";
@@ -92,8 +94,8 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     const int cpus = numa_num_task_cpus();
     const int use_nodes = (threads - 1) / cpus + 1;
     const int threads_per_node = (threads + (use_nodes - 1)) / use_nodes;
-    if (nodes.has_value()) {
-        options.thread_.group_count_ = std::stoi(nodes.value());
+    if (nodes_option.has_value()) {
+        options.thread_.group_count_ = std::stoi(nodes_option.value());
     } else {
         options.thread_.group_count_ = static_cast<uint16_t>(use_nodes);
     }
@@ -103,14 +105,14 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
 
     options.prescreen(&std::cout);
 
-    if (loggers.has_value()) {
-        options.log_.loggers_per_node_ = std::stoi(loggers.value());
+    if (loggers_option.has_value()) {
+        options.log_.loggers_per_node_ = std::stoi(loggers_option.value());
     } else {
         options.log_.loggers_per_node_ = 2;
     }
     LOG(INFO) << "loggers_per_node=" << options.log_.loggers_per_node_;
-    if (buffer.has_value()) {
-        options.log_.log_buffer_kb_ = std::stoi(buffer.value()) * 1024;
+    if (buffer_option.has_value()) {
+        options.log_.log_buffer_kb_ = std::stoi(buffer_option.value()) * 1024;
     } else {
         options.log_.log_buffer_kb_ = 512;
     }
@@ -120,18 +122,18 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     options.cache_.snapshot_cache_size_mb_per_node_ = 2;
     options.cache_.private_snapshot_cache_initial_grab_ = 16;
 
-    if (pool.has_value()) {
-        options.memory_.page_pool_size_mb_per_node_ = (std::stoi(pool.value())) * 1024;
+    if (pool_option.has_value()) {
+        options.memory_.page_pool_size_mb_per_node_ = (std::stoi(pool_option.value())) * 1024;
     } else {
         options.memory_.page_pool_size_mb_per_node_ = 32;
     }
     LOG(INFO) << "volatile_pool_size=" << options.log_.log_file_size_mb_ << "GB per NUMA node";
 
-    if (readset.has_value()) {
-        options.xct_.max_read_set_size_ = std::stoi(readset.value());
+    if (read_set_option.has_value()) {
+        options.xct_.max_read_set_size_ = std::stoi(read_set_option.value());
     }
-    if (writeset.has_value()) {
-        options.xct_.max_write_set_size_ = std::stoi(writeset.value());
+    if (write_set_option.has_value()) {
+        options.xct_.max_write_set_size_ = std::stoi(write_set_option.value());
     }
     options.snapshot_.log_mapper_io_buffer_mb_ = 2;
     options.snapshot_.log_reducer_buffer_mb_ = 2;
@@ -144,6 +146,17 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     options.xct_.hot_threshold_for_retrospective_lock_list_ = 256;
     options.xct_.enable_retrospective_lock_list_ = false;
     options.xct_.force_canonical_xlocks_in_precommit_ = true;
+
+    if (benchmark_option.has_value()) {
+        // from FOEDUS TPC-C benchmark
+        options.snapshot_.log_mapper_io_buffer_mb_ = 256;
+        options.snapshot_.log_mapper_bucket_kb_ = 4096;
+        options.snapshot_.log_reducer_buffer_mb_ = 2048;
+        options.snapshot_.snapshot_writer_page_pool_size_mb_ = 2014;
+        options.snapshot_.snapshot_writer_intermediate_pool_size_mb_ = 256;
+        options.cache_.snapshot_cache_size_mb_per_node_ = 4096;
+        options.snapshot_.snapshot_interval_milliseconds_ = 100000000U;
+    }
 
     return std::make_unique<::foedus::EngineOptions>(options);
 }
