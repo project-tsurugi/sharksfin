@@ -243,7 +243,12 @@ std::unique_ptr<Storage> Database::create_storage(Slice key) {
     if (get_storage(key)) {
         return {};
     }
+    // Not found, let's create new one acquiring lock
+    std::unique_lock lock{mutex_for_storage_metadata_};
     ::foedus::Epoch create_epoch;
+    if (get_storage(key)) {
+        return {};
+    }
     auto e = engine_->get_storage_manager()->create_storage(&meta, &create_epoch);
     if (e.is_error()) {
         throw std::runtime_error(e.get_message());
@@ -266,9 +271,12 @@ std::unique_ptr<Storage> Database::get_storage(Slice key) {
 
 void Database::delete_storage(Storage &storage) {
     ::foedus::storage::StorageName name{storage.prefix().data<char>(), static_cast<uint32_t>(storage.prefix().size())};
-    if (auto masstree = engine_->get_storage_manager()->get_masstree(name); masstree.exists()) {
-        ::foedus::Epoch drop_epoch;
-        engine_->get_storage_manager()->drop_storage(masstree.get_id(), &drop_epoch);
+    if (engine_->get_storage_manager()->get_masstree(name).exists()) {
+        std::unique_lock lock{mutex_for_storage_metadata_};
+        if (auto masstree = engine_->get_storage_manager()->get_masstree(name); masstree.exists()) {
+            ::foedus::Epoch drop_epoch;
+            engine_->get_storage_manager()->drop_storage(masstree.get_id(), &drop_epoch);
+        }
     }
 }
 

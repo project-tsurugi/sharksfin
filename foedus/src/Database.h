@@ -17,6 +17,7 @@
 #define SHARKSFIN_FOEDUS_DATABASE_H_
 
 #include <memory>
+#include <mutex>
 
 #include "foedus/engine.hpp"
 #include "sharksfin/api.h"
@@ -80,7 +81,8 @@ public:
     void delete_storage(Storage& storage);
 
 private:
-    std::unique_ptr<::foedus::Engine> engine_;
+    std::unique_ptr<::foedus::Engine> engine_{};
+    std::mutex mutex_for_storage_metadata_{};
 };
 
 }  // namespace sharksfin::foedus
