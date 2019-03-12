@@ -168,13 +168,14 @@ struct Input {
     ::foedus::Engine *engine_;
 };
 
-struct aborter {
+struct aborter { //NOLINT
     explicit aborter(foedus::Transaction *tx) : tx_(tx) {}
     ~aborter() {
         tx_->abort();
     }
     foedus::Transaction *tx_;
 };
+
 ::foedus::ErrorStack foedusCallback(const ::foedus::proc::ProcArguments &arg) {
     Input *ptr;
     std::memcpy(&ptr, arg.input_buffer_, sizeof(Input *));
