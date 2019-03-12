@@ -69,6 +69,7 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     auto read_set_option = dboptions.attribute(READ_SET_SIZE);
     auto write_set_option = dboptions.attribute(WRITE_SET_SIZE);
     auto buffer_option = dboptions.attribute(LOG_BUFFER_MB);
+    auto threads_option = dboptions.attribute(KEY_THREADS);
     auto benchmark_option = dboptions.attribute(BENCHMARK_MODE);
 
     options.debugging_.debug_log_min_threshold_ =
@@ -78,12 +79,6 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     
     std::string path = dbpath(dboptions);
 
-    int threads = 2; // default # of thread is min for tests
-    auto threads_option = dboptions.attribute(KEY_THREADS);
-    if (threads_option.has_value()) {
-        threads = std::stoi(threads_option.value());
-    }
-    
     const std::string snapshot_folder_path_pattern = path + "snapshots/node_$NODE$";
     options.snapshot_.folder_path_pattern_ = snapshot_folder_path_pattern.c_str();
     const std::string log_folder_path_pattern = path + "logs/node_$NODE$/logger_$LOGGER$";
@@ -91,15 +86,19 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     const std::string savepoint_path = path + SAVEPOINT_FILE;
     options.savepoint_.savepoint_path_ = savepoint_path.c_str();
 
-    const int cpus = numa_num_task_cpus();
-    const int use_nodes = (threads - 1) / cpus + 1;
-    const int threads_per_node = (threads + (use_nodes - 1)) / use_nodes;
+    int nodes = numa_num_task_cpus();
     if (nodes_option.has_value()) {
-        options.thread_.group_count_ = std::stoi(nodes_option.value());
-    } else {
-        options.thread_.group_count_ = static_cast<uint16_t>(use_nodes);
+        nodes = std::stoi(nodes_option.value());
     }
-    LOG(INFO) << "numa_nodes=" << options.thread_.group_count_;
+    options.thread_.group_count_ = nodes;
+    LOG(INFO) << "numa_nodes=" << nodes;
+
+    int threads = 2; // default # of thread is min for tests
+    if (threads_option.has_value()) {
+        threads = std::stoi(threads_option.value());
+    }
+    int threads_per_node = threads / nodes;
+    if((threads_per_node * nodes) < threads) threads_per_node++;
     options.thread_.thread_count_per_group_ = static_cast<::foedus::thread::ThreadLocalOrdinal>(threads_per_node);
     LOG(INFO) << "thread_per_node=" << threads_per_node;
 
@@ -108,7 +107,7 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     if (loggers_option.has_value()) {
         options.log_.loggers_per_node_ = std::stoi(loggers_option.value());
     } else {
-        options.log_.loggers_per_node_ = 2;
+        options.log_.loggers_per_node_ = 1;
     }
     LOG(INFO) << "loggers_per_node=" << options.log_.loggers_per_node_;
     if (buffer_option.has_value()) {
