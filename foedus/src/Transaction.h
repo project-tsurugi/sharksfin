@@ -73,19 +73,13 @@ public:
         auto ret = xct_manager->precommit_xct(context_, &commit_epoch);
         if (ret != ::foedus::kErrorCodeOk) {
             LOG(ERROR) << ::foedus::get_error_message(ret);
-            if (context_->is_running_xct()) {
-                if (auto ret2 = xct_manager->abort_xct(context_); ret2 != ::foedus::kErrorCodeOk) {
-                    LOG(ERROR) << ::foedus::get_error_message(ret2);
-                }
-            }
+            abort();
             return ret;
         }
         ret = xct_manager->wait_for_commit(commit_epoch);
         if (ret != ::foedus::kErrorCodeOk) {
             LOG(ERROR) << ::foedus::get_error_message(ret);
-            if (auto ret2 = xct_manager->abort_xct(context_); ret2 != ::foedus::kErrorCodeOk) {
-                LOG(ERROR) << ::foedus::get_error_message(ret2);
-            }
+            abort();
         }
         return ret;
     }
@@ -96,11 +90,13 @@ public:
      */
     inline ::foedus::ErrorCode abort() {
         auto* xct_manager = engine_->get_xct_manager();
-        auto ret = xct_manager->abort_xct(context_);
-        if (ret != ::foedus::kErrorCodeOk) {
-            LOG(ERROR) << ::foedus::get_error_message(ret);
+        if (context_->is_running_xct()) {
+            auto ret = xct_manager->abort_xct(context_);
+            if (ret != ::foedus::kErrorCodeOk) {
+                LOG(ERROR) << ::foedus::get_error_message(ret);
+            }
         }
-        return ret;
+        return ::foedus::kErrorCodeOk;
     }
     /**
      * @brief returns the owner of this transaction.

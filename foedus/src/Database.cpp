@@ -168,12 +168,20 @@ struct Input {
     ::foedus::Engine *engine_;
 };
 
+struct aborter {
+    explicit aborter(foedus::Transaction *tx) : tx_(tx) {}
+    ~aborter() {
+        tx_->abort();
+    }
+    foedus::Transaction *tx_;
+};
 ::foedus::ErrorStack foedusCallback(const ::foedus::proc::ProcArguments &arg) {
     Input *ptr;
     std::memcpy(&ptr, arg.input_buffer_, sizeof(Input *));
     TransactionCallback callback(ptr->callback_);
     auto tx = std::make_unique<foedus::Transaction>(ptr->db_, arg.context_, ptr->engine_);
     FOEDUS_WRAP_ERROR_CODE(tx->begin());  //NOLINT
+    aborter guard(tx.get());
     auto status = callback(reinterpret_cast<TransactionHandle>(tx.get()), ptr->arguments_); //NOLINT
     if (status == TransactionOperation::COMMIT) {
         FOEDUS_WRAP_ERROR_CODE(tx->commit());  //NOLINT
@@ -245,7 +253,7 @@ std::unique_ptr<Storage> Database::create_storage(Slice key) {
     }
     // Not found, let's create new one acquiring lock
     std::unique_lock lock{mutex_for_storage_metadata_};
-    ::foedus::Epoch create_epoch;
+    ::foedus::Epoch create_epoch{};
     if (get_storage(key)) {
         return {};
     }
