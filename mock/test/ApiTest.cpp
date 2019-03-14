@@ -625,6 +625,31 @@ TEST_F(ApiTest, put_operations) {
             }
             return TransactionOperation::COMMIT;
         }
+        static TransactionOperation put_and_rollback(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "RR", PutOperation::UPDATE) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::ROLLBACK;
+        }
+        static TransactionOperation check_rollback(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_get(tx, st, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "B") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation put_and_error(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "EEE", PutOperation::UPDATE) != StatusCode::OK) {
+                return TransactionOperation::ROLLBACK;
+            }
+            return TransactionOperation::ERROR;
+        }
         StorageHandle st;
     };
     S s;
@@ -634,6 +659,11 @@ TEST_F(ApiTest, put_operations) {
     EXPECT_EQ(transaction_exec(db, {}, &S::update_miss, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::create, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::check_create, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::create_when_exists_then_update, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::check_update, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::put_and_rollback, &s), StatusCode::USER_ROLLBACK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::check_rollback, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::put_and_error, &s), StatusCode::ERR_USER_ERROR);
     EXPECT_EQ(transaction_exec(db, {}, &S::create_when_exists_then_update, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::check_update, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);

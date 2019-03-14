@@ -33,7 +33,7 @@ public:
     Impl& operator=(Impl const& other) = delete;
     Impl& operator=(Impl&& other) noexcept = default;
 
-    void initialize(LogLevel level);
+    void initialize();
 private:
     std::unique_ptr<::foedus::Engine> engine_;
     std::unique_ptr<::foedus::debugging::DebuggingSupports> debugging_supports_;
@@ -43,27 +43,37 @@ Environment::Environment() noexcept : impl_(std::make_unique<Impl>()) {}
 
 Environment::~Environment() noexcept = default;
 
-void Environment::Impl::initialize(LogLevel level) {
+void Environment::Impl::initialize() {
     // initialize glog in DebuggingSupports using dummy foedus engine
-    ::foedus::EngineOptions engineOptions{};
-    if (FLAGS_log_dir.empty()) {
-        engineOptions.debugging_.debug_log_to_stderr_ = true;
+
+    // foedus read these options and sets to FLAGS_, so we do reverse here so that FLAGS_ are propagated
+    ::foedus::EngineOptions options{};
+    options.debugging_.debug_log_to_stderr_ = FLAGS_logtostderr ;
+    options.debugging_.debug_log_stderr_threshold_ = static_cast<::foedus::debugging::DebuggingOptions::DebugLogLevel>(FLAGS_stderrthreshold);
+    int level{};
+    if (auto v = std::getenv("LOGLEVEL"); v != nullptr) {
+        level = std::stoi(v);
+    } else {
+        level = 1; // defaulted to WARN because foedus writes to many INFO messages
     }
-    engineOptions.debugging_.debug_log_min_threshold_ = static_cast<::foedus::debugging::DebuggingOptions::DebugLogLevel>(level);
-    engine_ = std::make_unique<::foedus::Engine>(engineOptions);
+    options.debugging_.debug_log_min_threshold_ = static_cast<::foedus::debugging::DebuggingOptions::DebugLogLevel>(level);
+    options.debugging_.debug_log_dir_ = FLAGS_log_dir.c_str();
+    options.debugging_.verbose_log_level_ = static_cast<std::int16_t>(FLAGS_v);
+    if (FLAGS_log_dir.empty()) {
+        options.debugging_.debug_log_to_stderr_ = true;
+    }
+    engine_ = std::make_unique<::foedus::Engine>(options);
     debugging_supports_ = std::make_unique<::foedus::debugging::DebuggingSupports>(engine_.get());
     debugging_supports_->initialize_once();
     ::google::InstallFailureSignalHandler();
-
 }
 
 Environment::Impl::~Impl() noexcept {
     debugging_supports_->uninitialize_once();
 }
 
-void Environment::initialize(LogLevel level) {
-    impl_->initialize(level);
+void Environment::initialize() {
+    impl_->initialize();
 }
-
 
 } // namespace sharksfin

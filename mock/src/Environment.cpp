@@ -30,14 +30,14 @@ public:
     Impl& operator=(Impl const& other) = delete;
     Impl& operator=(Impl&& other) noexcept = default;
 
-    void initialize(LogLevel level);
+    void initialize();
 };
 
 Environment::Environment() noexcept : impl_(std::make_unique<Impl>()) {}
 
 Environment::~Environment() noexcept = default;
 
-void Environment::Impl::initialize(LogLevel) {
+void Environment::Impl::initialize() {
     // ignore log level
     if (FLAGS_log_dir.empty()) {
         FLAGS_logtostderr = true;
@@ -50,8 +50,8 @@ Environment::Impl::~Impl() noexcept {
     ::google::ShutdownGoogleLogging();
 }
 
-void Environment::initialize(LogLevel level) {
-    impl_->initialize(level);
+void Environment::initialize() {
+    impl_->initialize();
 }
 
 } // namespace sharksfin
