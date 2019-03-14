@@ -17,6 +17,7 @@
 #define SHARKSFIN_MOCK_DATABASE_H_
 
 #include <atomic>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -41,6 +42,11 @@ public:
      * @brief the transaction mutex type.
      */
     using transaction_mutex_type = std::mutex;
+
+    /**
+     * @brief the tracking time period.
+     */
+    using tracking_time_period = std::chrono::microseconds;
 
     /**
      * @brief constructs a new object.
@@ -106,10 +112,93 @@ public:
      */
     static StatusCode resolve(leveldb::Status const& status);
 
+    /**
+     * @brief returns whether or not performance tracking feature is enabled.
+     * @return true if performance tracking feature is enabled
+     * @return false otherwise
+     */
+    bool enable_tracking() const {
+        return enable_tracking_;
+    }
+
+    /**
+     * @brief sets whether or not performace tracking feature is enabled.
+     * @param on true to enable, false to disable
+     */
+    void enable_tracking(bool on) {
+        enable_tracking_ = on;
+    }
+
+    /**
+     * @brief returns the transaction count.
+     * @return the transaction count (not include retry count)
+     */
+    std::atomic_size_t& transaction_count() {
+        return transaction_count_;
+    }
+
+    /**
+     * @brief returns the transaction retry count.
+     * @return the transaction retry count
+     */
+    std::atomic_size_t& retry_count() {
+        return retry_count_;
+    }
+
+    /**
+     * @brief return the transaction process time.
+     * @return the duration of user operation in transaction process
+     */
+    tracking_time_period transaction_process_time() const {
+        return transaction_process_time_;
+    }
+
+    /**
+     * @brief return the transaction wait time.
+     * @return the duration of system operation in transaction process
+     */
+    tracking_time_period transaction_wait_time() const {
+        return transaction_wait_time_;
+    }
+
+    /**
+     * @brief return the transaction process time.
+     * @return the duration of user operation in transaction process
+     */
+    template<class R, class P>
+    void add_transaction_process_time(std::chrono::duration<R, P> duration) {
+        add(transaction_process_time_, std::chrono::duration_cast<tracking_time_period>(duration));
+    }
+
+    /**
+     * @brief return the transaction wait time.
+     * @return the duration of system operation in transaction process
+     */
+    template<class R, class P>
+    void add_transaction_wait_time(std::chrono::duration<R, P> duration) {
+        add(transaction_wait_time_, std::chrono::duration_cast<tracking_time_period>(duration));
+    }
+
 private:
     std::unique_ptr<leveldb::DB> leveldb_ = {};
     transaction_mutex_type transaction_mutex_ = {};
     std::atomic_size_t transaction_id_sequence_ = { 1U };
+
+    bool enable_tracking_ { false };
+
+    std::atomic_size_t transaction_count_ {};
+    std::atomic_size_t retry_count_ {};
+    std::atomic<tracking_time_period> transaction_process_time_ {};
+    std::atomic<tracking_time_period> transaction_wait_time_ {};
+
+    static void add(std::atomic<tracking_time_period>& atomic, tracking_time_period duration) {
+        while (true) {
+            auto v = atomic.load();
+            if (atomic.compare_exchange_strong(v, v + duration)) {
+                break;
+            }
+        }
+    }
 };
 
 }  // namespace sharksfin::mock

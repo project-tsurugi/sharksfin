@@ -23,12 +23,17 @@
 
 namespace sharksfin {
 
-using namespace std::literals::string_view_literals;
+using clock = std::chrono::steady_clock;
 
 /**
  * @brief the attribute key of database location on filesystem.
  */
-static constexpr auto KEY_LOCATION = "location"sv;
+static constexpr std::string_view KEY_LOCATION { "location" };
+
+/**
+ * @brief the attribute key of whether or not performance tracking feature is enabled.
+ */
+static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };
 
 static inline DatabaseHandle wrap(mock::Database* object) {
     return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
@@ -71,6 +76,19 @@ StatusCode database_open(
         return StatusCode::ERR_INVALID_ARGUMENT;
     }
 
+    bool tracking = false;
+    if (auto option = options.attribute(KEY_PERFORMANCE_TRACKING); option.has_value()) {
+        auto&& v = option.value();
+        if (v.empty() || v == "0" || v == "false") {
+            tracking = false;
+        } else if (v == "1" || v == "true") {
+            tracking = true;
+        } else {
+            // FIXME: detail
+            return StatusCode::ERR_INVALID_ARGUMENT;
+        }
+    }
+
     leveldb::Options leveldb_opts;
     if (options.open_mode() == DatabaseOptions::OpenMode::CREATE_OR_RESTORE) {
         leveldb_opts.create_if_missing = true;
@@ -81,6 +99,7 @@ StatusCode database_open(
     if (status.ok()) {
         std::unique_ptr<leveldb::DB> leveldb { leveldb_ptr };
         auto db = std::make_unique<mock::Database>(std::move(leveldb));
+        db->enable_tracking(tracking);
         *result = wrap(db.release());
         return StatusCode::OK;
     }
@@ -143,9 +162,22 @@ StatusCode transaction_exec(
         TransactionCallback callback,
         void *arguments) {
     auto database = unwrap(handle);
+    clock::time_point at_begin, at_process, at_end;
+    if (database->enable_tracking()) {
+        ++database->transaction_count();
+        at_begin = clock::now();
+    }
     auto tx = database->create_transaction();
     tx->acquire();
+    if (database->enable_tracking()) {
+        at_process = clock::now();
+    }
     auto status = callback(wrap(tx.get()), arguments);
+    if (database->enable_tracking()) {
+        at_end = clock::now();
+        database->add_transaction_process_time(at_begin - at_process);
+        database->add_transaction_process_time(at_end - at_process);
+    }
     if (status == TransactionOperation::COMMIT) {
         return StatusCode::OK;
     }

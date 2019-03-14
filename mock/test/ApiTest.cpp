@@ -30,6 +30,7 @@
 namespace sharksfin {
 
 static constexpr std::string_view KEY_LOCATION { "location" };
+static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };
 
 class ApiTest : public testing::TestRoot {};
 
@@ -1062,6 +1063,45 @@ TEST_F(ApiTest, scan_join) {
 
     EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, tracking) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+    options.attribute(KEY_PERFORMANCE_TRACKING, "1");
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation f1(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "A") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation f2(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_get(tx, st, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::f1, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f2, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
