@@ -28,12 +28,12 @@ using clock = std::chrono::steady_clock;
 /**
  * @brief the attribute key of database location on filesystem.
  */
-static constexpr std::string_view KEY_LOCATION { "location" };
+static constexpr std::string_view KEY_LOCATION { "location" };  // NOLINT
 
 /**
  * @brief the attribute key of whether or not performance tracking feature is enabled.
  */
-static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };
+static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLINT
 
 static inline DatabaseHandle wrap(mock::Database* object) {
     return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
@@ -156,6 +156,17 @@ StatusCode storage_dispose(StorageHandle handle) {
     return StatusCode::OK;
 }
 
+template<class T>
+static void add(std::atomic<T>& atomic, T duration) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    while (true) {
+        T expect = atomic.load();
+        if (atomic.compare_exchange_weak(expect, expect + duration)) {
+            break;
+        }
+    }
+}
+
 StatusCode transaction_exec(
         DatabaseHandle handle,
         [[maybe_unused]] TransactionOptions const& options,
@@ -175,8 +186,10 @@ StatusCode transaction_exec(
     auto status = callback(wrap(tx.get()), arguments);
     if (database->enable_tracking()) {
         at_end = clock::now();
-        database->add_transaction_process_time(at_begin - at_process);
-        database->add_transaction_process_time(at_end - at_process);
+        add(database->transaction_wait_time(),
+            std::chrono::duration_cast<mock::Database::tracking_time_period>(at_process - at_begin));
+        add(database->transaction_process_time(),
+            std::chrono::duration_cast<mock::Database::tracking_time_period>(at_end - at_process));
     }
     if (status == TransactionOperation::COMMIT) {
         return StatusCode::OK;

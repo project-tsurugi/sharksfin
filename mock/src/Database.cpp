@@ -28,8 +28,8 @@ void Database::shutdown() {
     if (enable_tracking()) {
         std::cout << "transaction count: " << transaction_count() << std::endl;
         std::cout << "retry count: " << retry_count() << std::endl;
-        std::cout << "transaction process time: " << transaction_process_time().count() << std::endl;
-        std::cout << "transaction wait time: "  << transaction_wait_time().count() << std::endl;
+        std::cout << "transaction process time: " << transaction_process_time().load().count() << std::endl;
+        std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
     std::unique_lock lock { transaction_mutex_ };
     leveldb_.reset();

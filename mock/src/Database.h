@@ -149,7 +149,7 @@ public:
      * @brief return the transaction process time.
      * @return the duration of user operation in transaction process
      */
-    tracking_time_period transaction_process_time() const {
+    std::atomic<tracking_time_period>& transaction_process_time() {
         return transaction_process_time_;
     }
 
@@ -157,7 +157,7 @@ public:
      * @brief return the transaction wait time.
      * @return the duration of system operation in transaction process
      */
-    tracking_time_period transaction_wait_time() const {
+    std::atomic<tracking_time_period>& transaction_wait_time() {
         return transaction_wait_time_;
     }
 
@@ -190,15 +190,6 @@ private:
     std::atomic_size_t retry_count_ {};
     std::atomic<tracking_time_period> transaction_process_time_ {};
     std::atomic<tracking_time_period> transaction_wait_time_ {};
-
-    static void add(std::atomic<tracking_time_period>& atomic, tracking_time_period duration) {
-        while (true) {
-            auto v = atomic.load();
-            if (atomic.compare_exchange_strong(v, v + duration)) {
-                break;
-            }
-        }
-    }
 };
 
 }  // namespace sharksfin::mock
