@@ -16,6 +16,8 @@
 #ifndef SHARKSFIN_FOEDUS_DATABASE_H_
 #define SHARKSFIN_FOEDUS_DATABASE_H_
 
+#include <atomic>
+#include <chrono>
 #include <memory>
 #include <mutex>
 
@@ -34,6 +36,11 @@ class Storage;
  */
 class Database {
 public:
+    using clock = std::chrono::steady_clock;
+    /**
+ * @brief the tracking time period.
+ */
+    using tracking_time_period = std::chrono::microseconds;
     /**
      * @brief setup foedus engine and return Database.
      */
@@ -80,9 +87,64 @@ public:
      */
     void delete_storage(Storage& storage);
 
+    /**
+     * @brief returns whether or not performance tracking feature is enabled.
+     * @return true if performance tracking feature is enabled
+     * @return false otherwise
+     */
+    bool enable_tracking() const {
+        return enable_tracking_;
+    }
+
+    /**
+     * @brief sets whether or not performace tracking feature is enabled.
+     * @param on true to enable, false to disable
+     */
+    void enable_tracking(bool on) {
+        enable_tracking_ = on;
+    }
+
+    /**
+     * @brief returns the transaction count.
+     * @return the transaction count (not include retry count)
+     */
+    std::atomic_size_t& transaction_count() {
+        return transaction_count_;
+    }
+
+    /**
+     * @brief returns the transaction retry count.
+     * @return the transaction retry count
+     */
+    std::atomic_size_t& retry_count() {
+        return retry_count_;
+    }
+
+    /**
+     * @brief return the transaction process time.
+     * @return the duration of user operation in transaction process
+     */
+    std::atomic<tracking_time_period>& transaction_process_time() {
+        return transaction_process_time_;
+    }
+
+    /**
+     * @brief return the transaction wait time.
+     * @return the duration of system operation in transaction process
+     */
+    std::atomic<tracking_time_period>& transaction_wait_time() {
+        return transaction_wait_time_;
+    }
+
 private:
     std::unique_ptr<::foedus::Engine> engine_{};
     std::mutex mutex_for_storage_metadata_{};
+
+    bool enable_tracking_ { false };
+    std::atomic_size_t transaction_count_ {};
+    std::atomic_size_t retry_count_ {};
+    std::atomic<tracking_time_period> transaction_process_time_ {};
+    std::atomic<tracking_time_period> transaction_wait_time_ {};
 };
 
 }  // namespace sharksfin::foedus

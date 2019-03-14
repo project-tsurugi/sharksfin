@@ -26,6 +26,11 @@
 
 namespace sharksfin {
 
+using clock = std::chrono::steady_clock;
+/**
+ * @brief the attribute key of whether or not performance tracking feature is enabled.
+ */
+static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLINT
 static inline DatabaseHandle wrap(foedus::Database* object) {
     return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
 }
@@ -63,6 +68,19 @@ StatusCode database_open(
     std::unique_ptr<foedus::Database> db;
     auto ret = foedus::Database::open(options, &db);
     if (ret == StatusCode::OK) {
+        bool tracking = false;
+        if (auto option = options.attribute(KEY_PERFORMANCE_TRACKING); option.has_value()) {
+            auto&& v = option.value();
+            if (v.empty() || v == "0" || v == "false") {
+                tracking = false;
+            } else if (v == "1" || v == "true") {
+                tracking = true;
+            } else {
+                // FIXME: detail
+                return StatusCode::ERR_INVALID_ARGUMENT;
+            }
+        }
+        db->enable_tracking(tracking);
         *result = wrap(db.release());
     }
     return ret;
