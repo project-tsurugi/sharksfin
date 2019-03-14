@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <utility>
+#include <chrono>
 
 #include "foedus/thread/thread.hpp"
 #include "foedus/error_stack.hpp"
@@ -175,16 +176,44 @@ struct aborter { //NOLINT
     foedus::Transaction *tx_;
 };
 
+template<class T>
+static void add(std::atomic<T>& atomic, T duration) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    while (true) {
+        T expect = atomic.load();
+        if (atomic.compare_exchange_weak(expect, expect + duration)) {
+            break;
+        }
+    }
+}
+
 ::foedus::ErrorStack foedusCallback(const ::foedus::proc::ProcArguments &arg) {
+    using clock = std::chrono::steady_clock;
     Input *ptr;
     std::memcpy(&ptr, arg.input_buffer_, sizeof(Input *));
     TransactionCallback callback(ptr->callback_);
     auto tx = std::make_unique<foedus::Transaction>(ptr->db_, arg.context_, ptr->engine_);
     FOEDUS_WRAP_ERROR_CODE(tx->begin());  //NOLINT
+    clock::time_point at_begin, at_process, at_end;
+    auto db = ptr->db_;
+    if (db->enable_tracking()) {
+        ++db->transaction_count();
+        at_begin = clock::now();
+    }
     aborter guard(tx.get());
     auto status = callback(reinterpret_cast<TransactionHandle>(tx.get()), ptr->arguments_); //NOLINT
+    if (db->enable_tracking()) {
+        at_process = clock::now();
+    }
     if (status == TransactionOperation::COMMIT) {
         FOEDUS_WRAP_ERROR_CODE(tx->commit());  //NOLINT
+        if (db->enable_tracking()) {
+            at_end = clock::now();
+            add(db->transaction_process_time(),
+                         std::chrono::duration_cast<foedus::Database::tracking_time_period>(at_process - at_begin));
+            add(db->transaction_wait_time(),
+                         std::chrono::duration_cast<foedus::Database::tracking_time_period>(at_end - at_process));
+        }
         return ::foedus::kRetOk;
     }
     FOEDUS_WRAP_ERROR_CODE(tx->abort());  //NOLINT
@@ -223,6 +252,12 @@ Database::Database(std::unique_ptr<::foedus::Engine> engine) noexcept : engine_(
 }
 
 StatusCode Database::shutdown() {
+    if (enable_tracking()) {
+        std::cout << "transaction count: " << transaction_count() << std::endl;
+        std::cout << "retry count: " << retry_count() << std::endl;
+        std::cout << "transaction process time: " << transaction_process_time().load().count() << std::endl;
+        std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
+    }
     return resolve(engine_->uninitialize());
 }
 
@@ -240,6 +275,7 @@ StatusCode Database::exec_transaction(
         result = engine_->get_thread_pool()->impersonate_synchronous(kProc, &in_ptr, sizeof(Input *));
         if (result.is_error() && result.get_error_code() == ::foedus::kErrorCodeXctRaceAbort) {
             retry = true;
+            ++retry_count_;
         }
     } while (retry);
     return resolve(result);
