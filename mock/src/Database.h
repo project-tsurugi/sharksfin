@@ -161,24 +161,6 @@ public:
         return transaction_wait_time_;
     }
 
-    /**
-     * @brief return the transaction process time.
-     * @return the duration of user operation in transaction process
-     */
-    template<class R, class P>
-    void add_transaction_process_time(std::chrono::duration<R, P> duration) {
-        add(transaction_process_time_, std::chrono::duration_cast<tracking_time_period>(duration));
-    }
-
-    /**
-     * @brief return the transaction wait time.
-     * @return the duration of system operation in transaction process
-     */
-    template<class R, class P>
-    void add_transaction_wait_time(std::chrono::duration<R, P> duration) {
-        add(transaction_wait_time_, std::chrono::duration_cast<tracking_time_period>(duration));
-    }
-
 private:
     std::unique_ptr<leveldb::DB> leveldb_ = {};
     transaction_mutex_type transaction_mutex_ = {};
