@@ -108,7 +108,7 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
     if (loggers_option.has_value()) {
         options.log_.loggers_per_node_ = std::stoi(loggers_option.value());
     } else {
-        options.log_.loggers_per_node_ = 2;
+        options.log_.loggers_per_node_ = 1;
     }
     LOG(INFO) << "loggers_per_node=" << options.log_.loggers_per_node_;
     if (buffer_option.has_value()) {
