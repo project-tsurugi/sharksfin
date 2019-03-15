@@ -82,6 +82,21 @@ ctest
 ninja doxygen
 ```
 
+### Customize logging setting 
+Sharksfin internally uses [glog](https://github.com/google/glog) so you can pass glog environment variables such as `GLOG_logtostderr=1` to customize the logging output of executable that uses sharksfin. 
+
+```sh
+GLOG_logtostderr=1 ./sharksfin-cli -Dlocation=./db1 put 0 A
+```
+
+There is one exception when using foedus bridge. `GLOG_minloglevel` conflicts with the glog used by foedus. So `LOGLEVEL` needs to be used to set the log level (0=INFO, 1=WARN, 2=ERROR, 3=FATAL). Default log level is WARN.
+
+```sh
+LOGLEVEL=0 ./sharksfin-cli -Dlocation=./db1 put 0 A
+```
+
+
+
 ## License
 
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
