@@ -156,7 +156,7 @@ std::unique_ptr<::foedus::EngineOptions> make_engine_options(DatabaseOptions con
         options.snapshot_.snapshot_writer_intermediate_pool_size_mb_ = 256;
         options.cache_.snapshot_cache_size_mb_per_node_ = 4096;
         options.snapshot_.snapshot_interval_milliseconds_ = 100000000U;
-        options.xct_.local_work_memory_size_mb_ = 4;
+        options.xct_.local_work_memory_size_mb_ = 8;
     }
 
     return std::make_unique<::foedus::EngineOptions>(options);
