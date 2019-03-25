@@ -159,7 +159,7 @@ private:
     std::atomic<tracking_time_period> transaction_process_time_ {};
     std::atomic<tracking_time_period> transaction_wait_time_ {};
 
-    bool waits_for_commit_ { false };
+    bool waits_for_commit_ { true };
 };
 
 }  // namespace sharksfin::foedus
