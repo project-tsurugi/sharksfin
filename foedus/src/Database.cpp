@@ -49,6 +49,7 @@ static const std::string LOG_BUFFER_MB { "buffer" };  //NOLINT
 static const std::string KEY_THREADS{"threads"};  // NOLINT
 static const std::string SAVEPOINT_FILE{"savepoint.xml"};  // NOLINT
 static const std::string BENCHMARK_MODE{"benchmark"};  // NOLINT
+static const std::string KEY_WAIT_FOR_COMMIT{"wait_for_commit"};  // NOLINT
 
 std::string dbpath(DatabaseOptions const &dboptions) {
     std::string path = "./foedus.out/";
@@ -207,7 +208,7 @@ static void add(std::atomic<T>& atomic, T duration) {
         at_process = clock::now();
     }
     if (status == TransactionOperation::COMMIT) {
-        FOEDUS_WRAP_ERROR_CODE(tx->commit());  //NOLINT
+        FOEDUS_WRAP_ERROR_CODE(tx->commit(db->waits_for_commit()));  //NOLINT
         if (db->enable_tracking()) {
             at_end = clock::now();
             add(db->transaction_process_time(),
@@ -237,15 +238,24 @@ StatusCode Database::open(DatabaseOptions const &options, std::unique_ptr<Databa
             return StatusCode::NOT_FOUND;
         }
     }
-    std::unique_ptr<::foedus::EngineOptions> engine_options{make_engine_options(options)};
+
+    auto engine_options = make_engine_options(options);
     auto engine = std::make_unique<::foedus::Engine>(*engine_options);
     engine->get_proc_manager()->pre_register(kProc, foedusCallback);
-    ::foedus::ErrorStack e{engine->initialize()};
+    auto e = engine->initialize();
     if (e.is_error()) {
         LOG(FATAL) << "*** failed to initialize engine ***" << e;
         return resolve(e);
     }
     *result = std::make_unique<Database>(std::move(engine));
+
+    if (auto wait_for_commit = options.attribute(KEY_WAIT_FOR_COMMIT); wait_for_commit.has_value()) {
+        if (wait_for_commit.value() == "true" || wait_for_commit.value() == "1") {
+            (*result)->waits_for_commit(true);
+        } else {
+            (*result)->waits_for_commit(false);
+        }
+    }
     return StatusCode::OK;
 }
 

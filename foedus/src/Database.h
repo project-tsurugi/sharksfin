@@ -136,6 +136,19 @@ public:
         return transaction_wait_time_;
     }
 
+    /**
+     * @brief return whether the Database waits group commit
+     */
+    bool waits_for_commit() {
+        return waits_for_commit_;
+    }
+
+    /**
+     * @brief setter on whether Database waits group commit
+     */
+    void waits_for_commit(bool wait) {
+        waits_for_commit_ = wait;
+    }
 private:
     std::unique_ptr<::foedus::Engine> engine_{};
     std::mutex mutex_for_storage_metadata_{};
@@ -145,6 +158,8 @@ private:
     std::atomic_size_t retry_count_ {};
     std::atomic<tracking_time_period> transaction_process_time_ {};
     std::atomic<tracking_time_period> transaction_wait_time_ {};
+
+    bool waits_for_commit_ { false };
 };
 
 }  // namespace sharksfin::foedus

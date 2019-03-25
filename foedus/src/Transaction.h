@@ -67,19 +67,21 @@ public:
      * @brief commit the transaction.
      * @return error code
      */
-    inline ::foedus::ErrorCode commit() {
+    inline ::foedus::ErrorCode commit(bool wait_group_commit) {
         auto* xct_manager = engine_->get_xct_manager();
-        ::foedus::Epoch commit_epoch;
+        ::foedus::Epoch commit_epoch{};
         auto ret = xct_manager->precommit_xct(context_, &commit_epoch);
         if (ret != ::foedus::kErrorCodeOk) {
             LOG(ERROR) << ::foedus::get_error_message(ret);
             abort();
             return ret;
         }
-        ret = xct_manager->wait_for_commit(commit_epoch);
-        if (ret != ::foedus::kErrorCodeOk) {
-            LOG(ERROR) << ::foedus::get_error_message(ret);
-            abort();
+        if (wait_group_commit) {
+            ret = xct_manager->wait_for_commit(commit_epoch);
+            if (ret != ::foedus::kErrorCodeOk) {
+                LOG(ERROR) << ::foedus::get_error_message(ret);
+                abort();
+            }
         }
         return ret;
     }
