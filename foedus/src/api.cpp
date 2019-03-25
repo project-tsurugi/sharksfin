@@ -31,6 +31,7 @@ using clock = std::chrono::steady_clock;
  * @brief the attribute key of whether or not performance tracking feature is enabled.
  */
 static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLINT
+
 static inline DatabaseHandle wrap(foedus::Database* object) {
     return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
 }
@@ -65,9 +66,9 @@ static inline foedus::Iterator* unwrap(IteratorHandle handle) {
 StatusCode database_open(
         DatabaseOptions const& options,
         DatabaseHandle* result) {
-    std::unique_ptr<foedus::Database> db;
-    auto ret = foedus::Database::open(options, &db);
-    if (ret == StatusCode::OK) {
+    std::unique_ptr<foedus::Database> db{};
+    auto rc = foedus::Database::open(options, &db);
+    if (rc == StatusCode::OK) {
         bool tracking = false;
         if (auto option = options.attribute(KEY_PERFORMANCE_TRACKING); option.has_value()) {
             auto&& v = option.value();
@@ -83,7 +84,7 @@ StatusCode database_open(
         db->enable_tracking(tracking);
         *result = wrap(db.release());
     }
-    return ret;
+    return rc;
 }
 
 StatusCode database_close(DatabaseHandle handle) {
@@ -101,12 +102,12 @@ StatusCode storage_create(
     DatabaseHandle handle,
     Slice key,
     StorageHandle *result) {
-    auto database = unwrap(handle);
-    auto storage = database->create_storage(key);
-    if (!storage) {
+    auto db = unwrap(handle);
+    auto stg = db->create_storage(key);
+    if (!stg) {
         return StatusCode::ALREADY_EXISTS;
     }
-    *result = wrap(storage.release());
+    *result = wrap(stg.release());
     return StatusCode::OK;
 }
 
@@ -114,24 +115,24 @@ StatusCode storage_get(
     DatabaseHandle handle,
     Slice key,
     StorageHandle *result) {
-    auto database = unwrap(handle);
-    auto storage = database->get_storage(key);
-    if (!storage) {
+    auto db = unwrap(handle);
+    auto stg = db->get_storage(key);
+    if (!stg) {
         return StatusCode::NOT_FOUND;
     }
-    *result = wrap(storage.release());
+    *result = wrap(stg.release());
     return StatusCode::OK;
 }
 
 StatusCode storage_delete(StorageHandle handle) {
-    auto storage = unwrap(handle);
-    storage->purge();
+    auto stg = unwrap(handle);
+    stg->purge();
     return StatusCode::OK;
 }
 
 StatusCode storage_dispose(StorageHandle handle) {
-    auto object = unwrap(handle);
-    delete object;  // NOLINT
+    auto stg = unwrap(handle);
+    delete stg;  // NOLINT
     return StatusCode::OK;
 }
 
@@ -140,16 +141,16 @@ StatusCode transaction_exec(
         [[maybe_unused]] TransactionOptions const& options,
         TransactionCallback callback,
         void *arguments) {
-    auto database = unwrap(handle);
-    return database->exec_transaction(callback, arguments);
+    auto db = unwrap(handle);
+    return db->exec_transaction(callback, arguments);
 }
 
 StatusCode transaction_borrow_owner(
     TransactionHandle handle,
     DatabaseHandle* result) {
     auto transaction = unwrap(handle);
-    if (auto database = transaction->owner()) {
-        *result = wrap(database);
+    if (auto db = transaction->owner()) {
+        *result = wrap(db);
         return StatusCode::OK;
     }
     return StatusCode::ERR_INVALID_STATE;
@@ -162,8 +163,8 @@ StatusCode content_get(
     Slice* result) {
     auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
-    auto database = tx->owner();
-    if (!database) {
+    auto db = tx->owner();
+    if (!db) {
         return StatusCode::ERR_INVALID_STATE;
     }
     auto& buffer = tx->buffer();
@@ -182,8 +183,8 @@ StatusCode content_put(
     PutOperation operation) {
     auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
-    auto database = tx->owner();
-    if (!database) {
+    auto db = tx->owner();
+    if (!db) {
         return StatusCode::ERR_INVALID_STATE;
     }
     return stg->put(tx, key, value, operation);
@@ -195,16 +196,16 @@ StatusCode content_delete(
     Slice key) {
     auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
-    auto database = tx->owner();
-    if (!database) {
+    auto db = tx->owner();
+    if (!db) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto ret = stg->remove(tx, key);
-    if (ret == StatusCode::NOT_FOUND) {
+    auto rc = stg->remove(tx, key);
+    if (rc == StatusCode::NOT_FOUND) {
          // foedus returns error on deleting missing record, but ignore it for now
-         ret = StatusCode::OK;
+         rc = StatusCode::OK;
     }
-    return ret;
+    return rc;
 }
 
 StatusCode content_scan_prefix(
@@ -214,8 +215,8 @@ StatusCode content_scan_prefix(
     IteratorHandle* result) {
     auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
-    auto database = tx->owner();
-    if (!database) {
+    auto db = tx->owner();
+    if (!db) {
         return StatusCode::ERR_INVALID_STATE;
     }
     auto iter = stg->scan_prefix(tx, prefix_key);
@@ -231,8 +232,8 @@ StatusCode content_scan_range(
     IteratorHandle* result) {
     auto tx = unwrap(transaction);
     auto stg = unwrap(storage);
-    auto database = tx->owner();
-    if (!database) {
+    auto db = tx->owner();
+    if (!db) {
         return StatusCode::ERR_INVALID_STATE;
     }
     auto iter = stg->scan_range(tx, begin_key, begin_exclusive, end_key, end_exclusive);
