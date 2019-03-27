@@ -100,6 +100,7 @@ TEST_F(FoedusApiTest, database_restore) {
         HandleHolder sth { s.st };
 
         EXPECT_EQ(transaction_exec(db, {}, &S::f, &s), StatusCode::OK);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // sleep for group commit
         EXPECT_EQ(database_close(db), StatusCode::OK);
     }
     {

@@ -252,7 +252,7 @@ StatusCode Database::open(DatabaseOptions const &options, std::unique_ptr<Databa
     if (auto wait_for_commit = options.attribute(KEY_WAIT_FOR_COMMIT); wait_for_commit.has_value()) {
         if (wait_for_commit.value() == "false" || wait_for_commit.value() == "0") {
             (*result)->waits_for_commit(false);
-        } else {
+        } else if (wait_for_commit.value() == "true" || wait_for_commit.value() == "1") {
             (*result)->waits_for_commit(true);
         }
     }
