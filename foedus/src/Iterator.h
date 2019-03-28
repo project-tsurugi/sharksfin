@@ -50,18 +50,9 @@ public:
              ::foedus::thread::Thread* context,
              Slice begin_key, bool begin_exclusive,
              Slice end_key, bool end_exclusive
-    ) : cursor_(storage, context), state_(State::INIT){
-        auto ret = cursor_.open(begin_key.data<char const>(), static_cast<::foedus::storage::masstree::KeyLength>(begin_key.size()),
-            end_key.data<char const>(), static_cast<::foedus::storage::masstree::KeyLength>(end_key.size()),
-            true, // forward_cursor
-            false, // for_writes
-            !begin_exclusive,
-            !end_exclusive
-            );
-        if (ret != ::foedus::kErrorCodeOk) {
-            LOG(ERROR) << ::foedus::get_error_message(ret);
-        }
-    }
+    ) :
+    cursor_(storage, context), state_(State::INIT), begin_key_(begin_key.to_string_view()), end_key_(end_key.to_string_view()),
+    begin_exclusive_(begin_exclusive), end_exclusive_(end_exclusive) {}
 
     /**
      * @brief advances this iterator position.
@@ -71,9 +62,9 @@ public:
      */
     inline StatusCode next() {
         if (state_ == State::INIT) {
-            // do nothing for init
+            auto ret = open_cursor_();
             state_ = test();
-            return StatusCode::OK;
+            return ret;
         }
         auto ret = resolve(cursor_.next());
         state_ = test();
@@ -110,15 +101,30 @@ public:
 
 private:
     ::foedus::storage::masstree::MasstreeCursor cursor_;
-    State state_;
-    std::string buffer_key_;
-    std::string buffer_value_;
+    State state_{};
+    std::string buffer_key_{};
+    std::string buffer_value_{};
 
+    std::string begin_key_{};
+    std::string end_key_{};
+    bool begin_exclusive_{};
+    bool end_exclusive_{};
     inline State test() {
         if (cursor_.is_valid_record()) {
             return State::BODY;
         }
         return State::SAW_EOF;
+    }
+
+    inline StatusCode open_cursor_() {
+        auto ret = cursor_.open(begin_key_.c_str(), static_cast<::foedus::storage::masstree::KeyLength>(begin_key_.size()),
+                     end_key_.c_str(), static_cast<::foedus::storage::masstree::KeyLength>(end_key_.size()),
+                     true, // forward_cursor
+                     false, // for_writes
+                     !begin_exclusive_,
+                     !end_exclusive_
+        );
+        return resolve(ret);
     }
 };
 
