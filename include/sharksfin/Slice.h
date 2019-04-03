@@ -90,7 +90,7 @@ public:
      * @brief returns the byte size of this slice.
      * @return the number of slice size in bytes
      */
-    inline constexpr std::size_t size() const {
+    inline constexpr std::size_t size() const noexcept {
         return size_;
     }
 
@@ -99,7 +99,7 @@ public:
      * @return true if this slice is empty
      * @return false if this slice is not empty
      */
-    inline constexpr bool empty() const {
+    inline constexpr bool empty() const noexcept {
         return size_ == 0;
     }
 
@@ -129,7 +129,7 @@ public:
      * @brief returns a string view of this slice.
      * @return a string view
      */
-    inline std::string_view to_string_view() const {
+    inline std::string_view to_string_view() const noexcept {
         if (empty()) {
             return {};
         }
@@ -157,13 +157,29 @@ public:
     }
 
     /**
+     * @brief returns whether or not this slice starts with the given one.
+     * @param other the target slice may be a prefix of this
+     * @return true if this starts with the given one
+     * @return false otherwise
+     */
+    inline bool starts_with(Slice const& other) const noexcept {
+        if (size_ < other.size_) {
+            return false;
+        }
+        if (data_ == other.data_) {
+            return true;
+        }
+        return std::memcmp(data_, other.data_, other.size_) == 0;
+    }
+
+    /**
      * @brief compares between this and the given slice.
      * @param other the target slice
      * @return = 0 if both slices are equivalent
      * @return < 0 if this slice is less than the given one
      * @return > 0 if this slice is greater than the given one
      */
-    inline int compare(Slice const& other) const {
+    inline int compare(Slice const& other) const noexcept {
         if (this == &other || (empty() && other.empty())) {
             return 0;
         }
@@ -197,7 +213,7 @@ public:
      * @return true if this slice has any contents
      * @return false if this slice is empty
      */
-    explicit inline constexpr operator bool() const {
+    explicit inline constexpr operator bool() const noexcept {
         return !empty();
     }
 
@@ -206,7 +222,7 @@ public:
      * @return true if this slice is empty
      * @return false if this slice has any contents
      */
-    inline bool constexpr operator!() const {
+    inline bool constexpr operator!() const noexcept {
         return !static_cast<bool>(*this);
     }
 
@@ -216,7 +232,7 @@ public:
      * @return true if both are equivalent
      * @return false otherwise
      */
-    inline bool operator==(Slice const& other) const {
+    inline bool operator==(Slice const& other) const noexcept {
         if (this == &other) {
             return true;
         }
@@ -235,7 +251,7 @@ public:
      * @return true if both are not equivalent
      * @return false otherwise
      */
-    inline bool operator!=(Slice const& other) const {
+    inline bool operator!=(Slice const& other) const noexcept {
         return !operator==(other);
     }
 
@@ -245,7 +261,7 @@ public:
      * @return true if this < other
      * @return false if this >= other
      */
-    inline bool operator<(Slice const& other) const {
+    inline bool operator<(Slice const& other) const noexcept {
         return compare(other) < 0;
     }
 
@@ -255,7 +271,7 @@ public:
      * @return true if this <= other
      * @return false if this > other
      */
-    inline bool operator<=(Slice const& other) const {
+    inline bool operator<=(Slice const& other) const noexcept {
         return compare(other) <= 0;
     }
 
@@ -265,7 +281,7 @@ public:
      * @return true if this > other
      * @return false if this <= other
      */
-    inline bool operator>(Slice const& other) const {
+    inline bool operator>(Slice const& other) const noexcept {
         return compare(other) > 0;
     }
 
@@ -275,7 +291,7 @@ public:
      * @return true if this >= other
      * @return false if this < other
      */
-    inline bool operator>=(Slice const& other) const {
+    inline bool operator>=(Slice const& other) const noexcept {
         return compare(other) >= 0;
     }
 
