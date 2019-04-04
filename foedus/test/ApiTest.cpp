@@ -422,12 +422,12 @@ TEST_F(FoedusApiTest, transaction_wait) {
 
     ASSERT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
     auto r1 = std::async(std::launch::async, [&] {
-      for (std::size_t i = 0U; i < 5U; ++i) {
-          if (auto c = transaction_exec(db, {}, &S::run, &s); c != StatusCode::OK) {
-              return c;
-          }
-      }
-      return StatusCode::OK;
+        for (std::size_t i = 0U; i < 5U; ++i) {
+            if (auto c = transaction_exec(db, {}, &S::run, &s); c != StatusCode::OK) {
+                return c;
+            }
+        }
+        return StatusCode::OK;
     });
     for (std::size_t i = 0U; i < 5U; ++i) {
         EXPECT_EQ(transaction_exec(db, {}, &S::run, &s), StatusCode::OK);
@@ -873,6 +873,86 @@ TEST_F(FoedusApiTest, scan_empty_prefix) {
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
+TEST_F(FoedusApiTest, scan_range_to_end) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "b", "B") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "c", "C") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "d", "EOF") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            IteratorHandle iter;
+            if (content_scan_range(tx, st, "b", false, "", false, &iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder closer { iter };
+
+            Slice s;
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "b") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "B") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "c") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "C") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "d") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "EOF") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
 TEST_F(FoedusApiTest, scan_data_variation) {
     using namespace std::literals::string_view_literals;
     DatabaseOptions options;
@@ -943,6 +1023,7 @@ TEST_F(FoedusApiTest, scan_data_variation) {
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
 TEST_F(FoedusApiTest, long_data) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
