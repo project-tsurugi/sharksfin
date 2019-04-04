@@ -30,7 +30,11 @@ public:
         auto leveldb = open();
         leveldb_ = leveldb.get();
         database_ = std::make_unique<Database>(std::move(leveldb));
-        storage_ = database_->create_storage("@");
+        storage_ = database_->create_storage("@1");
+        storage_prev_ = database_->create_storage("@0");
+        storage_next_ = database_->create_storage("@2");
+        EXPECT_EQ(storage_prev_->put("", "!!!"), StatusCode::OK);
+        EXPECT_EQ(storage_next_->put("", "!!!"), StatusCode::OK);
     }
 
     void put(Slice key, Slice value) {
@@ -55,6 +59,8 @@ private:
     leveldb::DB* leveldb_;
     std::unique_ptr<Database> database_;
     std::unique_ptr<Storage> storage_;
+    std::unique_ptr<Storage> storage_prev_;
+    std::unique_ptr<Storage> storage_next_;
 };
 
 TEST_F(IteratorTest, prefix) {

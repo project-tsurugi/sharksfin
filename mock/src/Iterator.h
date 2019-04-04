@@ -31,11 +31,16 @@ namespace sharksfin::mock {
  */
 class Iterator {
 private:
+    enum class End {
+        LESS,
+        LESS_EQ,
+        PREFIX,
+    };
+
     enum class State {
-        INIT_PREFIX,
-        INIT_RANGE,
-        BODY_PREFIX,
-        BODY_RANGE,
+        INIT_INCLUSIVE,
+        INIT_EXCLUSIVE,
+        CONTINUE,
         SAW_EOF,
     };
 
@@ -53,10 +58,9 @@ public:
         : owner_(owner)
         , iterator_(std::move(iterator))
         , begin_key_(qualified(owner, prefix_key))
-        , end_key_()
-        , begin_exclusive_(false)
-        , end_exclusive_(false)
-        , state_(State::INIT_PREFIX)
+        , end_key_(qualified(owner, prefix_key))
+        , state_(State::INIT_INCLUSIVE)
+        , end_(End::PREFIX)
     {}
 
     /**
@@ -76,10 +80,9 @@ public:
         : owner_(owner)
         , iterator_(std::move(iterator))
         , begin_key_(qualified(owner, begin_key))
-        , end_key_(end_key.empty() ? std::string() : qualified(owner, end_key))
-        , begin_exclusive_(begin_exclusive)
-        , end_exclusive_(end_exclusive)
-        , state_(State::INIT_RANGE)
+        , end_key_(qualified(owner, end_key))
+        , state_(begin_exclusive ? State::INIT_EXCLUSIVE : State::INIT_INCLUSIVE)
+        , end_(end_key.empty() ? End::PREFIX : (end_exclusive ? End::LESS : End::LESS_EQ))
     {}
 
     /**
@@ -135,64 +138,52 @@ private:
     std::unique_ptr<leveldb::Iterator> iterator_;
     std::string const begin_key_;
     std::string const end_key_;
-    bool begin_exclusive_;
-    bool end_exclusive_;
     State state_;
+    End end_;
 
     inline State state_step(State current) {
         switch (current) {
-            case State::INIT_PREFIX: return state_init_prefix();
-            case State::INIT_RANGE: return state_init_range();
-            case State::BODY_PREFIX: return state_body_prefix();
-            case State::BODY_RANGE: return state_body_range();
+            case State::INIT_INCLUSIVE: return state_init_inclusive();
+            case State::INIT_EXCLUSIVE: return state_init_exclusive();
+            case State::CONTINUE: return state_continue();
             case State::SAW_EOF: return State::SAW_EOF;
             default: abort();
         }
     }
 
-    inline State state_init_prefix() {
+    inline State state_init_inclusive() {
         iterator_->Seek(begin_key_);
-        return test_prefix();
+        return test_key() ? State::CONTINUE : State::SAW_EOF;
     }
 
-    inline State state_body_prefix() {
-        iterator_->Next();
-        return test_prefix();
-    }
-
-    inline State state_init_range() {
+    inline State state_init_exclusive() {
         iterator_->Seek(begin_key_);
-        if (!begin_exclusive_) {
-            return test_range();
-        }
         if (!iterator_->Valid()) {
             return State::SAW_EOF;
         }
-        return state_body_range();
+        return state_continue();
     }
 
-    inline State state_body_range() {
+    inline State state_continue() {
         iterator_->Next();
-        return test_range();
+        return test_key() ? State::CONTINUE : State::SAW_EOF;
     }
 
-    inline State test_prefix() {
-        if (iterator_->Valid() && iterator_->key().starts_with(begin_key_)) {
-            return State::BODY_PREFIX;
-        }
-        return State::SAW_EOF;
-    }
-
-    inline State test_range() {
+    bool test_key() {
         if (iterator_->Valid()) {
-            if (end_key_.empty()) {
-                return State::BODY_RANGE;
+            switch (end_) {
+                case End::LESS:
+                    return iterator_->key().compare(end_key_) < 0;
+                case End::LESS_EQ:
+                    return iterator_->key().compare(end_key_) <= 0;
+                case End::PREFIX:
+                    return iterator_->key().starts_with(end_key_);
+                default:
+                    std::abort();
             }
-            if (auto compare = iterator_->key().compare(end_key_); compare < 0 || (compare == 0 && !end_exclusive_)) {
-                return State::BODY_RANGE;
-            }
+
         }
-        return State::SAW_EOF;
+        return false;
     }
 
     static inline std::string qualified(Storage* owner, Slice key) {
