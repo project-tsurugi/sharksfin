@@ -76,7 +76,7 @@ public:
         : owner_(owner)
         , iterator_(std::move(iterator))
         , begin_key_(qualified(owner, begin_key))
-        , end_key_(qualified(owner, end_key))
+        , end_key_(end_key.empty() ? std::string() : qualified(owner, end_key))
         , begin_exclusive_(begin_exclusive)
         , end_exclusive_(end_exclusive)
         , state_(State::INIT_RANGE)
@@ -185,8 +185,10 @@ private:
 
     inline State test_range() {
         if (iterator_->Valid()) {
-            auto compare = iterator_->key().compare(end_key_);
-            if (compare < 0 || (compare == 0 && !end_exclusive_)) {
+            if (end_key_.empty()) {
+                return State::BODY_RANGE;
+            }
+            if (auto compare = iterator_->key().compare(end_key_); compare < 0 || (compare == 0 && !end_exclusive_)) {
                 return State::BODY_RANGE;
             }
         }

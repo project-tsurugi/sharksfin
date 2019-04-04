@@ -285,6 +285,7 @@ extern "C" StatusCode content_scan_prefix(
 
 /**
  * @brief obtains iterator between begin and end keys range.
+ * If the end_key was empty, the returned iterator scans to the end of storage.
  * The content of begin/end keys must not be changed while using the returned iterator.
  * The created handle must be disposed by iterator_dispose().
  * The returned iterator is still available even if database content was changed.
@@ -292,7 +293,7 @@ extern "C" StatusCode content_scan_prefix(
  * @param storage the target storage
  * @param begin_key the content key of beginning position
  * @param begin_exclusive whether or not beginning position is exclusive
- * @param end_key the content key of ending position
+ * @param end_key the content key of ending position, or empty slice
  * @param end_exclusive whether or not ending position is exclusive
  * @param result [OUT] an iterator handle over the key range
  * @return Status::OK if the iterator was successfully prepared
