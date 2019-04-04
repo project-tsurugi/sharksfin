@@ -65,7 +65,7 @@ public:
         : owner_(owner)
         , next_key_(begin_key.to_string_view())
         , end_key_(end_key)
-        , end_type_(end_exclusive ? End::LESS : End::LESS_OR_EQ)
+        , end_type_(end_key.empty() ? End::END : (end_exclusive ? End::LESS : End::LESS_OR_EQ))
         , state_(begin_exclusive ? State::INIT_EXCLUSIVE : State::INIT_INCLUSIVE)
     {}
 

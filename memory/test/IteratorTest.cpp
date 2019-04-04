@@ -153,6 +153,34 @@ TEST_F(IteratorTest, range_ex_ex) {
     ASSERT_EQ(it.next(), false);
 }
 
+TEST_F(IteratorTest, range_to_end) {
+    put("a", "A");
+    put("b", "B");
+    put("c", "C");
+    put("d", "D");
+    put("e", "E");
+
+    Iterator it { storage(), "b", false, "", false };
+
+    ASSERT_EQ(it.next(), true);
+    EXPECT_EQ(it.key(), "b");
+    EXPECT_EQ(it.payload(), "B");
+
+    ASSERT_EQ(it.next(), true);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.payload(), "C");
+
+    ASSERT_EQ(it.next(), true);
+    EXPECT_EQ(it.key(), "d");
+    EXPECT_EQ(it.payload(), "D");
+
+    ASSERT_EQ(it.next(), true);
+    EXPECT_EQ(it.key(), "e");
+    EXPECT_EQ(it.payload(), "E");
+
+    ASSERT_EQ(it.next(), false);
+}
+
 TEST_F(IteratorTest, range_empty) {
     Iterator it { storage(), "b", false, "d", false };
     ASSERT_EQ(it.next(), false);
