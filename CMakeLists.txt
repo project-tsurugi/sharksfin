@@ -22,6 +22,7 @@ project(sharksfin
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 option(BUILD_TESTS "Build test programs" ON)
+option(BUILD_MEMORY "Build in-memory implementation" ON)
 option(BUILD_MOCK "Build mock implementation" ON)
 option(BUILD_FOEDUS_ENGINE "Build transaction engine with foedus" OFF)
 option(BUILD_EXAMPLES "Build and test example programs" ON)
@@ -101,6 +102,9 @@ install(
 
 if(BUILD_TESTS)
     add_subdirectory(test)
+endif()
+if(BUILD_MEMORY)
+    add_subdirectory(memory)
 endif()
 if(BUILD_MOCK)
     add_subdirectory(mock)

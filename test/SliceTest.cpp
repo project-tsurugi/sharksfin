@@ -91,6 +91,16 @@ TEST_F(SliceTest, append_to) {
     EXPECT_EQ(str, "Hello!");
 }
 
+TEST_F(SliceTest, starts_with) {
+    EXPECT_TRUE(slice("abc").starts_with("abc"));
+    EXPECT_TRUE(slice("abc").starts_with("ab"));
+    EXPECT_TRUE(slice("abc").starts_with("a"));
+    EXPECT_TRUE(slice("abc").starts_with(""));
+    EXPECT_FALSE(slice("abc").starts_with("abcd"));
+    EXPECT_FALSE(slice("abc").starts_with("bc"));
+    EXPECT_FALSE(slice("abc").starts_with("c"));
+}
+
 TEST_F(SliceTest, compare) {
     EXPECT_EQ(slice("f").compare(slice("f")), 0);
     EXPECT_LT(slice("f").compare(slice("g")), 0);

@@ -49,6 +49,7 @@ ninja
 
 available options:
 * `-DBUILD_TESTS=OFF` - never build test programs
+* `-DBUILD_MEMORY=OFF` - never build API in-memory implementation
 * `-DBUILD_MOCK=OFF` - never build API mock implementation
 * `-DBUILD_FOEDUS_BRIDGE=ON` - build FOEDUS bridge
 * `-DBUILD_EXAMPLES=OFF` - never build example programs
