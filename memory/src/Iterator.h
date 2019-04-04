@@ -78,6 +78,8 @@ public:
                 return advance(true);
             case State::END:
                 return false;
+            default:
+                std::abort();
         }
     }
 
