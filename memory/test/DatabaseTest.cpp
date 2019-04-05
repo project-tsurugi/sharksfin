@@ -86,10 +86,12 @@ TEST_F(DatabaseTest, begin_transaction) {
     TransactionContext::id_type t1, t2, t3;
     {
         auto tx = db.create_transaction();
+        EXPECT_FALSE(tx->is_alive());
         tx->acquire();
-        ASSERT_EQ(tx->owner(), &db);
+        EXPECT_TRUE(tx->is_alive());
         t1 = tx->id();
         tx->release();
+        EXPECT_FALSE(tx->is_alive());
     }
     {
         auto tx = db.create_transaction();
@@ -108,6 +110,18 @@ TEST_F(DatabaseTest, begin_transaction) {
     EXPECT_NE(t1, t2);
     EXPECT_NE(t1, t3);
     EXPECT_NE(t2, t3);
+}
+
+TEST_F(DatabaseTest, no_transaction_lock) {
+    Database db;
+    db.enable_transaction_lock(false);
+
+    auto tx = db.create_transaction();
+    EXPECT_TRUE(tx->is_alive());
+    tx->acquire();
+    EXPECT_TRUE(tx->is_alive());
+    tx->release();
+    EXPECT_TRUE(tx->is_alive());
 }
 
 TEST_F(DatabaseTest, lifecycle) {
