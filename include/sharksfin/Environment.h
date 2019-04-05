@@ -29,11 +29,30 @@ private:
     std::unique_ptr<Impl> impl_;
 
 public:
+    /**
+     * @brief constructs a new object.
+     */
     Environment() noexcept;
+
+    /**
+     * @brief destructs this object.
+     */
     ~Environment() noexcept;
-    Environment(Environment const& other) = delete;
+
+    Environment(Environment const&) = delete;
+    Environment& operator=(Environment const&) = delete;
+
+    /**
+     * @brief constructs a new object.
+     * @param other the move source
+     */
     Environment(Environment&& other) noexcept = default;
-    Environment& operator=(Environment const& other) = delete;
+
+    /**
+     * @brief assigns the given object into this.
+     * @param other the move source
+     * @return this
+     */
     Environment& operator=(Environment&& other) noexcept = default;
 
     /**
