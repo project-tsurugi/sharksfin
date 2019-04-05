@@ -32,7 +32,7 @@ void Database::shutdown() {
         std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
     if (enable_transaction_lock()) {
-        std::unique_lock { transaction_mutex_ };
+        std::unique_lock lock { transaction_mutex_ };
         leveldb_.reset();
     } else {
         leveldb_.reset();
