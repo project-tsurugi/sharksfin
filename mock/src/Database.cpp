@@ -20,7 +20,7 @@
 #include <utility>
 
 #include "Iterator.h"
-#include "TransactionLock.h"
+#include "TransactionContext.h"
 
 namespace sharksfin::mock {
 
@@ -31,14 +31,20 @@ void Database::shutdown() {
         std::cout << "transaction process time: " << transaction_process_time().load().count() << std::endl;
         std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
-    std::unique_lock lock { transaction_mutex_ };
+    if (enable_transaction_lock()) {
+        std::unique_lock { transaction_mutex_ };
+    }
     leveldb_.reset();
 }
 
-std::unique_ptr<TransactionLock> Database::create_transaction() {
+std::unique_ptr<TransactionContext> Database::create_transaction() {
     auto id = transaction_id_sequence_.fetch_add(1U);
-    std::unique_lock lock { transaction_mutex_, std::defer_lock };
-    return std::make_unique<TransactionLock>(this, id, std::move(lock));
+    if (enable_transaction_lock()) {
+        std::unique_lock lock { transaction_mutex_, std::defer_lock };
+        return std::make_unique<TransactionContext>(this, id, std::move(lock));
+    }
+    std::unique_lock<transaction_mutex_type> lock;
+    return std::make_unique<TransactionContext>(this, id, std::move(lock));
 }
 
 StatusCode Database::handle(leveldb::Status const& status) {

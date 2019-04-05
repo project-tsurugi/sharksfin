@@ -83,7 +83,38 @@ TEST_F(DatabaseTest, storage_separated) {
 
 TEST_F(DatabaseTest, begin_transaction) {
     Database db;
-    auto tx = db.create_transaction();
-    ASSERT_EQ(tx->owner(), &db);
+    TransactionContext::id_type t1, t2, t3;
+    {
+        auto tx = db.create_transaction();
+        tx->acquire();
+        ASSERT_EQ(tx->owner(), &db);
+        t1 = tx->id();
+        tx->release();
+    }
+    {
+        auto tx = db.create_transaction();
+        tx->acquire();
+        ASSERT_EQ(tx->owner(), &db);
+        t2 = tx->id();
+        // tx->release();
+    }
+    {
+        auto tx = db.create_transaction();
+        tx->acquire();
+        ASSERT_EQ(tx->owner(), &db);
+        t3 = tx->id();
+        tx->release();
+    }
+    EXPECT_NE(t1, t2);
+    EXPECT_NE(t1, t3);
+    EXPECT_NE(t2, t3);
+}
+
+TEST_F(DatabaseTest, lifecycle) {
+    Database db;
+    ASSERT_TRUE(db.is_alive());
+
+    db.shutdown();
+    ASSERT_FALSE(db.is_alive());
 }
 }  // namespace sharksfin::memory

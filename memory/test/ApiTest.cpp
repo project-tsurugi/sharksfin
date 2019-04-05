@@ -17,15 +17,18 @@
 
 #include <cstdint>
 #include <functional>
+#include <future>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <thread>
 
 #include <gtest/gtest.h>
 
 #include "sharksfin/HandleHolder.h"
 
 namespace sharksfin {
+
 class ApiTest : public testing::Test {};
 
 template<class T>
@@ -71,8 +74,6 @@ TEST_F(ApiTest, simple) {
 
 TEST_F(ApiTest, storage_create) {
     DatabaseOptions options;
-
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -120,8 +121,6 @@ TEST_F(ApiTest, storage_create) {
 
 TEST_F(ApiTest, storage_create_exists) {
     DatabaseOptions options;
-
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -154,8 +153,6 @@ TEST_F(ApiTest, storage_create_exists) {
 
 TEST_F(ApiTest, storage_get) {
     DatabaseOptions options;
-
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -203,8 +200,6 @@ TEST_F(ApiTest, storage_get) {
 
 TEST_F(ApiTest, storage_get_missing) {
     DatabaseOptions options;
-
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -232,7 +227,6 @@ TEST_F(ApiTest, storage_get_missing) {
 
 TEST_F(ApiTest, storage_delete) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -295,10 +289,70 @@ TEST_F(ApiTest, storage_delete) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ApiTest, transaction_wait) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            std::int8_t v = 0;
+            if (content_put(tx, st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation run(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_get(tx, st, "k", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            std::int8_t v = static_cast<std::int8_t>(*s.data<std::int8_t>() + 1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            if (content_put(tx, st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation validate(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_get(tx, st, "k", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (*s.data<std::int8_t>() != 10) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    ASSERT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    auto r1 = std::async(std::launch::async, [&] {
+        for (std::size_t i = 0U; i < 5U; ++i) {
+            if (auto c = transaction_exec(db, {}, &S::run, &s); c != StatusCode::OK) {
+                return c;
+            }
+        }
+        return StatusCode::OK;
+    });
+    for (std::size_t i = 0U; i < 5U; ++i) {
+        EXPECT_EQ(transaction_exec(db, {}, &S::run, &s), StatusCode::OK);
+    }
+    EXPECT_EQ(r1.get(), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::validate, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 TEST_F(ApiTest, transaction_failed) {
     DatabaseOptions options;
-
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -319,7 +373,6 @@ TEST_F(ApiTest, transaction_failed) {
 
 TEST_F(ApiTest, transaction_borrow_owner) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -372,7 +425,6 @@ TEST_F(ApiTest, transaction_borrow_owner) {
 
 TEST_F(ApiTest, contents) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -443,7 +495,6 @@ TEST_F(ApiTest, contents) {
 
 TEST_F(ApiTest, put_operations) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -543,7 +594,6 @@ TEST_F(ApiTest, put_operations) {
 
 TEST_F(ApiTest, scan_prefix) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -612,7 +662,6 @@ TEST_F(ApiTest, scan_prefix) {
 
 TEST_F(ApiTest, scan_range) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -681,7 +730,6 @@ TEST_F(ApiTest, scan_range) {
 
 TEST_F(ApiTest, scan_empty_prefix) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -743,7 +791,6 @@ TEST_F(ApiTest, scan_empty_prefix) {
 
 TEST_F(ApiTest, scan_empty_table) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -785,7 +832,6 @@ TEST_F(ApiTest, scan_empty_table) {
 
 TEST_F(ApiTest, scan_range_to_end) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -865,7 +911,6 @@ TEST_F(ApiTest, scan_range_to_end) {
 TEST_F(ApiTest, scan_data_variation) {
     using namespace std::literals::string_view_literals;
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -934,7 +979,6 @@ TEST_F(ApiTest, scan_data_variation) {
 
 TEST_F(ApiTest, long_data) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -971,7 +1015,6 @@ TEST_F(ApiTest, long_data) {
 
 TEST_F(ApiTest, scan_join) {
     DatabaseOptions options;
-
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };

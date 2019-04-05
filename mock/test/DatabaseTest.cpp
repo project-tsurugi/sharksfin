@@ -19,7 +19,7 @@
 
 #include "Storage.h"
 #include "Iterator.h"
-#include "TransactionLock.h"
+#include "TransactionContext.h"
 
 namespace sharksfin::mock {
 
@@ -92,7 +92,7 @@ TEST_F(DatabaseTest, storage_separated) {
 
 TEST_F(DatabaseTest, begin_transaction) {
     Database db { open() };
-    TransactionLock::id_type t1, t2, t3;
+    TransactionContext::id_type t1, t2, t3;
     {
         auto tx = db.create_transaction();
         tx->acquire();
