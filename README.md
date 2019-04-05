@@ -58,7 +58,8 @@ available options:
 * `-DINSTALL_EXAMPLES=ON` - also install example programs (requires `BUILD_EXAMPLES` is enables)
 * `-DEXAMPLE_IMPLEMENTATION=...` - link the specified target-name implementation to example programs
   * `mock` - link to mock implementation (default)
-  * `foedus-bridge` - link to FOEDUS (requires `-DBUILD_FOEDUS_BRIDGE`)
+  * `memory` - link to in-memory implementation
+  * `foedus-bridge` - link to FOEDUS (requires `-DBUILD_FOEDUS_BRIDGE=ON`)
 * `-DCMAKE_PREFIX_PATH=<installation directory>` - indicate FOEDUS installation directory
 * for debugging only
   * `-DENABLE_SANITIZER=OFF` - disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug`)
