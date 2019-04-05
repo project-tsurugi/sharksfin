@@ -28,13 +28,15 @@ void Database::check_alive() const {
 
 void Database::shutdown() {
     if (enable_transaction_lock()) {
-        std::unique_lock { transaction_mutex_ };
+        std::unique_lock txlock { transaction_mutex_ };
+        alive_ = false;
+    } else  {
+        alive_ = false;
     }
     {
-        std::unique_lock lock { storages_mutex_ };
+        std::unique_lock slock { storages_mutex_ };
         storages_.clear();
     }
-    alive_ = false;
 }
 
 std::shared_ptr<Storage> Database::create_storage(Slice key) {

@@ -33,8 +33,10 @@ void Database::shutdown() {
     }
     if (enable_transaction_lock()) {
         std::unique_lock { transaction_mutex_ };
+        leveldb_.reset();
+    } else {
+        leveldb_.reset();
     }
-    leveldb_.reset();
 }
 
 std::unique_ptr<TransactionContext> Database::create_transaction() {
