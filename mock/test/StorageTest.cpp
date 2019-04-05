@@ -19,7 +19,7 @@
 
 #include "Database.h"
 #include "Iterator.h"
-#include "TransactionLock.h"
+#include "TransactionContext.h"
 
 namespace sharksfin::mock {
 

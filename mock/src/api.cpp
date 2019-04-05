@@ -19,7 +19,7 @@
 #include "Database.h"
 #include "Iterator.h"
 #include "Storage.h"
-#include "TransactionLock.h"
+#include "TransactionContext.h"
 
 namespace sharksfin {
 
@@ -31,9 +31,16 @@ using clock = std::chrono::steady_clock;
 static constexpr std::string_view KEY_LOCATION { "location" };  // NOLINT
 
 /**
+ * @brief the attribute key of whether or not transaction lock is enabled.
+ */
+static inline constexpr std::string_view KEY_TRANSACTION_LOCK { "lock" };  // NOLINT
+static inline constexpr bool DEFAULT_TRANSACTION_LOCK = true;
+
+/**
  * @brief the attribute key of whether or not performance tracking feature is enabled.
  */
 static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLINT
+static inline constexpr bool DEFAULT_PERFORMANCE_TRACKING = false;
 
 static inline DatabaseHandle wrap(mock::Database* object) {
     return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
@@ -43,7 +50,7 @@ static inline StorageHandle wrap(mock::Storage* object) {
     return reinterpret_cast<StorageHandle>(object);  // NOLINT
 }
 
-static inline TransactionHandle wrap(mock::TransactionLock* object) {
+static inline TransactionHandle wrap(mock::TransactionContext* object) {
     return reinterpret_cast<TransactionHandle>(object);  // NOLINT
 }
 
@@ -59,12 +66,26 @@ static inline mock::Storage* unwrap(StorageHandle handle) {
     return reinterpret_cast<mock::Storage*>(handle);  // NOLINT
 }
 
-static inline mock::TransactionLock* unwrap(TransactionHandle handle) {
-    return reinterpret_cast<mock::TransactionLock*>(handle);  // NOLINT
+static inline mock::TransactionContext* unwrap(TransactionHandle handle) {
+    return reinterpret_cast<mock::TransactionContext*>(handle);  // NOLINT
 }
 
 static inline mock::Iterator* unwrap(IteratorHandle handle) {
     return reinterpret_cast<mock::Iterator*>(handle);  // NOLINT
+}
+
+static inline StatusCode parse_option(std::optional<std::string> const& option, bool& result) {
+    if (option.has_value()) {
+        auto&& v = option.value();
+        if (v.empty() || v == "0" || v == "false") {
+            result = false;
+        } else if (v == "1" || v == "true") {
+            result = true;
+        } else {
+            return StatusCode::ERR_INVALID_ARGUMENT;
+        }
+    }
+    return StatusCode::OK;
 }
 
 StatusCode database_open(
@@ -76,17 +97,14 @@ StatusCode database_open(
         return StatusCode::ERR_INVALID_ARGUMENT;
     }
 
-    bool tracking = false;
-    if (auto option = options.attribute(KEY_PERFORMANCE_TRACKING); option.has_value()) {
-        auto&& v = option.value();
-        if (v.empty() || v == "0" || v == "false") {
-            tracking = false;
-        } else if (v == "1" || v == "true") {
-            tracking = true;
-        } else {
-            // FIXME: detail
-            return StatusCode::ERR_INVALID_ARGUMENT;
-        }
+    bool transaction_lock = DEFAULT_TRANSACTION_LOCK;
+    if (auto s = parse_option(options.attribute(KEY_TRANSACTION_LOCK), transaction_lock); s != StatusCode::OK) {
+        return s;
+    }
+
+    bool tracking = DEFAULT_PERFORMANCE_TRACKING;
+    if (auto s = parse_option(options.attribute(KEY_PERFORMANCE_TRACKING), tracking); s != StatusCode::OK) {
+        return s;
     }
 
     leveldb::Options leveldb_opts;
@@ -99,6 +117,7 @@ StatusCode database_open(
     if (status.ok()) {
         std::unique_ptr<leveldb::DB> leveldb { leveldb_ptr };
         auto db = std::make_unique<mock::Database>(std::move(leveldb));
+        db->enable_transaction_lock(transaction_lock);
         db->enable_tracking(tracking);
         *result = wrap(db.release());
         return StatusCode::OK;
@@ -289,15 +308,12 @@ StatusCode content_scan_range(
     return StatusCode::OK;
 }
 
-StatusCode iterator_next(
-        IteratorHandle handle) {
+StatusCode iterator_next(IteratorHandle handle) {
     auto iterator = unwrap(handle);
     return iterator->next();
 }
 
-StatusCode iterator_get_key(
-        IteratorHandle handle,
-        Slice* result) {
+StatusCode iterator_get_key(IteratorHandle handle, Slice* result) {
     auto iterator = unwrap(handle);
     if (!iterator->is_valid()) {
         return StatusCode::ERR_INVALID_STATE;
@@ -306,9 +322,7 @@ StatusCode iterator_get_key(
     return StatusCode::OK;
 }
 
-StatusCode iterator_get_value(
-        IteratorHandle handle,
-        Slice* result) {
+StatusCode iterator_get_value(IteratorHandle handle, Slice* result) {
     auto iterator = unwrap(handle);
     if (!iterator->is_valid()) {
         return StatusCode::ERR_INVALID_STATE;
@@ -317,8 +331,7 @@ StatusCode iterator_get_value(
     return StatusCode::OK;
 }
 
-StatusCode iterator_dispose(
-        IteratorHandle handle) {
+StatusCode iterator_dispose(IteratorHandle handle) {
     auto iterator = unwrap(handle);
     delete iterator;  // NOLINT
     return StatusCode::OK;

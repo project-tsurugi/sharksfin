@@ -16,6 +16,7 @@
 #ifndef SHARKSFIN_MEMORY_DATABASE_H_
 #define SHARKSFIN_MEMORY_DATABASE_H_
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -30,6 +31,21 @@ class TransactionContext;
 
 class Database {
 public:
+    /**
+     * @brief the transaction ID type.
+     */
+    using transaction_id_type = std::size_t;
+
+    /**
+     * @brief the transaction mutex type.
+     */
+    using transaction_mutex_type = std::mutex;
+
+    /**
+     * @brief shutdown this database.
+     */
+    void shutdown();
+
     /**
      * @brief creates a new storage space.
      * @param key the storage key
@@ -60,9 +76,44 @@ public:
      */
     std::unique_ptr<TransactionContext> create_transaction();
 
+    /**
+     * @brief returns whether or not this database is alive.
+     * @return true if it is alive
+     * @return false if it is already closed
+     */
+    inline bool is_alive() const noexcept {
+        return alive_;
+    }
+
+    /**
+     * @brief returns whether or not the transaction lock is enabled.
+     * @return true if it is enabled
+     * @return false otherwise
+     */
+    bool enable_transaction_lock() const noexcept {
+        return enable_transaction_lock_;
+    }
+
+    /**
+     * @brief sets whether or not the transaction lock is enabled.
+     * @param value true to enable, otherwise false
+     * @return this
+     */
+    Database& enable_transaction_lock(bool value) {
+        enable_transaction_lock_ = value;
+        return *this;
+    }
+
 private:
+    bool alive_ { true };
     std::map<Buffer, std::shared_ptr<Storage>> storages_ {};
+    transaction_mutex_type transaction_mutex_ = {};
+    std::atomic<transaction_id_type> transaction_id_sequence_ = { 1U };
     std::mutex storages_mutex_ {};
+
+    bool enable_transaction_lock_ { true };
+
+    void check_alive() const;
 };
 
 }  // naespace sharksfin::memory

@@ -15,12 +15,32 @@
  */
 #include "Database.h"
 
+#include <cassert>
+
 #include "Storage.h"
 #include "TransactionContext.h"
 
 namespace sharksfin::memory {
 
+void Database::check_alive() const {
+    assert(alive_);  // NOLINT
+}
+
+void Database::shutdown() {
+    if (enable_transaction_lock()) {
+        std::unique_lock lock { transaction_mutex_ };
+        alive_ = false;
+    } else  {
+        alive_ = false;
+    }
+    {
+        std::unique_lock lock { storages_mutex_ };
+        storages_.clear();
+    }
+}
+
 std::shared_ptr<Storage> Database::create_storage(Slice key) {
+    check_alive();
     std::unique_lock lock { storages_mutex_ };
     if (auto it = storages_.find(key); it != storages_.end()) {
         return {};
@@ -31,6 +51,7 @@ std::shared_ptr<Storage> Database::create_storage(Slice key) {
 }
 
 std::shared_ptr<Storage> Database::get_storage(Slice key) {
+    check_alive();
     std::unique_lock lock { storages_mutex_ };
     if (auto it = storages_.find(key); it != storages_.end()) {
         return it->second;
@@ -39,6 +60,7 @@ std::shared_ptr<Storage> Database::get_storage(Slice key) {
 }
 
 bool Database::delete_storage(Slice key) {
+    check_alive();
     std::unique_lock lock { storages_mutex_ };
     if (auto it = storages_.find(key); it != storages_.end()) {
         storages_.erase(it);
@@ -48,7 +70,14 @@ bool Database::delete_storage(Slice key) {
 }
 
 std::unique_ptr<TransactionContext> Database::create_transaction() {
-    return std::make_unique<TransactionContext>(this);
+    check_alive();
+    auto id = transaction_id_sequence_.fetch_add(1U);
+    if (enable_transaction_lock()) {
+        std::unique_lock lock { transaction_mutex_, std::defer_lock };
+        return std::make_unique<TransactionContext>(this, id, std::move(lock));
+    }
+    std::unique_lock<transaction_mutex_type> lock;
+    return std::make_unique<TransactionContext>(this, id, std::move(lock));
 }
 
 }  // naespace sharksfin::memory

@@ -15,6 +15,8 @@
  */
 #include "sharksfin/api.h"
 
+#include <string_view>
+
 #include "glog/logging.h"
 #include "Database.h"
 #include "Iterator.h"
@@ -22,6 +24,9 @@
 #include "TransactionContext.h"
 
 namespace sharksfin {
+
+static inline constexpr std::string_view KEY_TRANSACTION_LOCK { "lock" };  // NOLINT
+static inline constexpr bool DEFAULT_TRANSACTION_LOCK = true;
 
 static inline DatabaseHandle wrap(memory::Database* object) {
     return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
@@ -55,13 +60,35 @@ static inline memory::Iterator* unwrap(IteratorHandle handle) {
     return reinterpret_cast<memory::Iterator*>(handle);  // NOLINT
 }
 
+static inline StatusCode parse_option(std::optional<std::string> const& option, bool& result) {
+    if (option.has_value()) {
+        auto&& v = option.value();
+        if (v.empty() || v == "0" || v == "false") {
+            result = false;
+        } else if (v == "1" || v == "true") {
+            result = true;
+        } else {
+            return StatusCode::ERR_INVALID_ARGUMENT;
+        }
+    }
+    return StatusCode::OK;
+}
+
 StatusCode database_open([[maybe_unused]] DatabaseOptions const& options, DatabaseHandle* result) {
+    bool transaction_lock = DEFAULT_TRANSACTION_LOCK;
+    if (auto s = parse_option(options.attribute(KEY_TRANSACTION_LOCK), transaction_lock); s != StatusCode::OK) {
+        return s;
+    }
+
     auto db = std::make_unique<memory::Database>();
+    db->enable_transaction_lock(transaction_lock);
     *result = wrap(db.release());
     return StatusCode::OK;
 }
 
-StatusCode database_close([[maybe_unused]] DatabaseHandle handle) {
+StatusCode database_close(DatabaseHandle handle) {
+    auto db = unwrap(handle);
+    db->shutdown();
     return StatusCode::OK;
 }
 
@@ -110,6 +137,7 @@ StatusCode transaction_exec(
         void *arguments) {
     auto database = unwrap(handle);
     auto tx = database->create_transaction();
+    tx->acquire();
     auto status = callback(wrap(tx.get()), arguments);
     if (status == TransactionOperation::COMMIT) {
         return StatusCode::OK;
@@ -131,11 +159,15 @@ StatusCode transaction_borrow_owner(TransactionHandle handle, DatabaseHandle* re
 }
 
 StatusCode content_get(
-        [[maybe_unused]] TransactionHandle transaction,
+        TransactionHandle transaction,
         StorageHandle storage,
         Slice key,
         Slice* result) {
+    auto tx = unwrap(transaction);
     auto st = unwrap(storage);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
     auto buffer = st->get(key);
     if (buffer) {
         *result = buffer->to_slice();
@@ -145,12 +177,16 @@ StatusCode content_get(
 }
 
 StatusCode content_put(
-        [[maybe_unused]] TransactionHandle transaction,
+        TransactionHandle transaction,
         StorageHandle storage,
         Slice key,
         Slice value,
         PutOperation operation) {
+    auto tx = unwrap(transaction);
     auto st = unwrap(storage);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
     switch (operation) {
         case PutOperation::CREATE:
             if (st->create(key, value)) {
@@ -173,10 +209,14 @@ StatusCode content_put(
 }
 
 StatusCode content_delete(
-        [[maybe_unused]] TransactionHandle transaction,
+        TransactionHandle transaction,
         StorageHandle storage,
         Slice key) {
+    auto tx = unwrap(transaction);
     auto st = unwrap(storage);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
     if (st->remove(key)) {
         return StatusCode::OK;
     }
@@ -184,23 +224,31 @@ StatusCode content_delete(
 }
 
 StatusCode content_scan_prefix(
-        [[maybe_unused]] TransactionHandle transaction,
+        TransactionHandle transaction,
         StorageHandle storage,
         Slice prefix_key,
         IteratorHandle* result) {
+    auto tx = unwrap(transaction);
     auto st = unwrap(storage);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
     auto iterator = std::make_unique<memory::Iterator>(st, prefix_key);
     *result = wrap(iterator.release());
     return StatusCode::OK;
 }
 
 StatusCode content_scan_range(
-        [[maybe_unused]] TransactionHandle transaction,
+        TransactionHandle transaction,
         StorageHandle storage,
         Slice begin_key, bool begin_exclusive,
         Slice end_key, bool end_exclusive,
         IteratorHandle* result) {
+    auto tx = unwrap(transaction);
     auto st = unwrap(storage);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
     auto iterator = std::make_unique<memory::Iterator>(
         st,
         begin_key, begin_exclusive,

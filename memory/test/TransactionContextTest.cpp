@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "TransactionLock.h"
+#include "TransactionContext.h"
+
+#include <gtest/gtest.h>
 
 #include <vector>
 
-#include "TestRoot.h"
+namespace sharksfin::memory {
 
-namespace sharksfin::mock {
+class TransactionContextTest : public testing::Test {};
 
-class TransactionLockTest : public testing::TestRoot {};
-
-TEST_F(TransactionLockTest, simple) {
-    Database db { open() };
-    std::vector<TransactionLock::id_type> ids;
+TEST_F(TransactionContextTest, simple) {
+    Database db;
+    std::vector<TransactionContext::id_type> ids;
     for (std::size_t i = 0U; i < 3U; ++i) {
         auto tx = db.create_transaction();
         ASSERT_TRUE(tx->try_acquire());
@@ -37,8 +37,8 @@ TEST_F(TransactionLockTest, simple) {
     EXPECT_NE(ids[1], ids[2]);
 }
 
-TEST_F(TransactionLockTest, owner) {
-    Database db { open() };
+TEST_F(TransactionContextTest, owner) {
+    Database db;
     auto tx = db.create_transaction();
     EXPECT_EQ(tx->owner(), nullptr);
 
@@ -49,8 +49,8 @@ TEST_F(TransactionLockTest, owner) {
     EXPECT_EQ(tx->owner(), nullptr);
 }
 
-TEST_F(TransactionLockTest, block) {
-    Database db { open() };
+TEST_F(TransactionContextTest, block) {
+    Database db;
     {
         auto tx = db.create_transaction();
         ASSERT_TRUE(tx->try_acquire());
@@ -68,4 +68,4 @@ TEST_F(TransactionLockTest, block) {
     }
 }
 
-}  // namespace sharksfin::mock
+}  // namespace sharksfin::memory

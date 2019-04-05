@@ -31,13 +31,18 @@
 namespace sharksfin::mock {
 
 class Storage;
-class TransactionLock;
+class TransactionContext;
 
 /**
  * @brief a LevelDB wrapper.
  */
 class Database {
 public:
+    /**
+     * @brief the transaction ID type.
+     */
+    using transaction_id_type = std::size_t;
+
     /**
      * @brief the transaction mutex type.
      */
@@ -87,7 +92,7 @@ public:
      * @brief creates a new transaction lock.
      * @return the created transaction lock, but it's lock has not been acquired
      */
-    std::unique_ptr<TransactionLock> create_transaction();
+    std::unique_ptr<TransactionContext> create_transaction();
 
     /**
      * @brief returns whether or not the underlying LevelDB is still alive.
@@ -111,6 +116,25 @@ public:
      * @return the corresponded status code in shark's fin API
      */
     static StatusCode resolve(leveldb::Status const& status);
+
+    /**
+     * @brief returns whether or not the transaction lock is enabled.
+     * @return true if it is enabled
+     * @return false otherwise
+     */
+    bool enable_transaction_lock() const noexcept {
+        return enable_transaction_lock_;
+    }
+
+    /**
+     * @brief sets whether or not the transaction lock is enabled.
+     * @param value true to enable, otherwise false
+     * @return this
+     */
+    Database& enable_transaction_lock(bool value) {
+        enable_transaction_lock_ = value;
+        return *this;
+    }
 
     /**
      * @brief returns whether or not performance tracking feature is enabled.
@@ -164,8 +188,9 @@ public:
 private:
     std::unique_ptr<leveldb::DB> leveldb_ = {};
     transaction_mutex_type transaction_mutex_ = {};
-    std::atomic_size_t transaction_id_sequence_ = { 1U };
+    std::atomic<transaction_id_type> transaction_id_sequence_ = { 1U };
 
+    bool enable_transaction_lock_ { true };
     bool enable_tracking_ { false };
 
     std::atomic_size_t transaction_count_ {};

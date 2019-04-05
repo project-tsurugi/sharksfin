@@ -13,38 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_MOCK_TRANSACTIONLOCK_H_
-#define SHARKSFIN_MOCK_TRANSACTIONLOCK_H_
+#ifndef SHARKSFIN_MOCK_TRANSACTION_CONTEXT_H_
+#define SHARKSFIN_MOCK_TRANSACTION_CONTEXT_H_
+
+#include <mutex>
+#include <string>
 
 #include <cstddef>
-#include <mutex>
 
 #include "Database.h"
-
-#include "sharksfin/api.h"
 
 namespace sharksfin::mock {
 
 /**
- * @brief a transaction lock.
+ * @brief a transaction context.
  */
-class TransactionLock {
+class TransactionContext {
 public:
     /**
-     * @brief transaction ID type.
+     * @brief the transaction ID type.
      */
-    using id_type = std::size_t;
+    using id_type = Database::transaction_id_type;
 
     /**
-     * @brief creates a new instance.
+     * @brief the transaction mutex type.
+     */
+    using mutex_type = Database::transaction_mutex_type;
+
+    /**
+     * @brief constructs a new object.
      * @param owner the owner
      * @param id the transaction ID
-     * @param lock the transaction lock
+     * @param lock the transaction lock, or lock unsupported if no mutex is bound
      */
-    inline TransactionLock(
+    explicit TransactionContext(
             Database* owner,
             id_type id,
-            std::unique_lock<Database::transaction_mutex_type> lock) noexcept
+            std::unique_lock<mutex_type> lock) noexcept
         : owner_(owner)
         , id_(id)
         , lock_(std::move(lock))
@@ -54,8 +59,8 @@ public:
      * @brief returns the owner of this transaction.
      * @return the owner, or nullptr if this transaction is not active
      */
-    inline Database* owner() {
-        if (lock_.owns_lock()) {
+    inline Database* owner() const noexcept {
+        if (is_alive()) {
             return owner_;
         }
         return nullptr;
@@ -63,18 +68,18 @@ public:
 
     /**
      * @brief returns whether or not this transaction lock is acquired.
-     * @return true if this transaction lock is acquired
+     * @return true if this transaction lock is acquired, or transaction lock is not supported
      * @return false otherwise
      */
-    inline bool is_alive() {
-        return lock_.owns_lock();
+    inline bool is_alive() const noexcept {
+        return !enable_lock() || lock_.owns_lock();
     }
 
     /**
      * @brief return the current transaction ID
      * @return the current transaction ID
      */
-    inline id_type id() const {
+    inline id_type id() const noexcept {
         return id_;
     }
 
@@ -82,29 +87,37 @@ public:
      * @brief acquires the transaction lock.
      */
     inline void acquire() {
-        lock_.lock();
+        if (enable_lock()) {
+            lock_.lock();
+        }
     }
 
     /**
      * @brief try acquires the transaction lock.
-     * @return true if the lock was successfully acquired
+     * @return true if the lock was successfully acquired, or transaction lock is not supported
      * @return false if the lock was failed
      */
     inline bool try_acquire() {
-        return lock_.try_lock();
+        if (enable_lock()) {
+            return lock_.try_lock();
+        }
+        return true;
     }
 
     /**
      * @brief releases the owned transaction lock only if it has been acquired.
-     * @return true if the lock was successfully released
+     * @return true if the lock was successfully released, or transaction lock is not supported
      * @return false if this does not own lock
      */
     inline bool release() {
-        if (lock_.owns_lock()) {
-            lock_.unlock();
-            return true;
+        if (enable_lock()) {
+            if (is_alive()) {
+                lock_.unlock();
+                return true;
+            }
+            return false;
         }
-        return false;
+        return true;
     }
 
     /**
@@ -120,8 +133,12 @@ private:
     id_type id_;
     std::unique_lock<Database::transaction_mutex_type> lock_;
     std::string buffer_;
+
+    bool enable_lock() const noexcept {
+        return lock_.mutex() != nullptr;
+    }
 };
 
 }  // namespace sharksfin::mock
 
-#endif  // SHARKSFIN_MOCK_TRANSACTIONLOCK_H_
+#endif  // SHARKSFIN_MOCK_TRANSACTION_CONTEXT_H_
