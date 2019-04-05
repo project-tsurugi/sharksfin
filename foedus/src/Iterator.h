@@ -61,12 +61,17 @@ public:
      * @return otherwise if error occurred
      */
     inline StatusCode next() {
+        StatusCode ret;
         if (state_ == State::INIT) {
-            auto ret = open_cursor_();
-            state_ = test();
+            ret = open_cursor_();
+        } else {
+            ret = resolve(cursor_.next());
+        }
+        // Foedus open()/next() don't return NOT FOUND even if there is no more record.
+        // That should be checked with is_valid_record separately.
+        if (ret != StatusCode::OK) {
             return ret;
         }
-        auto ret = resolve(cursor_.next());
         state_ = test();
         if (state_ == State::SAW_EOF) {
             return StatusCode::NOT_FOUND;

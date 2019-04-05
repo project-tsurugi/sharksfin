@@ -874,6 +874,49 @@ TEST_F(FoedusApiTest, scan_empty_prefix) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(FoedusApiTest, scan_empty_table) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation test(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            {
+                IteratorHandle iter;
+                if (content_scan_prefix(tx, st, "a", &iter) != StatusCode::OK) {
+                    return TransactionOperation::ERROR;
+                }
+                HandleHolder closer{iter};
+                if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                    return TransactionOperation::ERROR;
+                }
+            }
+            {
+                IteratorHandle iter;
+                if (content_scan_range(tx, st, "b", false, "", false, &iter) != StatusCode::OK) {
+                    return TransactionOperation::ERROR;
+                }
+                HandleHolder closer{iter};
+                if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                    return TransactionOperation::ERROR;
+                }
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 TEST_F(FoedusApiTest, scan_range_to_end) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
