@@ -113,19 +113,19 @@ pipeline {
     }
     post {
         always {
-            junit keepLongStdio: true, allowEmptyResults: true, testResults: '**/*_gtest_result.xml'
-            warnings consoleParsers: [
-                [parserName: 'GNU Make + GNU C Compiler (gcc)'],
-            ]
-            warnings parserConfigurations: [
-                [parserName: 'Clang (LLVM based)', pattern: 'build/clang-tidy.log'],
-            ], unstableTotalAll: '0'
-            warnings parserConfigurations: [
-                [parserName: 'Doxygen', pattern: 'build/doxygen.log'],
-            ]
-            cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'build/gcovr-xml/sharksfin-gcovr.xml', failNoReports: false, failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, zoomCoverageChart: false
+            xunit tools: ([GoogleTest(pattern: '**/*_gtest_result.xml', deleteOutputFiles: false, failIfNotNew: false, skipNoTestFiles: false, stopProcessingIfError: true)]), reduceLog: false
+            recordIssues tool: clangTidy(pattern: 'build/clang-tidy.log'),
+                qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
+            recordIssues tool: gcc4(),
+                enabledForFailure: true
+            recordIssues tool: doxygen(pattern: 'build/doxygen.log')
+            recordIssues tool: taskScanner(
+                highTags: 'FIXME', normalTags: 'TODO',
+                includePattern: '**/*.md,**/*.txt,**/*.in,**/*.cmake,**/*.cpp,**/*.h',
+                excludePattern: 'third_party/**'),
+                enabledForFailure: true
+            publishCoverage adapters: [coberturaAdapter('build/gcovr-xml/sharksfin-gcovr.xml')], sourceFileResolver: sourceFiles('STORE_ALL_BUILD')
             archiveArtifacts allowEmptyArchive: true, artifacts: 'build/sharksfin-coverage-report.zip, build/sharksfin-doxygen.zip, build/clang-tidy.log, build/clang-tidy-fix.yaml, build/dependency-graph/sharksfin.png', onlyIfSuccessful: true
-            openTasks high: 'FIXME', normal: 'TODO', pattern: '**/*.md,**/*.txt,**/*.in,**/*.cmake,**/*.cpp,**/*.h', excludePattern: 'third_party/**'
             notifySlack('tsurugi-dev')
         }
     }
