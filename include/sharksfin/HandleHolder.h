@@ -64,7 +64,7 @@ public:
      * @brief constructs a new object.
      * @param other the move source
      */
-    HandleHolder(HandleHolder&& other) noexcept = default;
+    HandleHolder(HandleHolder&& other) = default;
 
     /**
      * @brief returns the holding handle.
@@ -133,7 +133,7 @@ public:
      * @brief constructs a new object.
      * @param other the move source
      */
-    HandleHolder(HandleHolder&& other) noexcept = default;
+    HandleHolder(HandleHolder&& other) = default;
 
     /**
      * @brief returns the holding handle.
@@ -202,7 +202,7 @@ public:
      * @brief constructs a new object.
      * @param other the move source
      */
-    HandleHolder(HandleHolder&& other) noexcept = default;
+    HandleHolder(HandleHolder&& other) = default;
 
     /**
      * @brief returns the holding handle.

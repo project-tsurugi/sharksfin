@@ -230,7 +230,7 @@ static void add(std::atomic<T>& atomic, T duration) {
     std::abort();
 }
 
-StatusCode Database::open(DatabaseOptions const &options, std::unique_ptr<Database> *result) noexcept {
+StatusCode Database::open(DatabaseOptions const &options, std::unique_ptr<Database> *result) {
     if (options.open_mode() == DatabaseOptions::OpenMode::RESTORE) {
         std::string path = dbpath(options);
         if (!::foedus::fs::exists(::foedus::fs::Path(path)) ||

@@ -37,7 +37,7 @@ public:
     /**
      * @brief constructs a new empty object.
      */
-    inline constexpr Slice() noexcept = default;
+    inline constexpr Slice() = default;
 
     /**
      * @brief constructs a new object.

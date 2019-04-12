@@ -42,7 +42,7 @@ public:
             Database* owner,
             ::foedus::thread::Thread* context,
             ::foedus::Engine* engine
-            ) noexcept
+            )
         :
         owner_(owner)
         , context_(context)

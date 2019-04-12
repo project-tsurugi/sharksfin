@@ -26,12 +26,12 @@ namespace sharksfin {
 
 class Environment::Impl {
 public:
-    Impl() noexcept = default;
-    ~Impl() noexcept;
+    Impl() = default;
+    ~Impl();
     Impl(Impl const& other) = delete;
-    Impl(Impl&& other) noexcept = default;
+    Impl(Impl&& other) = default;
     Impl& operator=(Impl const& other) = delete;
-    Impl& operator=(Impl&& other) noexcept = default;
+    Impl& operator=(Impl&& other) = default;
 
     void initialize();
 private:
@@ -39,9 +39,9 @@ private:
     std::unique_ptr<::foedus::debugging::DebuggingSupports> debugging_supports_;
 };
 
-Environment::Environment() noexcept : impl_(std::make_unique<Impl>()) {}
+Environment::Environment() : impl_(std::make_unique<Impl>()) {}
 
-Environment::~Environment() noexcept = default;
+Environment::~Environment() = default;
 
 void Environment::Impl::initialize() {
     // initialize glog in DebuggingSupports using dummy foedus engine
@@ -68,7 +68,7 @@ void Environment::Impl::initialize() {
     ::google::InstallFailureSignalHandler();
 }
 
-Environment::Impl::~Impl() noexcept {
+Environment::Impl::~Impl() {
     debugging_supports_->uninitialize_once();
 }
 

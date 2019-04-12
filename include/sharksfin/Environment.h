@@ -32,12 +32,12 @@ public:
     /**
      * @brief constructs a new object.
      */
-    Environment() noexcept;
+    Environment();
 
     /**
      * @brief destructs this object.
      */
-    ~Environment() noexcept;
+    ~Environment();
 
     Environment(Environment const&) = delete;
     Environment& operator=(Environment const&) = delete;
@@ -46,14 +46,14 @@ public:
      * @brief constructs a new object.
      * @param other the move source
      */
-    Environment(Environment&& other) noexcept = default;
+    Environment(Environment&& other) = default;
 
     /**
      * @brief assigns the given object into this.
      * @param other the move source
      * @return this
      */
-    Environment& operator=(Environment&& other) noexcept = default;
+    Environment& operator=(Environment&& other) = default;
 
     /**
      * @brief initialize the sharksfin environment in order to initialize static control area (e.g. one held by glog).

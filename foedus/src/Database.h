@@ -44,7 +44,7 @@ public:
     /**
      * @brief setup foedus engine and return Database.
      */
-    static StatusCode open(DatabaseOptions const& options, std::unique_ptr<Database>* result) noexcept;
+    static StatusCode open(DatabaseOptions const& options, std::unique_ptr<Database>* result);
 
     /**
      * @brief constructs a new object.

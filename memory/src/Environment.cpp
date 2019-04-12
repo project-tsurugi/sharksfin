@@ -23,14 +23,14 @@ namespace sharksfin {
 
 class Environment::Impl {
 public:
-    Impl() noexcept = default;
-    ~Impl() noexcept {
+    Impl() = default;
+    ~Impl() {
         ::google::ShutdownGoogleLogging();
     }
     Impl(Impl const& other) = delete;
-    Impl(Impl&& other) noexcept = default;
+    Impl(Impl&& other) = default;
     Impl& operator=(Impl const& other) = delete;
-    Impl& operator=(Impl&& other) noexcept = default;
+    Impl& operator=(Impl&& other) = default;
 
     void initialize() {
         // ignore log level
@@ -42,9 +42,9 @@ public:
     }
 };
 
-Environment::Environment() noexcept : impl_(std::make_unique<Impl>()) {}
+Environment::Environment() : impl_(std::make_unique<Impl>()) {}
 
-Environment::~Environment() noexcept = default;
+Environment::~Environment() = default;
 
 void Environment::initialize() {
     impl_->initialize();
