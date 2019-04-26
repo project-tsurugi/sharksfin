@@ -33,6 +33,7 @@ option(FORCE_INSTALL_RPATH "Force add lib dir of custom prefixes to INSTALL_RPAT
 option(ENABLE_SANITIZER "enable sanitizer on debug build" ON)
 option(ENABLE_UB_SANITIZER "enable undefined behavior sanitizer on debug build" OFF)
 option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
+option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 
 if(NOT EXAMPLE_IMPLEMENTATION)
     set(
@@ -49,6 +50,7 @@ find_package(FOEDUS)
 find_package(Boost
     COMPONENTS filesystem)
 find_package(glog)
+find_package(numa)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)

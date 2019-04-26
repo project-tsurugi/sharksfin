@@ -15,7 +15,7 @@ file(GLOB SOURCES
     "*.cpp"
 )
 
-add_library(memory SHARED
+add_library(memory
     ${SOURCES}
 )
 

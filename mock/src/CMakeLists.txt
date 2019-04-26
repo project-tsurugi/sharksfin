@@ -20,7 +20,7 @@ file(GLOB SOURCES
     "*.cpp"
 )
 
-add_library(mock SHARED
+add_library(mock
     ${SOURCES}
 )
 
