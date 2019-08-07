@@ -27,51 +27,54 @@ namespace sharksfin {
  * @tparam T the handle type
  */
 template<class T>
-class HandleHolder {};
-
-/**
- * @brief a database handle holder.
- */
-template<>
-class HandleHolder<DatabaseHandle> {
+class HandleHolder {
 public:
     /**
      * @brief constructs a new empty object.
      */
-    constexpr HandleHolder() noexcept {}  // NOLINT
+    HandleHolder() = default;
 
     /**
      * @brief constructs a new object.
      * @param handle the handle to be disposed after operation
      */
-    constexpr HandleHolder(DatabaseHandle handle) noexcept : handle_(handle) {}  // NOLINT
+    constexpr HandleHolder(T handle) noexcept : handle_(handle) {}  // NOLINT
 
     /**
      * @brief destructs this object.
      */
     ~HandleHolder() {
         if (handle_) {
-            database_dispose(handle_);
+            dispose(handle_);
             handle_ = nullptr;
         }
     }
 
     HandleHolder(HandleHolder const&) = delete;
     HandleHolder& operator=(HandleHolder const&) = delete;
-    HandleHolder& operator=(HandleHolder&& other) = delete;
 
     /**
      * @brief constructs a new object.
      * @param other the move source
      */
-    HandleHolder(HandleHolder&& other) = default;
+    HandleHolder(HandleHolder&& other) noexcept : handle_(other.release()) {}
+
+    /**
+     * @brief assign the given object.
+     * @param other the move source
+     * @return this
+     */
+    HandleHolder& operator=(HandleHolder&& other) noexcept {
+        ~HandleHolder();
+        handle_ = other.release();
+    }
 
     /**
      * @brief returns the holding handle.
      * @return the holding handle
      * @return nullptr if this does not hold any handles
      */
-    DatabaseHandle& get() {
+    T& get() {
         return handle_;
     }
 
@@ -80,7 +83,7 @@ public:
      * @return the holding handle
      * @return nullptr if this does not hold any handles
      */
-    DatabaseHandle& operator*() {
+    T& operator*() {
         return handle_;
     }
 
@@ -88,160 +91,28 @@ public:
      * @brief releases the holding handle.
      * @return the holding handle
      */
-    DatabaseHandle release() {
+    T release() noexcept {
         auto handle = handle_;
         handle_ = nullptr;
         return handle;
     }
 
 private:
-    DatabaseHandle handle_ {};
+    T handle_ {};
+
+    static void dispose(DatabaseHandle handle) {
+        database_dispose(handle);
+    }
+    static void dispose(StorageHandle handle) {
+        storage_dispose(handle);
+    }
+    static void dispose(TransactionControlHandle handle) {
+        transaction_dispose(handle);
+    }
+    static void dispose(IteratorHandle handle) {
+        iterator_dispose(handle);
+    }
 };
-
-/**
- * @brief a storage handle holder.
- */
-template<>
-class HandleHolder<StorageHandle> {
-public:
-    /**
-     * @brief constructs a new empty object.
-     */
-    constexpr HandleHolder() noexcept {}  // NOLINT
-
-    /**
-     * @brief constructs a new object.
-     * @param handle the handle to be disposed after operation
-     */
-    constexpr HandleHolder(StorageHandle handle) noexcept : handle_(handle) {}  // NOLINT
-
-    /**
-     * @brief destructs this object.
-     */
-    ~HandleHolder() {
-        if (handle_) {
-            storage_dispose(handle_);
-            handle_ = nullptr;
-        }
-    }
-
-    HandleHolder(HandleHolder const&) = delete;
-    HandleHolder& operator=(HandleHolder const&) = delete;
-    HandleHolder& operator=(HandleHolder&& other) = delete;
-
-    /**
-     * @brief constructs a new object.
-     * @param other the move source
-     */
-    HandleHolder(HandleHolder&& other) = default;
-
-    /**
-     * @brief returns the holding handle.
-     * @return the holding handle
-     * @return nullptr if this does not hold any handles
-     */
-    StorageHandle& get() {
-        return handle_;
-    }
-
-    /**
-     * @brief returns the holding handle.
-     * @return the holding handle
-     * @return nullptr if this does not hold any handles
-     */
-    StorageHandle& operator*() {
-        return handle_;
-    }
-
-    /**
-     * @brief releases the holding handle.
-     * @return the holding handle
-     */
-    StorageHandle release() {
-        auto handle = handle_;
-        handle_ = nullptr;
-        return handle;
-    }
-
-private:
-    StorageHandle handle_ {};
-};
-
-/**
- * @brief a iterator handle holder.
- */
-template<>
-class HandleHolder<IteratorHandle> {
-public:
-    /**
-     * @brief constructs a new empty object.
-     */
-    constexpr HandleHolder() noexcept {}  // NOLINT
-
-    /**
-     * @brief constructs a new object.
-     * @param handle the handle to be disposed after operation
-     */
-    constexpr HandleHolder(IteratorHandle handle) noexcept : handle_(handle) {}  // NOLINT
-
-    /**
-     * @brief destructs this object.
-     */
-    ~HandleHolder() {
-        if (handle_) {
-            iterator_dispose(handle_);
-            handle_ = nullptr;
-        }
-    }
-
-    HandleHolder(HandleHolder const&) = delete;
-    HandleHolder& operator=(HandleHolder const&) = delete;
-    HandleHolder& operator=(HandleHolder&& other) = delete;
-
-    /**
-     * @brief constructs a new object.
-     * @param other the move source
-     */
-    HandleHolder(HandleHolder&& other) = default;
-
-    /**
-     * @brief returns the holding handle.
-     * @return the holding handle
-     * @return nullptr if this does not hold any handles
-     */
-    IteratorHandle& get() {
-        return handle_;
-    }
-
-    /**
-     * @brief returns the holding handle.
-     * @return the holding handle
-     * @return nullptr if this does not hold any handles
-     */
-    IteratorHandle& operator*() {
-        return handle_;
-    }
-
-    /**
-     * @brief releases the holding handle.
-     * @return the holding handle
-     */
-    IteratorHandle release() {
-        auto handle = handle_;
-        handle_ = nullptr;
-        return handle;
-    }
-
-private:
-    IteratorHandle handle_ {};
-};
-
-/**
- * @brief detects handle type.
- * @tparam T the handle type
- */
-template <class T>
-HandleHolder(T) -> HandleHolder<T>;
 
 }  // namespace sharksfin
 

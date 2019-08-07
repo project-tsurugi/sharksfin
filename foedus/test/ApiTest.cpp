@@ -1226,4 +1226,104 @@ TEST_F(FoedusApiTest, tracking) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+// transaction_begin/transaction_abort APIs are not supported by foedus-bridge
+/*
+TEST_F(FoedusApiTest, transaction_begin_and_commit) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            std::int8_t v = 0;
+            if (content_put(tx, st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static bool run(DatabaseHandle db, S& s) {
+            HandleHolder<TransactionControlHandle> tch{};
+            if (auto c = transaction_begin(db, {}, &tch.get()); c != StatusCode::OK) {
+                return false;
+            }
+            TransactionHandle tx{};
+            if (auto c = transaction_borrow_handle(tch.get(), &tx); c != StatusCode::OK) {
+                return false;
+            }
+            Slice slice{};
+            if (content_get(tx, s.st, "k", &slice) != StatusCode::OK) {
+                return false;
+            }
+            std::int8_t v = static_cast<std::int8_t>(*slice.data<std::int8_t>() + 1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            if (content_put(tx, s.st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return false;
+            }
+            if (transaction_commit(tch.get(), true) != StatusCode::OK) {
+                return false;
+            }
+            return transaction_wait_commit(tch.get()) == StatusCode::OK;
+        }
+        static TransactionOperation validate(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_get(tx, st, "k", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (*s.data<std::int8_t>() != 10) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    ASSERT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    auto r1 = std::async(std::launch::async, [&] {
+        bool ret = true;
+        for (std::size_t i = 0U; i < 5U; ++i) {
+            ret = ret && S::run(db, s);
+        }
+        return ret;
+    });
+    for (std::size_t i = 0U; i < 5U; ++i) {
+        EXPECT_EQ(S::run(db, s), true);
+    }
+    EXPECT_EQ(r1.get(), true);
+    EXPECT_EQ(transaction_exec(db, {}, &S::validate, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(FoedusApiTest, transaction_begin_and_abort) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static bool run(DatabaseHandle db, S& s) {
+            (void)s;
+            HandleHolder<TransactionControlHandle> tch{};
+            if (auto c = transaction_begin(db, {}, &tch.get()); c != StatusCode::OK) {
+                return false;
+            }
+            return transaction_abort(tch.get(), true) == StatusCode::OK;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+    EXPECT_EQ(S::run(db, s), true);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+*/
+
 }  // namespace sharksfin

@@ -36,6 +36,11 @@ static inline StorageHandle wrap(memory::Storage* object) {
     return reinterpret_cast<StorageHandle>(object);  // NOLINT
 }
 
+// TransactionContext* can be interpreted as TransactionControlHandle and TransactionHandle
+static inline TransactionControlHandle wrap_as_control_handle(memory::TransactionContext* object) {
+    return reinterpret_cast<TransactionControlHandle>(object);  // NOLINT
+}
+
 static inline TransactionHandle wrap(memory::TransactionContext* object) {
     return reinterpret_cast<TransactionHandle>(object);  // NOLINT
 }
@@ -50,6 +55,10 @@ static inline memory::Database* unwrap(DatabaseHandle handle) {
 
 static inline memory::Storage* unwrap(StorageHandle handle) {
     return reinterpret_cast<memory::Storage*>(handle);  // NOLINT
+}
+
+static inline memory::TransactionContext* unwrap(TransactionControlHandle handle) {
+    return reinterpret_cast<memory::TransactionContext*>(handle);  // NOLINT
 }
 
 static inline memory::TransactionContext* unwrap(TransactionHandle handle) {
@@ -156,6 +165,59 @@ StatusCode transaction_borrow_owner(TransactionHandle handle, DatabaseHandle* re
         return StatusCode::OK;
     }
     return StatusCode::ERR_INVALID_STATE;
+}
+
+StatusCode transaction_begin(
+        DatabaseHandle handle,
+        [[maybe_unused]] TransactionOptions const& options,
+        TransactionControlHandle *result) {
+    auto database = unwrap(handle);
+    auto tx = database->create_transaction();
+    tx->acquire();
+    *result = wrap_as_control_handle(tx.release());
+    return StatusCode::OK;
+}
+
+StatusCode transaction_borrow_handle(
+        TransactionControlHandle handle,
+        TransactionHandle* result) {
+    *result = wrap(unwrap(handle));
+    return StatusCode::OK;
+}
+
+StatusCode transaction_commit(
+        TransactionControlHandle handle,
+        [[maybe_unused]] bool async) { // async not supported
+    auto tx = unwrap(handle);
+    if (tx->release()) {
+        return StatusCode::OK;
+    }
+    // transaction is already finished
+    return StatusCode::ERR_INVALID_STATE;
+}
+
+StatusCode transaction_abort(
+        TransactionControlHandle handle,
+        [[maybe_unused]] bool rollback) {
+    auto tx = unwrap(handle);
+    tx->release();
+    // No need to check the return value.
+    // Abort is allowed even for finished transactions.
+    return StatusCode::OK;
+}
+
+StatusCode transaction_wait_commit(
+        [[maybe_unused]] TransactionControlHandle handle,
+        [[maybe_unused]] std::size_t timeout_ns) {
+    // no-op - async commit is not supported
+    return StatusCode::OK;
+}
+
+StatusCode transaction_dispose(
+        TransactionControlHandle handle) {
+    auto tx = unwrap(handle);
+    delete tx;  // NOLINT
+    return StatusCode::OK;
 }
 
 StatusCode content_get(

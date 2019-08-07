@@ -156,6 +156,43 @@ StatusCode transaction_borrow_owner(
     return StatusCode::ERR_INVALID_STATE;
 }
 
+// foedus-bridge doesn't support transaction begin/commit/abort API. Use transaction_exec() instead.
+StatusCode transaction_begin(
+        DatabaseHandle,
+        TransactionOptions const&,
+        TransactionControlHandle *) {
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
+StatusCode transaction_borrow_handle(
+        TransactionControlHandle,
+        TransactionHandle*) {
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
+StatusCode transaction_commit(
+        TransactionControlHandle,
+        bool) {
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
+StatusCode transaction_abort(
+        TransactionControlHandle,
+        bool) {
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
+StatusCode transaction_wait_commit(
+        TransactionControlHandle,
+        std::size_t) {
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
+StatusCode transaction_dispose(
+        TransactionControlHandle) {
+    return StatusCode::OK;
+}
+
 StatusCode content_get(
     TransactionHandle transaction,
     StorageHandle storage,

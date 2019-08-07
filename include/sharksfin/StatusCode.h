@@ -75,6 +75,21 @@ enum class StatusCode : std::int64_t {
      * @brief transaction operation met an user-defined error.
      */
     ERR_USER_ERROR = -6,
+
+    /**
+     * @brief transaction is aborted
+     */
+    ERR_ABORTED = -7,
+
+    /**
+     * @brief transaction is aborted, but retry might resolve the situation
+     */
+    ERR_ABORTED_RETRYABLE = -8,
+
+    /**
+     * @brief api call timed out
+     */
+    ERR_TIME_OUT = -9,
 };
 
 /**
@@ -94,6 +109,9 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_INVALID_STATE: return "ERR_INVALID_STATE";
         case StatusCode::ERR_UNSUPPORTED: return "ERR_UNSUPPORTED";
         case StatusCode::ERR_USER_ERROR: return "ERR_USER_ERROR";
+        case StatusCode::ERR_ABORTED: return "ERR_ABORTED";
+        case StatusCode::ERR_ABORTED_RETRYABLE: return "ERR_ABORTED_RETRYABLE";
+        case StatusCode::ERR_TIME_OUT: return "ERR_TIME_OUT";
         default: return "UNDEFINED";
     }
 }

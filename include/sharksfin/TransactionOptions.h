@@ -72,7 +72,7 @@ public:
      * @return otherwise maximum retry count
      * @see TransactionOperation
      */
-    constexpr std::size_t retry_count() const {
+    constexpr std::size_t retry_count() const noexcept {
         return retry_count_;
     }
 
@@ -80,7 +80,7 @@ public:
      * @brief returns the transaction operation kind.
      * @return the transaction operation kind
      */
-    constexpr OperationKind operation_kind() const {
+    constexpr OperationKind operation_kind() const noexcept {
         return operation_kind_;
     }
 
@@ -90,7 +90,7 @@ public:
      * @param count the retry count; 0 - never, TransactionOptions::INF - infinity
      * @return this
      */
-    inline TransactionOptions& retry_count(std::size_t count) {
+    constexpr inline TransactionOptions& retry_count(std::size_t count) noexcept {
         retry_count_ = count;
         return *this;
     }
@@ -101,7 +101,7 @@ public:
      * @param kind the operation kind
      * @return this
      */
-    inline TransactionOptions& operation_kind(OperationKind kind) {
+    inline TransactionOptions& operation_kind(OperationKind kind) noexcept {
         operation_kind_ = kind;
         return *this;
     }
