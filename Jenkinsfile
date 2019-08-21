@@ -113,7 +113,7 @@ pipeline {
     }
     post {
         always {
-            xunit tools: ([GoogleTest(pattern: '**/*_gtest_result.xml', deleteOutputFiles: false, failIfNotNew: false, skipNoTestFiles: false, stopProcessingIfError: true)]), reduceLog: false
+            xunit tools: ([GoogleTest(pattern: '**/*_gtest_result.xml', deleteOutputFiles: false, failIfNotNew: false, skipNoTestFiles: true, stopProcessingIfError: true)]), reduceLog: false
             recordIssues tool: clangTidy(pattern: 'build/clang-tidy.log'),
                 qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
             recordIssues tool: gcc4(),
