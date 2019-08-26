@@ -2,7 +2,7 @@
 
 ## この文書について
 
-* Tx engine と SQL engine を共同開発するための初期の教会として利用する低レベルAPIの概要
+* Tx engine と SQL engine を共同開発するための初期の境界として利用する低レベルAPIの概要
 * 現状のASISを示したものであり、不都合があれば指摘がほしい状態
 
 ## ファイル
@@ -56,7 +56,8 @@
 * 疎結合で動的リンクを前提
   * SQL engine と Tx engine を個別にビルドして実行時に動的リンクできるように
   * SQL engine は低レベルAPIを介してのみ Tx engine を利用する (当面は)
-  * 実装型を隠蔽するため、オブジェクトはハンドル (`void*`) を経由
+  * 実装型を隠蔽するため、オブジェクトはハンドルを経由
+    * ハンドルは隠蔽用の空の構造体(`DatabaseStub`など)へのポインタである
     * Tx engine の内部で `reinterpret_cast` 経由で実装型に変換する
     * ただし、この関係で `std::unique_ptr` が使いづらくなっている
 * LLVM JITから利用可能
@@ -133,9 +134,9 @@
   * `transaction_exec`
     * 新しいトランザクションプロセス内で、指定したコールバック関数を実行する
   * `transaction_begin`
-    * トランザクションの開始を宣言し、操作用ハンドル`TransactionControlHandle`を取得する
+    * トランザクションの開始を宣言し、制御用ハンドル`TransactionControlHandle`を取得する
   * `transaction_borrow_handle`
-    * 操作用ハンドルからトランザクションハンドル`TransactionHandle`を取得する
+    * 制御用ハンドルからトランザクションハンドル`TransactionHandle`を取得する
   * `transaction_commit`
     * トランザクションのコミットを宣言する。引数でグループコミット完了を待機するかを選択可能
   * `transaction_abort`
@@ -143,9 +144,9 @@
   * `transaction_wait_commit`
     * グループコミットの完了を待機する
   * `transaction_dispose`
-    * 操作用ハンドルを廃棄する
+    * 制御用ハンドルを廃棄する
 * 備考
-    * いずれの方式でもcontent_* API呼び出し時には`TransactionHandle`使用
+    * いずれの方式でもcontent_* API呼び出し時には`TransactionHandle`を使用
     * begin/commit方式でのみトランザクション制御のために`TransactionControlHandle`を使用
 
 ### content_*
@@ -156,7 +157,7 @@
   * `content_get`
     * 指定のキーに対する値を返す
   * `content_put`
-    * 指定のキーに対して値を書き込む (上書き、なければエントリを作成)
+    * 指定のキーに対して値を書き込む (新規エントリを作成or上書きか等をオプションで指定可能)
   * `content_delete`
     * 指定のキーに関連する値を削除する
   * `content_scan_prefix`
@@ -168,8 +169,6 @@
     * スレッド安全性は `TransactionHandle` が確保する想定
   * `Slice` を返すだけでなく、 `std::string` に書き出す仕組みがあっても良いかもしれない
     * in-memory db なのでできるだけゼロコピーでやりたい、という気持ちから現在はこの形
-  * TBD: `put` は `insert`, `update`, `insert or update` を区別できるようにするか
-    * `get` -> `put` で同等の操作が可能
   * TBD: `get`, `put` はペイドードの一部を参照、更新できるようにするか
 
 ### iterator_*
