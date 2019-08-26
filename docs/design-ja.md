@@ -19,16 +19,19 @@
 * `include/StatusCode.h`
   * 低レベルAPIのステータスコード
   * 最低限しかおいていないので、必要に応じて追加していく
+* `include/TransactionOperation.h`
+  * トランザクションコールバックの戻り値定義
+* `include/Environment.h`
+  * データベース環境初期化用(loggerなど)
+* `include/HandleHolder.h`
+  * ハンドル用RAIIユーティリティクラス
 
 ## 前提
 
-* データベース全体で単一の巨大なソート済みKVS
-  * テーブルやインデックスが同一のKVS上に格納される
-    * キーの前半でテーブルやインデックスを判別
-    * TBD: 異なるキー空間を表すための仕組みを入れたほうがいいかも
-      * テーブルごとにキー空間が異なる
-      * ストレージのデータ構造ごとにキー空間が異なる (mass-tree, hash-table, ...)
-    * キーの後半で当該テーブルやインデックス内のキーを表現
+* データベースは複数のKVSの集合として実現
+  * キー空間を分けるためにデータベースを「ストレージ」に分割
+    * 各ストレージに1つKVSがぶら下がる形
+    * 上位層がテーブルやインデックスごとにストレージを作ることでセカンダリキーなど主キー以外のキーによる検索もサポート可能
   * keyやvalueは可変長のバイナリ列で、Tx engine側では型を認識していない状態
   * keyに対してvalueは高々1つ
     * key-valueが1:Nの場合、valueのバイト列に詰め込むかkey側にsuffixを付与
@@ -123,12 +126,27 @@
 
 * 概要
   * トランザクションの制御
+  * 二種類の方式
+    * コールバック方式(transaction_execを利用)
+    * begin/commit方式(transaction_exec以外のtransaction_* APIを利用)
 * 関数
   * `transaction_exec`
     * 新しいトランザクションプロセス内で、指定したコールバック関数を実行する
+  * `transaction_begin`
+    * トランザクションの開始を宣言し、操作用ハンドル`TransactionControlHandle`を取得する
+  * `transaction_borrow_handle`
+    * 操作用ハンドルからトランザクションハンドル`TransactionHandle`を取得する
+  * `transaction_commit`
+    * トランザクションのコミットを宣言する。引数でグループコミット完了を待機するかを選択可能
+  * `transaction_abort`
+    * トランザクション処理を中止する
+  * `transaction_wait_commit`
+    * グループコミットの完了を待機する
+  * `transaction_dispose`
+    * 操作用ハンドルを廃棄する
 * 備考
-  * 現在はスレッドAPIを提供していないので、コールバック実行のみ
-  * グループコミットの終了待機をasyncにする機能がほしい
+    * いずれの方式でもcontent_* API呼び出し時には`TransactionHandle`使用
+    * begin/commit方式でのみトランザクション制御のために`TransactionControlHandle`を使用
 
 ### content_*
 
