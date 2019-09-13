@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'nautilus/oltp-sandbox'
+            image 'project-tsurugi/oltp-sandbox'
             label 'docker'
             args '--privileged --ulimit memlock=-1:-1 --ulimit nofile=655360:655360 --ulimit nproc=655360:655360 --ulimit rtprio=99:99 --sysctl kernel.shmmax=9223372036854775807 --sysctl kernel.shmall=1152921504606846720 --sysctl kernel.shmmni=409600'
         }
