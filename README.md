@@ -2,7 +2,7 @@
 
 ## Requirements
 
-* CMake `>= 3.5`
+* CMake `>= 3.10`
 * C++ Compiler `>= C++17`
 * [FOEDUS](https://github.com/large-scale-oltp-team/foedus_code) if you want to run this API with it.
 * and see *Dockerfile* section
