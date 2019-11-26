@@ -72,27 +72,6 @@ StatusCode Storage::remove(Transaction* tx, Slice key) {
         key.data(), static_cast<::foedus::storage::masstree::KeyLength>(key.size())));
 }
 
-std::unique_ptr<Iterator> Storage::scan_prefix(Transaction* tx, Slice prefix_key) {
-    std::string end_key{prefix_key.to_string()};
-    if (!end_key.empty()) {
-        end_key[end_key.size()-1] += 1;
-    } else {
-        // If prefix length is zero, then both begin/end prefix should be zero as well.
-        // Foedus cursor accepts zero length string to specify no upper/lower bound.
-    }
-    return std::make_unique<Iterator>(masstree_, tx->context(),
-        prefix_key, false,
-        end_key, true);
-}
-
-std::unique_ptr<Iterator> Storage::scan_range(Transaction* tx,
-                                               Slice begin_key, bool begin_exclusive,
-                                               Slice end_key, bool end_exclusive) {
-    return std::make_unique<Iterator>(masstree_, tx->context(),
-        begin_key, begin_exclusive,
-        end_key, end_exclusive);
-}
-
 std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
                                               Slice begin_key, EndPointKind begin_kind,
                                               Slice end_key, EndPointKind end_kind) {

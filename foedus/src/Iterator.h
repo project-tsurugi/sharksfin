@@ -43,23 +43,6 @@ public:
      * @param storage the masstree where iterator works on
      * @param context the foedus thread where iterator runs
      * @param begin_key the content key of beginning position
-     * @param begin_exclusive whether or not beginning position is exclusive
-     * @param end_key the content key of ending position
-     * @param end_exclusive whether or not ending position is exclusive
-     */
-    inline Iterator(::foedus::storage::masstree::MasstreeStorage storage,  // NOLINT(performance-unnecessary-value-param)
-             ::foedus::thread::Thread* context,
-             Slice begin_key, bool begin_exclusive,
-             Slice end_key, bool end_exclusive
-    ) :
-    cursor_(storage, context), state_(State::INIT), begin_key_(begin_key.to_string_view()), end_key_(end_key.to_string_view()),
-    begin_exclusive_(begin_exclusive), end_exclusive_(end_exclusive) {}
-
-    /**
-     * @brief creates a new instance which iterates between the begin and end keys.
-     * @param storage the masstree where iterator works on
-     * @param context the foedus thread where iterator runs
-     * @param begin_key the content key of beginning position
      * @param begin_kind end-point kind of the beginning position
      * @param end_key the content key of ending position
      * @param end_kind end-point kind of the ending position

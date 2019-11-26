@@ -85,29 +85,6 @@ public:
     StatusCode remove(Transaction* tx, Slice key);
 
     /**
-     * @brief creates an iterator over the prefix key range.
-     * The content of prefix key must not be changed while using the returned iterator.
-     * The returned iterator is still available even if database content was changed.
-     * @param prefix_key the prefix key
-     * @return the created iterator
-     */
-    std::unique_ptr<Iterator> scan_prefix(Transaction* tx, Slice prefix_key);
-
-    /**
-     * @brief creates an iterator over the key range.
-     * The content of begin/end key pair must not be changed while using the returned iterator.
-     * The returned iterator is still available even if database content was changed.
-     * @param begin_key the content key of beginning position
-     * @param begin_exclusive whether or not beginning position is exclusive
-     * @param end_key the content key of ending position
-     * @param end_exclusive whether or not ending position is exclusive
-     * @return the created iterator
-     */
-    std::unique_ptr<Iterator> scan_range(Transaction* tx,
-                                         Slice begin_key, bool begin_exclusive,
-                                         Slice end_key, bool end_exclusive);
-
-    /**
      * @brief creates an iterator over the key range.
      * The content of begin/end key pair must not be changed while using the returned iterator.
      * The returned iterator is still available even if database content was changed.

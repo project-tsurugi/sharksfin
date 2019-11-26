@@ -250,15 +250,12 @@ StatusCode content_scan_prefix(
     StorageHandle storage,
     Slice prefix_key,
     IteratorHandle* result) {
-    auto tx = unwrap(transaction);
-    auto stg = unwrap(storage);
-    auto db = tx->owner();
-    if (!db) {
-        return StatusCode::ERR_INVALID_STATE;
-    }
-    auto iter = stg->scan_prefix(tx, prefix_key);
-    *result = wrap(iter.release());
-    return StatusCode::OK;
+    return content_scan(transaction, storage,
+                        prefix_key,
+                        EndPointKind::PREFIXED_INCLUSIVE,
+                        prefix_key,
+                        EndPointKind::PREFIXED_INCLUSIVE,
+                        result);
 }
 
 StatusCode content_scan_range(
@@ -267,15 +264,12 @@ StatusCode content_scan_range(
     Slice begin_key, bool begin_exclusive,
     Slice end_key, bool end_exclusive,
     IteratorHandle* result) {
-    auto tx = unwrap(transaction);
-    auto stg = unwrap(storage);
-    auto db = tx->owner();
-    if (!db) {
-        return StatusCode::ERR_INVALID_STATE;
-    }
-    auto iter = stg->scan_range(tx, begin_key, begin_exclusive, end_key, end_exclusive);
-    *result = wrap(iter.release());
-    return StatusCode::OK;
+    return content_scan(transaction, storage,
+            begin_key,
+            begin_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE,
+            end_key,
+            end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE,
+            result);
 }
 
 StatusCode content_scan(
