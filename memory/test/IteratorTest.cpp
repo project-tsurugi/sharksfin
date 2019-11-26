@@ -54,7 +54,11 @@ TEST_F(IteratorTest, prefix) {
     put("a/a", "B");
     put("b", "NG");
 
-    Iterator it { storage(), "a/" };
+    Iterator it {
+            storage(),
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+    };
 
     ASSERT_EQ(it.next(), true);
     EXPECT_EQ(it.key(), "a/");
@@ -68,126 +72,30 @@ TEST_F(IteratorTest, prefix) {
 }
 
 TEST_F(IteratorTest, prefix_empty) {
-    Iterator it { storage(), "a/" };
-
-    ASSERT_EQ(it.next(), false);
-}
-
-TEST_F(IteratorTest, range_in_in) {
-    put("a", "A");
-    put("b", "B");
-    put("c", "C");
-    put("d", "D");
-    put("e", "E");
-
-    Iterator it { storage(), "b", false, "d", false };
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "b");
-    EXPECT_EQ(it.payload(), "B");
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "c");
-    EXPECT_EQ(it.payload(), "C");
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "d");
-    EXPECT_EQ(it.payload(), "D");
-
-    ASSERT_EQ(it.next(), false);
-}
-
-TEST_F(IteratorTest, range_ex_in) {
-    put("a", "A");
-    put("b", "B");
-    put("c", "C");
-    put("d", "D");
-    put("e", "E");
-
-    Iterator it { storage(), "b", true, "d", false };
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "c");
-    EXPECT_EQ(it.payload(), "C");
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "d");
-    EXPECT_EQ(it.payload(), "D");
-
-    ASSERT_EQ(it.next(), false);
-}
-
-TEST_F(IteratorTest, range_in_ex) {
-    put("a", "A");
-    put("b", "B");
-    put("c", "C");
-    put("d", "D");
-    put("e", "E");
-
-    Iterator it { storage(), "b", false, "d", true };
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "b");
-    EXPECT_EQ(it.payload(), "B");
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "c");
-    EXPECT_EQ(it.payload(), "C");
-
-    ASSERT_EQ(it.next(), false);
-}
-
-TEST_F(IteratorTest, range_ex_ex) {
-    put("a", "A");
-    put("b", "B");
-    put("c", "C");
-    put("d", "D");
-    put("e", "E");
-
-    Iterator it { storage(), "b", true, "d", true };
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "c");
-    EXPECT_EQ(it.payload(), "C");
-
-    ASSERT_EQ(it.next(), false);
-}
-
-TEST_F(IteratorTest, range_to_end) {
-    put("a", "A");
-    put("b", "B");
-    put("c", "C");
-    put("d", "D");
-    put("e", "E");
-
-    Iterator it { storage(), "b", false, "", false };
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "b");
-    EXPECT_EQ(it.payload(), "B");
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "c");
-    EXPECT_EQ(it.payload(), "C");
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "d");
-    EXPECT_EQ(it.payload(), "D");
-
-    ASSERT_EQ(it.next(), true);
-    EXPECT_EQ(it.key(), "e");
-    EXPECT_EQ(it.payload(), "E");
+    Iterator it {
+            storage(),
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+    };
 
     ASSERT_EQ(it.next(), false);
 }
 
 TEST_F(IteratorTest, range_empty) {
-    Iterator it { storage(), "b", false, "d", false };
+    Iterator it {
+            storage(),
+            "b", EndPointKind::INCLUSIVE,
+            "d", EndPointKind::INCLUSIVE,
+    };
     ASSERT_EQ(it.next(), false);
 }
 
 TEST_F(IteratorTest, range_ex_empty) {
-    Iterator it { storage(), "b", true, "d", true };
+    Iterator it {
+            storage(),
+            "b", EndPointKind::EXCLUSIVE,
+            "d", EndPointKind::EXCLUSIVE,
+    };
     ASSERT_EQ(it.next(), false);
 }
 
@@ -336,10 +244,18 @@ TEST_F(IteratorTest, join) {
     putv("b/3", 6);
 
     std::vector<std::pair<int, int>> results {};
-    Iterator left { storage(), "a/" };
+    Iterator left {
+            storage(),
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+    };
     while (left.next()) {
         auto left_v = *left.payload().data<int>();
-        Iterator right { storage(), "b/" };
+        Iterator right {
+                storage(),
+                "b/", EndPointKind::PREFIXED_INCLUSIVE,
+                "b/", EndPointKind::PREFIXED_INCLUSIVE,
+        };
         while (right.next()) {
             auto right_v = *right.payload().data<int>();
             results.emplace_back(left_v, right_v);

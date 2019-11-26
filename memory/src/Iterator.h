@@ -27,7 +27,6 @@ private:
         LESS,
         LESS_OR_EQ,
         LESS_OR_PREFIXED,
-        PREFIXED,
         END,
     };
 
@@ -40,40 +39,6 @@ private:
     };
 
 public:
-    /**
-     * @brief creates a new instance which iterates over the prefix range.
-     * @param owner the owner
-     * @param prefix_key the prefix key
-     */
-    Iterator(Storage* owner, Slice prefix_key)
-        : owner_(owner)
-        , next_key_(prefix_key.to_string_view())
-        , end_key_(prefix_key)
-        , end_type_(End::PREFIXED)
-        , state_(State::INIT_INCLUSIVE)
-    {}
-
-    /**
-     * @brief creates a new instance which iterates between the begin and end keys.
-     * @param iterator the iterator
-     * @param begin_key the content key of beginning position
-     * @param begin_exclusive whether or not beginning position is exclusive
-     * @param end_key the content key of ending position
-     * @param end_exclusive whether or not ending position is exclusive
-     */
-    Iterator(
-            Storage* owner,
-            Slice begin_key, bool begin_exclusive,
-            Slice end_key, bool end_exclusive)
-        : Iterator(
-                owner,
-                begin_key,
-                (begin_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE),
-                end_key,
-                (end_key.empty() ? EndPointKind::UNBOUND
-                                 : end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE))
-    {}
-
     /**
      * @brief creates a new instance which iterates between the begin and end keys.
      * @param iterator the iterator
@@ -174,7 +139,6 @@ private:
             case End::LESS: return key < end_key;
             case End::LESS_OR_EQ: return key <= end_key;
             case End::LESS_OR_PREFIXED: return key <= end_key || key.starts_with(end_key);
-            case End::PREFIXED: return key.starts_with(end_key);
         }
         std::abort();
     }
