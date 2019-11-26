@@ -77,21 +77,15 @@ StatusCode Storage::remove(Slice key) {
     return owner_->handle(status);
 }
 
-std::unique_ptr<Iterator> Storage::scan_prefix(Slice prefix_key) {
-    leveldb::ReadOptions options;
-    std::unique_ptr<leveldb::Iterator> iter { leveldb_->NewIterator(options) };
-    return std::make_unique<Iterator>(this, std::move(iter), prefix_key);
-}
-
-std::unique_ptr<Iterator> Storage::scan_range(
-    Slice begin_key, bool begin_exclusive,
-    Slice end_key, bool end_exclusive) {
+std::unique_ptr<Iterator> Storage::scan(
+        Slice begin_key, EndPointKind begin_kind,
+        Slice end_key, EndPointKind end_kind) {
     leveldb::ReadOptions options;
     std::unique_ptr<leveldb::Iterator> iter { leveldb_->NewIterator(options) };
     return std::make_unique<Iterator>(
-        this, std::move(iter),
-        begin_key, begin_exclusive,
-        end_key, end_exclusive);
+            this, std::move(iter),
+            begin_key, begin_kind,
+            end_key, end_kind);
 }
 
 void Storage::purge() {

@@ -78,9 +78,9 @@ public:
      * @brief creates a new instance which iterates between the begin and end keys.
      * @param iterator the iterator
      * @param begin_key the content key of beginning position
-     * @param begin_exclusive whether or not beginning position is exclusive
+     * @param begin_kind end-point kind of the beginning position
      * @param end_key the content key of ending position
-     * @param end_exclusive whether or not ending position is exclusive
+     * @param end_kind end-point kind of the ending position
      */
     Iterator(
             Storage* owner,

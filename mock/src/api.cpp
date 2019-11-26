@@ -343,7 +343,9 @@ StatusCode content_scan_prefix(
     if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto iterator = st->scan_prefix(prefix_key);
+    auto iterator = st->scan(
+            prefix_key, EndPointKind::PREFIXED_INCLUSIVE,
+            prefix_key, EndPointKind::PREFIXED_INCLUSIVE);
     *result = wrap(iterator.release());
     return StatusCode::OK;
 }
@@ -359,9 +361,30 @@ StatusCode content_scan_range(
     if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto iterator = st->scan_range(
-        begin_key, begin_exclusive,
-        end_key, end_exclusive);
+    auto iterator = st->scan(
+            begin_key,
+            begin_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE,
+            end_key,
+            end_key.empty() ? EndPointKind::UNBOUND
+                            : end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE);
+    *result = wrap(iterator.release());
+    return StatusCode::OK;
+}
+
+StatusCode content_scan(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice begin_key, EndPointKind begin_kind,
+        Slice end_key, EndPointKind end_kind,
+        IteratorHandle* result) {
+    auto tx = unwrap(transaction);
+    auto st = unwrap(storage);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto iterator = st->scan(
+            begin_key, begin_kind,
+            end_key, end_kind);
     *result = wrap(iterator.release());
     return StatusCode::OK;
 }

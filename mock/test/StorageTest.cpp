@@ -80,7 +80,9 @@ TEST_F(StorageTest, prefix_conflict) {
     auto s0 = db.create_storage("a");
     auto s1 = db.create_storage("b");
     s1->put("a", "B");
-    auto it = s0->scan_prefix({});
+    auto it = s0->scan(
+            "", EndPointKind::PREFIXED_INCLUSIVE,
+            "", EndPointKind::PREFIXED_INCLUSIVE);
 
     EXPECT_EQ(it->next(), StatusCode::NOT_FOUND);
 }
@@ -96,7 +98,9 @@ TEST_F(StorageTest, scan_prefix) {
     ASSERT_EQ(st->put("a/b", "a-b"), StatusCode::OK);
     ASSERT_EQ(st->put("b", "b"), StatusCode::OK);
 
-    auto iter = st->scan_prefix("a/");
+    auto iter = st->scan(
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+            "a/", EndPointKind::PREFIXED_INCLUSIVE);
 
     ASSERT_EQ(iter->next(), StatusCode::OK);
     EXPECT_EQ(iter->key().to_string_view(), "a/");
@@ -127,7 +131,9 @@ TEST_F(StorageTest, scan_range) {
     ASSERT_EQ(st->put("d", "D"), StatusCode::OK);
     ASSERT_EQ(st->put("e", "E"), StatusCode::OK);
 
-    auto iter = st->scan_range("b", false, "d", false);
+    auto iter = st->scan(
+            "b", EndPointKind::INCLUSIVE,
+            "d", EndPointKind::INCLUSIVE);
 
     ASSERT_EQ(iter->next(), StatusCode::OK);
     EXPECT_EQ(iter->key().to_string_view(), "b");
@@ -154,7 +160,9 @@ TEST_F(StorageTest, scan_range_exclusive) {
     ASSERT_EQ(st->put("d", "D"), StatusCode::OK);
     ASSERT_EQ(st->put("e", "E"), StatusCode::OK);
 
-    auto iter = st->scan_range("b", true, "d", true);
+    auto iter = st->scan(
+            "b", EndPointKind::EXCLUSIVE,
+            "d", EndPointKind::EXCLUSIVE);
 
     ASSERT_EQ(iter->next(), StatusCode::OK);
     EXPECT_EQ(iter->key().to_string_view(), "c");

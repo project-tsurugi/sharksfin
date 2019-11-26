@@ -69,7 +69,11 @@ TEST_F(IteratorTest, prefix) {
     put("a/a", "B");
     put("b", "NG");
 
-    Iterator it { storage(), iter(), "a/" };
+    Iterator it {
+            storage(), iter(),
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+    };
 
     ASSERT_EQ(it.next(), StatusCode::OK);
     EXPECT_EQ(it.key(), "a/");
@@ -83,99 +87,48 @@ TEST_F(IteratorTest, prefix) {
 }
 
 TEST_F(IteratorTest, prefix_empty) {
-    Iterator it { storage(), iter(), "a/" };
+    Iterator it {
+            storage(), iter(),
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+            "a/", EndPointKind::PREFIXED_INCLUSIVE,
+    };
 
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(IteratorTest, range_in_in) {
+TEST_F(IteratorTest, range_empty) {
+    Iterator it {
+            storage(), iter(),
+            "b", EndPointKind::INCLUSIVE,
+            "d", EndPointKind::INCLUSIVE,
+    };
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, range_ex_empty) {
+    Iterator it {
+            storage(), iter(),
+            "b", EndPointKind::EXCLUSIVE,
+            "d", EndPointKind::EXCLUSIVE,
+    };
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, endpoint_unbound) {
     put("a", "A");
     put("b", "B");
     put("c", "C");
     put("d", "D");
     put("e", "E");
 
-    Iterator it { storage(), iter(), "b", false, "d", false };
+    using Kind = EndPointKind;
+    Iterator it { storage(), iter(),
+                  "b", Kind::UNBOUND,
+                  "d", Kind::UNBOUND };
 
     ASSERT_EQ(it.next(), StatusCode::OK);
-    EXPECT_EQ(it.key(), "b");
-    EXPECT_EQ(it.value(), "B");
-
-    ASSERT_EQ(it.next(), StatusCode::OK);
-    EXPECT_EQ(it.key(), "c");
-    EXPECT_EQ(it.value(), "C");
-
-    ASSERT_EQ(it.next(), StatusCode::OK);
-    EXPECT_EQ(it.key(), "d");
-    EXPECT_EQ(it.value(), "D");
-
-    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
-}
-
-TEST_F(IteratorTest, range_ex_in) {
-    put("a", "A");
-    put("b", "B");
-    put("c", "C");
-    put("d", "D");
-    put("e", "E");
-
-    Iterator it { storage(), iter(), "b", true, "d", false };
-
-    ASSERT_EQ(it.next(), StatusCode::OK);
-    EXPECT_EQ(it.key(), "c");
-    EXPECT_EQ(it.value(), "C");
-
-    ASSERT_EQ(it.next(), StatusCode::OK);
-    EXPECT_EQ(it.key(), "d");
-    EXPECT_EQ(it.value(), "D");
-
-    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
-}
-
-TEST_F(IteratorTest, range_in_ex) {
-    put("a", "A");
-    put("b", "B");
-    put("c", "C");
-    put("d", "D");
-    put("e", "E");
-
-    Iterator it { storage(), iter(), "b", false, "d", true };
-
-    ASSERT_EQ(it.next(), StatusCode::OK);
-    EXPECT_EQ(it.key(), "b");
-    EXPECT_EQ(it.value(), "B");
-
-    ASSERT_EQ(it.next(), StatusCode::OK);
-    EXPECT_EQ(it.key(), "c");
-    EXPECT_EQ(it.value(), "C");
-
-    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
-}
-
-TEST_F(IteratorTest, range_ex_ex) {
-    put("a", "A");
-    put("b", "B");
-    put("c", "C");
-    put("d", "D");
-    put("e", "E");
-
-    Iterator it { storage(), iter(), "b", true, "d", true };
-
-    ASSERT_EQ(it.next(), StatusCode::OK);
-    EXPECT_EQ(it.key(), "c");
-    EXPECT_EQ(it.value(), "C");
-
-    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
-}
-
-TEST_F(IteratorTest, range_to_end) {
-    put("a", "A");
-    put("b", "B");
-    put("c", "C");
-    put("d", "D");
-    put("e", "E");
-
-    Iterator it { storage(), iter(), "b", false, "", false };
+    EXPECT_EQ(it.key(), "a");
+    EXPECT_EQ(it.value(), "A");
 
     ASSERT_EQ(it.next(), StatusCode::OK);
     EXPECT_EQ(it.key(), "b");
@@ -196,13 +149,103 @@ TEST_F(IteratorTest, range_to_end) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(IteratorTest, range_empty) {
-    Iterator it { storage(), iter(), "b", false, "d", false };
+TEST_F(IteratorTest, endpoint_inclusive) {
+    put("a", "NG");
+    put("b", "B");
+    put("c", "C");
+    put("d", "D");
+    put("d1", "NG");
+    put("e", "NG");
+
+    using Kind = EndPointKind;
+    Iterator it { storage(), iter(),
+                  "b", Kind::INCLUSIVE,
+                  "d", Kind::INCLUSIVE };
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "b");
+    EXPECT_EQ(it.value(), "B");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.value(), "C");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "d");
+    EXPECT_EQ(it.value(), "D");
+
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(IteratorTest, range_ex_empty) {
-    Iterator it { storage(), iter(), "b", true, "d", true };
+TEST_F(IteratorTest, endpoint_exclusive) {
+    put("a", "NG");
+    put("b", "NG");
+    put("c", "C");
+    put("d", "NG");
+    put("e", "NG");
+
+    using Kind = EndPointKind;
+    Iterator it { storage(), iter(),
+                  "b", Kind::EXCLUSIVE,
+                  "d", Kind::EXCLUSIVE };
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.value(), "C");
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, endpoint_prefixed_inclusive) {
+    put("a", "NG");
+    put("b", "B");
+    put("c", "C");
+    put("d", "D");
+    put("d1", "D1");
+    put("e", "NG");
+
+    using Kind = EndPointKind;
+    Iterator it { storage(), iter(),
+                  "b", Kind::PREFIXED_INCLUSIVE,
+                  "d", Kind::PREFIXED_INCLUSIVE };
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "b");
+    EXPECT_EQ(it.value(), "B");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.value(), "C");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "d");
+    EXPECT_EQ(it.value(), "D");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "d1");
+    EXPECT_EQ(it.value(), "D1");
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(IteratorTest, endpoint_prefixed_exclusive) {
+    put("a", "NG");
+    put("b", "NG");
+    put("b1", "NG");
+    put("c", "C");
+    put("d", "NG");
+    put("d1", "NG");
+    put("e", "NG");
+
+    using Kind = EndPointKind;
+    Iterator it { storage(), iter(),
+                  "b", Kind::PREFIXED_EXCLUSIVE,
+                  "d", Kind::PREFIXED_EXCLUSIVE };
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.value(), "C");
+
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
@@ -216,10 +259,18 @@ TEST_F(IteratorTest, join) {
     putv("b/3", 6);
 
     std::vector<std::tuple<int, int>> results {};
-    Iterator left { storage(), iter(), "a/" };
+    Iterator left {
+        storage(), iter(),
+        "a/", EndPointKind::PREFIXED_INCLUSIVE,
+        "a/", EndPointKind::PREFIXED_INCLUSIVE,
+    };
     while (left.next() == StatusCode::OK) {
         auto left_v = *left.value().data<int>();
-        Iterator right { storage(), iter(), "b/" };
+        Iterator right {
+                storage(), iter(),
+                "b/", EndPointKind::PREFIXED_INCLUSIVE,
+                "b/", EndPointKind::PREFIXED_INCLUSIVE,
+        };
         while (right.next() == StatusCode::OK) {
             auto right_v = *right.value().data<int>();
             results.emplace_back(left_v, right_v);
