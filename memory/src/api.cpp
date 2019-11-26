@@ -295,7 +295,10 @@ StatusCode content_scan_prefix(
     if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto iterator = std::make_unique<memory::Iterator>(st, prefix_key);
+    auto iterator = std::make_unique<memory::Iterator>(
+            st,
+            prefix_key, EndPointKind::PREFIXED_INCLUSIVE,
+            prefix_key, EndPointKind::PREFIXED_INCLUSIVE);
     *result = wrap(iterator.release());
     return StatusCode::OK;
 }
@@ -313,8 +316,30 @@ StatusCode content_scan_range(
     }
     auto iterator = std::make_unique<memory::Iterator>(
         st,
-        begin_key, begin_exclusive,
-        end_key, end_exclusive);
+        begin_key,
+        begin_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE,
+        end_key,
+        end_key.empty() ? EndPointKind::UNBOUND
+                        : end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE);
+    *result = wrap(iterator.release());
+    return StatusCode::OK;
+}
+
+StatusCode content_scan(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice begin_key, EndPointKind begin_kind,
+        Slice end_key, EndPointKind end_kind,
+        IteratorHandle* result) {
+    auto tx = unwrap(transaction);
+    auto st = unwrap(storage);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto iterator = std::make_unique<memory::Iterator>(
+            st,
+            begin_key, begin_kind,
+            end_key, end_kind);
     *result = wrap(iterator.release());
     return StatusCode::OK;
 }

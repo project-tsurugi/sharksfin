@@ -120,6 +120,15 @@ TEST_F(StorageTest, next) {
         auto s = st->next("b/", true);
         ASSERT_EQ(s.second, nullptr);
     }
+    {
+        auto s = st->next_neighbor("a");
+        ASSERT_EQ(s.first, "b/");
+        ASSERT_EQ(s.second->to_slice(), "4");
+    }
+    {
+        auto s = st->next_neighbor("b");
+        ASSERT_EQ(s.second, nullptr);
+    }
 }
 
 }  // namespace sharksfin::memory

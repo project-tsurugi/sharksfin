@@ -90,27 +90,18 @@ public:
     StatusCode remove(Slice key);
 
     /**
-     * @brief creates an iterator over the prefix key range.
-     * The content of prefix key must not be changed while using the returned iterator.
-     * The returned iterator is still available even if database content was changed.
-     * @param prefix_key the prefix key
-     * @return the created iterator
-     */
-    std::unique_ptr<Iterator> scan_prefix(Slice prefix_key);
-
-    /**
      * @brief creates an iterator over the key range.
      * The content of begin/end key pair must not be changed while using the returned iterator.
      * The returned iterator is still available even if database content was changed.
      * @param begin_key the content key of beginning position
-     * @param begin_exclusive whether or not beginning position is exclusive
+     * @param begin_kind end-point kind of the beginning position
      * @param end_key the content key of ending position
-     * @param end_exclusive whether or not ending position is exclusive
+     * @param end_kind end-point kind of the ending position
      * @return the created iterator
      */
-    std::unique_ptr<Iterator> scan_range(
-        Slice begin_key, bool begin_exclusive,
-        Slice end_key, bool end_exclusive);
+    std::unique_ptr<Iterator> scan(
+            Slice begin_key, EndPointKind begin_kind,
+            Slice end_key, EndPointKind end_kind);
 
     /**
      * @brief returns whether or not this storage is alive.

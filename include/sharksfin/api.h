@@ -408,6 +408,59 @@ extern "C" StatusCode content_scan_range(
         IteratorHandle* result);
 
 /**
+ * @brief an end-point kind of scan intervals.
+ */
+enum class EndPointKind : std::uint32_t {
+
+    /**
+     * @brief end-point is unspecified (unbound interval).
+     */
+    UNBOUND = 0U,
+
+    /**
+     * @brief includes end-point key.
+     */
+    INCLUSIVE,
+
+    /**
+     * @brief excludes end-point key.
+     */
+    EXCLUSIVE,
+
+    /**
+     * @brief includes entries which contain the end-point key as prefix.
+     */
+    PREFIXED_INCLUSIVE,
+
+    /**
+     * @brief excludes entries which contain the end-point key as prefix.
+     */
+    PREFIXED_EXCLUSIVE,
+};
+
+/**
+ * @brief obtains iterator between begin and end keys range.
+ * The content of begin/end keys must not be changed while using the returned iterator.
+ * The created handle must be disposed by iterator_dispose().
+ * The returned iterator is still available even if database content was changed.
+ * @param transaction the current transaction handle
+ * @param storage the target storage
+ * @param begin_key the content key of beginning position
+ * @param begin_kind end-point kind of the beginning position
+ * @param end_key the content key of ending position
+ * @param end_kind end-point kind of the ending position
+ * @param result [OUT] an iterator handle over the key range
+ * @return Status::OK if the iterator was successfully prepared
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode content_scan(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice begin_key, EndPointKind begin_kind,
+        Slice end_key, EndPointKind end_kind,
+        IteratorHandle* result);
+
+/**
  * @brief advances the given iterator.
  * This will change the iterator state.
  * Iterator position will become valid only if this operation returned StatusCode::OK.
