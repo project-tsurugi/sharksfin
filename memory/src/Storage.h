@@ -133,7 +133,7 @@ public:
      * @return a pair of search key and null pointer if there is no such the entry
      */
     std::pair<Slice, Buffer*> next_neighbor(Slice key) {
-        static Buffer buffer { allocator_ };
+        thread_local Buffer buffer { allocator_ };
         buffer = key;
         for (char *iter = (buffer.data() + buffer.size() - 1), *end = buffer.data(); iter >= end; --iter) { // NOLINT
             if (++*iter != '\0') {
