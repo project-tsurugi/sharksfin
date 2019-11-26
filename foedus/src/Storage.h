@@ -108,6 +108,20 @@ public:
                                          Slice end_key, bool end_exclusive);
 
     /**
+     * @brief creates an iterator over the key range.
+     * The content of begin/end key pair must not be changed while using the returned iterator.
+     * The returned iterator is still available even if database content was changed.
+     * @param begin_key the content key of beginning position
+     * @param begin_kind end-point kind of the beginning position
+     * @param end_key the content key of ending position
+     * @param end_kind end-point kind of the ending position
+     * @return the created iterator
+     */
+    std::unique_ptr<Iterator> scan(Transaction* tx,
+                                   Slice begin_key, EndPointKind begin_kind,
+                                   Slice end_key, EndPointKind end_kind);
+
+    /**
      * @brief purges this storage from the related database.
      */
     void purge();

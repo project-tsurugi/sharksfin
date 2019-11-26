@@ -278,6 +278,23 @@ StatusCode content_scan_range(
     return StatusCode::OK;
 }
 
+StatusCode content_scan(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice begin_key, EndPointKind begin_kind,
+        Slice end_key, EndPointKind end_kind,
+        IteratorHandle* result) {
+    auto tx = unwrap(transaction);
+    auto stg = unwrap(storage);
+    auto db = tx->owner();
+    if (!db) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto iter = stg->scan(tx, begin_key, begin_kind, end_key, end_kind);
+    *result = wrap(iter.release());
+    return StatusCode::OK;
+}
+
 StatusCode iterator_next(
         IteratorHandle handle) {
     auto iter = unwrap(handle);

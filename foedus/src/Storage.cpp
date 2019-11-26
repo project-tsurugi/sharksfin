@@ -93,6 +93,14 @@ std::unique_ptr<Iterator> Storage::scan_range(Transaction* tx,
         end_key, end_exclusive);
 }
 
+std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
+                                              Slice begin_key, EndPointKind begin_kind,
+                                              Slice end_key, EndPointKind end_kind) {
+    return std::make_unique<Iterator>(masstree_, tx->context(),
+                                      begin_key, begin_kind,
+                                      end_key, end_kind);
+}
+
 void Storage::purge() {
     if (owner_) {
         owner_->delete_storage(*this);
