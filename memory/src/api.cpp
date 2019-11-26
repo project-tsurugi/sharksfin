@@ -319,6 +319,25 @@ StatusCode content_scan_range(
     return StatusCode::OK;
 }
 
+StatusCode content_scan(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice begin_key, EndPointKind begin_kind,
+        Slice end_key, EndPointKind end_kind,
+        IteratorHandle* result) {
+    auto tx = unwrap(transaction);
+    auto st = unwrap(storage);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto iterator = std::make_unique<memory::Iterator>(
+            st,
+            begin_key, begin_kind,
+            end_key, end_kind);
+    *result = wrap(iterator.release());
+    return StatusCode::OK;
+}
+
 StatusCode iterator_next(IteratorHandle handle) {
     auto iterator = unwrap(handle);
     if (iterator->next()) {

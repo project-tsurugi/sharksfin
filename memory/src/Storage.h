@@ -126,6 +126,27 @@ public:
         return { key, {} };
     }
 
+    /**
+     * @brief finds for the next sibling or its smallest child entry of the given key.
+     * @param key the search key
+     * @return the next neighbor entry of key slice and payload buffer pair
+     * @return a pair of search key and null pointer if there is no such the entry
+     */
+    std::pair<Slice, Buffer*> next_neighbor(Slice key) {
+        static Buffer buffer { allocator_ };
+        buffer = key;
+        for (char *iter = (buffer.data() + buffer.size() - 1), *end = buffer.data(); iter >= end; --iter) { // NOLINT
+            if (++*iter != '\0') {
+                if (auto it = entries_.lower_bound(buffer.to_slice()); it != entries_.end()) {
+                    return { it->first.to_slice(), &it->second };
+                }
+                break;
+            }
+            // carry up
+        }
+        return { key, {} };
+    }
+
 private:
     Database* owner_;
     Buffer key_;

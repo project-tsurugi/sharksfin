@@ -164,6 +164,8 @@
     * 指定のキーを接頭辞に持つ範囲を反復するイテレータハンドルを返す
   * `content_scan_range`
     * 指定のキー範囲を反復するイテレータハンドルを返す
+  * `content_scan`
+    * 指定のキー範囲を反復するイテレータハンドルを返す
 * 備考
   * ここでの引数は `TransactionHandle`, `StorageHandle` のペア
     * スレッド安全性は `TransactionHandle` が確保する想定
