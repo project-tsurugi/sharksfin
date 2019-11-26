@@ -16,7 +16,7 @@
 #ifndef SHARKSFIN_MEMORY_ITERATOR_H_
 #define SHARKSFIN_MEMORY_ITERATOR_H_
 
-#include <sharksfin/api.h>
+#include "sharksfin/api.h"
 #include "Storage.h"
 
 namespace sharksfin::memory {

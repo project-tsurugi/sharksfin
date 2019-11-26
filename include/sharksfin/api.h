@@ -428,12 +428,12 @@ enum class EndPointKind : std::uint32_t {
     EXCLUSIVE,
 
     /**
-     * @brief includes entries which contain the end-point key their key prefix.
+     * @brief includes entries which contain the end-point key as prefix.
      */
     PREFIXED_INCLUSIVE,
 
     /**
-     * @brief excludes entries which contain the end-point key their key prefix.
+     * @brief excludes entries which contain the end-point key as prefix.
      */
     PREFIXED_EXCLUSIVE,
 };
