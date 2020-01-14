@@ -53,7 +53,7 @@ pipeline {
                     ./bootstrap.sh
                     mkdir build
                     cd build
-                    cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON -DENABLE_SANITIZER=ON ..
+                    cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON -DENABLE_SANITIZER=ON -DCMAKE_INSTALL_PREFIX=${WORKSPACE}/.local ..
                     make clean
                     make all install -j${BUILD_PARALLEL_NUM}
                 '''
