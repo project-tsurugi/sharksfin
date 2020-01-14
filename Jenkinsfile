@@ -50,8 +50,9 @@ pipeline {
             steps {
                 sh '''
                     cd third_party/kvs_charkey
+                    git log -n 1 --format=%H
                     ./bootstrap.sh
-                    mkdir build
+                    mkdir -p build
                     cd build
                     cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON -DENABLE_SANITIZER=ON -DCMAKE_INSTALL_PREFIX=${WORKSPACE}/.local ..
                     make clean
@@ -63,7 +64,7 @@ pipeline {
         stage ('Build') {
             steps {
                 sh '''
-                    mkdir build
+                    mkdir -p build
                     cd build
                     cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_FOEDUS_BRIDGE=ON -DENABLE_COVERAGE=ON -DCMAKE_PREFIX_PATH=${WORKSPACE}/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
                     make all -j${BUILD_PARALLEL_NUM}
