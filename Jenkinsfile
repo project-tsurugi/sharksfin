@@ -27,7 +27,7 @@ pipeline {
                 checkout scm
                 sh '''
                     git clean -dfx
-                    git submodule sync
+                    git submodule sync --recursive
                     git submodule update --init --recursive
                 '''
             }
@@ -46,6 +46,20 @@ pipeline {
                 '''
             }
         }
+        stage ('Install kvs_charkey') {
+            steps {
+                sh '''
+                    cd third_party/kvs_charkey
+                    ./bootstrap.sh
+                    mkdir build
+                    cd build
+                    cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON -DENABLE_SANITIZER=ON ..
+                    make clean
+                    make all install -j${BUILD_PARALLEL_NUM}
+                '''
+            }
+        }
+
         stage ('Build') {
             steps {
                 sh '''
