@@ -32,6 +32,10 @@ StatusCode Database::open(DatabaseOptions const &options, std::unique_ptr<Databa
         return StatusCode::ERR_UNSUPPORTED;
     }
     *result = std::make_unique<Database>();
+
+    // Not opened with restore option. Ensure db to be clean in case previous test has left over.
+    // Remove this when kvs_charkey ensures clean at db open.
+    (*result)->clean();
     return StatusCode::OK;
 }
 
@@ -42,12 +46,9 @@ StatusCode Database::shutdown() {
         std::cout << "transaction process time: " << transaction_process_time().load().count() << std::endl;
         std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
-    // cleaning up volatile storage. This is for testing purpose.
-    // When kvs supports durability, remove following clean() and let testcase clean up the durable store (e.g. files)
-    auto rc = clean();
     ::kvs::fin();
     ::kvs::forced_gc_all_records();
-    return rc;
+    return StatusCode::OK;
 }
 
 // prefix for storage name entries
