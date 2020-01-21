@@ -86,7 +86,7 @@ public:
                 end_key_ = next_neighbor_(end_key_).to_string_view();
                 if (end_key_.empty()) {
                     // should not happen because end_key_ contains storage prefix
-                    std::abort();
+                    throw std::domain_error("end_kind unbound");
                 }
                 break;
             }
@@ -116,7 +116,7 @@ public:
                     begin_key_.data(), begin_key_.size(), begin_exclusive,
                     end_key_.data(), end_key_.size(), end_exclusive, records_);
                 res != ::kvs::Status::OK) {
-            std::abort();
+            throw std::domain_error("invalid rc from scan_key");
         }
     }
     /**
