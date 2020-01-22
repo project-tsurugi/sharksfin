@@ -200,11 +200,8 @@ StatusCode transaction_exec(
                 tx->abort();
                 return StatusCode::ERR_USER_ERROR;
             case TransactionOperation::RETRY:
-                // user instructed to retry
-                if (database->enable_tracking()) {
-                    ++database->retry_count();
-                }
-                continue;
+                // simply return retryable error so that caller can retry
+                return StatusCode::ERR_ABORTED_RETRYABLE;
         }
     } while (true); // currently retry infinitely
 }
