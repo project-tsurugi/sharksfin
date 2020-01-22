@@ -16,13 +16,13 @@
 #include "Database.h"
 
 #include <memory>
-#include <thread>
 
 #include "kvs/interface.h"
 #include "sharksfin/api.h"
 #include "Iterator.h"
 #include "Transaction.h"
 #include "Storage.h"
+#include "Error.h"
 
 namespace sharksfin::kvs {
 
@@ -75,7 +75,7 @@ StatusCode Database::clean() {
 
 static void ensure_end_of_transaction(Transaction& tx, bool to_abort = false) {
     if (auto rc = to_abort ? tx.abort() : tx.commit(false); rc != StatusCode::OK) {
-        std::abort();
+        ABORT();
     }
 }
 
@@ -96,7 +96,7 @@ std::unique_ptr<Storage> Database::create_storage(Slice key, Transaction& tx) {
     qualify_meta(storage->prefix(), k);
     auto rc = resolve(::kvs::upsert(tx.native_handle(), DefaultStorage, k.data(), k.size(), v.data(), v.size()));
     if (rc != StatusCode::OK) {
-        std::abort();
+        ABORT();
     }
     ensure_end_of_transaction(tx);
     return get_storage(key);
@@ -133,13 +133,14 @@ std::unique_ptr<Storage> Database::get_storage(Slice key, Transaction* tx) {
     Holder holder{tx, this};
     auto res = ::kvs::search_key(holder.tx()->native_handle(), DefaultStorage, k.data(), k.size(), &tuple);
     switch(res) {
+        // TODO retryable error
         case ::kvs::Status::OK:
         case ::kvs::Status::WARN_READ_FROM_OWN_OPERATION:
             break;
         case ::kvs::Status::ERR_NOT_FOUND:
             return {};
         default:
-            std::abort();
+            ABORT();
     }
     assert(tuple != nullptr);
     return storage;
@@ -155,7 +156,7 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
         return StatusCode::NOT_FOUND;
     }
     if (st != ::kvs::Status::OK) {
-        std::abort();
+        ABORT();
     }
     std::string prefix{ storage.prefix().data<char>(), storage.prefix().size() };
     std::string end{prefix};
@@ -176,12 +177,12 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
             // TODO check the cause of this
             return rc;
         }
-        std::abort();
+        ABORT();
     }
     for(auto t : records) {
         auto rc2 = resolve(::kvs::delete_record(tx.native_handle(), DefaultStorage, t->key.get(), t->len_key));
         if (rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
-            std::abort();
+            ABORT();
         }
     }
     return StatusCode::OK;
@@ -189,7 +190,7 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
 
 StatusCode Database::delete_storage(Storage &storage, Transaction& tx) {
     if (auto rc = erase_storage_(storage, tx); rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
-        std::abort();
+        ABORT();
     }
     ensure_end_of_transaction(tx);
     return StatusCode::OK;

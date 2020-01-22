@@ -36,14 +36,17 @@ public:
         BODY,
         SAW_EOF,
         END,
+        RETRYABLE_ERROR,
     };
 
     /**
      * @brief creates a new instance which iterates between the begin and end keys.
      * @param begin_key the content key of beginning position
-     * @param begin_exclusive whether or not beginning position is exclusive
+     * @param begin_kind begin end point kind
+     * If begin_key is not empty and begin kind UNBOUND, the begin_kind is reduced to INCLUSIVE
      * @param end_key the content key of ending position
-     * @param end_exclusive whether or not ending position is exclusive
+     * @param end_kind whether or not ending position is exclusive
+     * If end_key is not empty and end kind UNBOUND, the end_kind is reduced to PREFIXED_INCLUSIVE
      */
     inline Iterator( // NOLINT(performance-unnecessary-value-param)
             Storage* owner,
@@ -55,8 +58,8 @@ public:
         bool end_exclusive = false;
         switch (begin_kind) {
             case EndPointKind::UNBOUND:
-                // begin_key_ should contain storage prefix
-                // when kvs_charkey supports storage, make sure begin key is empty by begin_key_.clear()
+                // begin_key_ can contain storage prefix
+                // if begin_key_ is not empty, handle this case same as EndPointKind::INCLUSIVE
                 break;
             case EndPointKind::PREFIXED_INCLUSIVE:
             case EndPointKind::INCLUSIVE:
@@ -78,18 +81,11 @@ public:
                 break;
         }
         switch (end_kind) {
-            case EndPointKind::UNBOUND: {
-                // end_key_ should contain storage prefix
-                // when kvs_charkey supports storage, make sure end key is empty by end_key_.clear()
-                // until then, let's find next neighbor to simulate unbound upper limit
-                end_exclusive = true;  // strictly less than next neighbor
-                end_key_ = next_neighbor_(end_key_).to_string_view();
-                if (end_key_.empty()) {
-                    // should not happen because end_key_ contains storage prefix
-                    throw std::domain_error("end_kind unbound");
-                }
-                break;
-            }
+            case EndPointKind::UNBOUND:
+                // end_key_ can contain storage prefix
+                // if end_key_ is not empty, handle this case same as EndPointKind::PREFIXED_INCLUSIVE
+
+                // fall-through
             case EndPointKind::PREFIXED_INCLUSIVE: {
                 end_exclusive = true;  // strictly less than next neighbor
                 if (end_key_.empty()) {
@@ -115,18 +111,24 @@ public:
         if (auto res = ::kvs::scan_key(tx->native_handle(), DefaultStorage,
                     begin_key_.data(), begin_key_.size(), begin_exclusive,
                     end_key_.data(), end_key_.size(), end_exclusive, records_);
-                res != ::kvs::Status::OK) {
-            throw std::domain_error("invalid rc from scan_key");
+                res == ::kvs::Status::ERR_ILLEGAL_STATE) {
+            state_ = State::RETRYABLE_ERROR;
+        } else if (res != ::kvs::Status::OK) {
+            ABORT_MSG("invalid rc from scan_key");
         }
     }
     /**
      * @brief advances this iterator position.
-     * @return Status::OK if next entry exists
-     * @return Status::NOT_FOUND if next entry does not exist
+     * @return StatusCode::OK if next entry exists
+     * @return StatusCode::NOT_FOUND if next entry does not exist
+     * @return StatusCode::ERR_ABORTED_RETRYABLE when kvs scans uncommitted record
      * @return otherwise if error occurred
      */
     inline StatusCode next() {
         StatusCode ret{StatusCode::OK};
+        if (state_ == State::RETRYABLE_ERROR) {
+            return StatusCode::ERR_ABORTED_RETRYABLE;
+        }
         if (state_ == State::END) {
             return StatusCode::NOT_FOUND;
         }
@@ -151,7 +153,7 @@ public:
      * @return false otherwise
      */
     inline bool is_valid() const {
-        return test() != State::SAW_EOF;
+        return state_ != State::RETRYABLE_ERROR && test() != State::SAW_EOF;
     }
 
     /**

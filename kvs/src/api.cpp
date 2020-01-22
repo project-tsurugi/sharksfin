@@ -21,6 +21,7 @@
 #include "Transaction.h"
 #include "Iterator.h"
 #include "Storage.h"
+#include "Error.h"
 
 namespace sharksfin {
 
@@ -188,7 +189,7 @@ StatusCode transaction_exec(
                         LOG(INFO) << "commit failed. retry transaction.";
                         continue;
                     }
-                    std::abort();
+                    ABORT();
                 }
                 return rc;
             }
@@ -253,8 +254,7 @@ StatusCode transaction_abort(
     auto tx = unwrap(handle);
     auto rc = tx->abort();
     if (rc != StatusCode::OK) {
-        // assuming abort is always successful
-        std::abort();
+        ABORT_MSG("assuming abort is always successful");
     }
     return StatusCode::OK;
 }

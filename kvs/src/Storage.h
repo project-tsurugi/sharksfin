@@ -68,6 +68,7 @@ public:
      * @param key the entry key
      * @param buffer the destination buffer
      * @return the operation status
+     * @return StatusCode::ERR_ABORTED_RETRYABLE when kvs reads uncommitted record
      */
     StatusCode get(Transaction* tx, Slice key, std::string& buffer);
 

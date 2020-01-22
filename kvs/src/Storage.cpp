@@ -42,15 +42,12 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
     assert(tx->active());
     Slice k = qualify(key);
     ::kvs::Tuple* tuple{};
-    if (auto rc = resolve(::kvs::search_key(tx->native_handle(), DefaultStorage,
-                k.data<std::string::value_type>(), k.size(), &tuple));
-            rc == StatusCode::OK) {
-        if (tuple != nullptr) {
-            buffer.assign(tuple->val.get(), tuple->len_val);
-            return StatusCode::OK;
-        }
+    StatusCode rc = resolve(::kvs::search_key(tx->native_handle(), DefaultStorage,
+            k.data<std::string::value_type>(), k.size(), &tuple));
+    if (rc == StatusCode::OK && tuple != nullptr) {
+        buffer.assign(tuple->val.get(), tuple->len_val);
     }
-    return StatusCode::NOT_FOUND;
+    return rc;
 }
 
 StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {
@@ -67,7 +64,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
                     value.size()
             ));
             if (rc != StatusCode::OK && rc != StatusCode::ALREADY_EXISTS) {
-                std::abort();
+                ABORT();
             }
             break;
         }
@@ -80,7 +77,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
                     value.size()
             ));
             if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
-                std::abort();
+                ABORT();
             }
             break;
         }
@@ -93,7 +90,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
                     value.size()
             ));
             if (rc != StatusCode::OK) {
-                std::abort();
+                ABORT();
             }
             break;
     }
@@ -109,7 +106,7 @@ StatusCode Storage::remove(Transaction* tx, Slice key) {
             k.size()
     ));
     if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
-        std::abort();
+        ABORT();
     }
     return rc;
 }

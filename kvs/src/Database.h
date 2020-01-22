@@ -25,6 +25,7 @@
 #include "kvs/interface.h"
 #include "sharksfin/api.h"
 #include "sharksfin/Slice.h"
+#include "Error.h"
 
 namespace sharksfin::kvs {
 
@@ -151,8 +152,7 @@ public:
      */
     void waits_for_commit(bool wait) {
         if (!wait) {
-            // async commit not supported yet
-            std::abort();
+            ABORT_MSG("async commit not supported yet");
         }
         waits_for_commit_ = wait;
     }

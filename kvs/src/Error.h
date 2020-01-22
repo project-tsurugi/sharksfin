@@ -36,7 +36,7 @@ inline StatusCode resolve(::kvs::Status const& result) {
         case ::kvs::Status::ERR_ALREADY_EXISTS:
             return StatusCode::ALREADY_EXISTS;
         case ::kvs::Status::ERR_ILLEGAL_STATE:
-            return StatusCode::ERR_INVALID_STATE;
+            return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::kvs::Status::ERR_INVALID_ARGS:
             return StatusCode::ERR_INVALID_ARGUMENT;
         case ::kvs::Status::ERR_VALIDATION:
@@ -57,6 +57,21 @@ inline StatusCode resolve(::kvs::Status const& result) {
     LOG(ERROR) << "KVS error : " << static_cast<std::int32_t>(result);
     return StatusCode::ERR_UNKNOWN;
 }
+
+[[noreturn]] inline void
+abort_with_lineno_(const char *msg, const char *file, int line)
+{
+    std::stringstream buf{};
+    buf << msg;
+    buf << " file:";
+    buf << file;
+    buf << " line:";
+    buf << line;
+    throw std::domain_error(buf.str());
+}
+
+#define ABORT_MSG(msg) kvs::abort_with_lineno_(msg, __FILE__, __LINE__)
+#define ABORT() kvs::abort_with_lineno_("", __FILE__, __LINE__)
 
 }  // namespace sharksfin::kvs
 

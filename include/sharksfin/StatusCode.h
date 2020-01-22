@@ -83,6 +83,7 @@ enum class StatusCode : std::int64_t {
 
     /**
      * @brief transaction is aborted, but retry might resolve the situation
+     * @details transaction engine can return this error on any operation
      */
     ERR_ABORTED_RETRYABLE = -8,
 

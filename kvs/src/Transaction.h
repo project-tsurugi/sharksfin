@@ -64,7 +64,7 @@ public:
             return StatusCode::ERR_UNSUPPORTED;
         }
         if(!is_active_) {
-            std::abort();
+            ABORT();
         }
         auto rc = resolve(::kvs::commit(session_->id()));
         if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
@@ -84,8 +84,7 @@ public:
         }
         auto rc = resolve(::kvs::abort(session_->id()));
         if (rc != StatusCode::OK) {
-            // abort should always be successful
-            std::abort();
+            ABORT_MSG("abort should always be successful");
         }
         is_active_ = false;
         return rc;
@@ -121,7 +120,7 @@ public:
      */
     inline void reset() {
         if(is_active_) {
-            std::abort();
+            ABORT();
         }
         ::kvs::tbegin(session_->id());
         is_active_ = true;

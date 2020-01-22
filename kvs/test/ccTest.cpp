@@ -15,6 +15,7 @@
  */
 #include "Storage.h"
 
+#include <future>
 #include <gtest/gtest.h>
 #include "TestRoot.h"
 
@@ -22,6 +23,8 @@
 #include "Iterator.h"
 
 namespace sharksfin::kvs {
+
+using namespace std::string_literals;
 
 static constexpr std::string_view TESTING { "test" }; // around 8 chars cause delete_record crash
 
@@ -116,6 +119,125 @@ TEST_F(KVSCCTest, simple) {
         ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }
+    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+}
+
+TEST_F(KVSCCTest, scan_concurrently) {
+    // verify detecting ERR_ILLEGAL_STATE - occ error on scan_key()
+    const static std::size_t COUNT = 100;
+    std::unique_ptr<Database> db{};
+    DatabaseOptions options{};
+    Database::open(options, &db);
+    {
+        auto tx = db->create_transaction();
+        auto st = db->create_storage("S", *tx);
+        // prepare data
+        tx->reset();
+        ASSERT_EQ(st->put(tx.get(), "aA", "A", PutOperation::CREATE), StatusCode::OK);
+        ASSERT_EQ(st->put(tx.get(), "az", "A", PutOperation::CREATE), StatusCode::OK);
+        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+    }
+    auto r1 = std::async(std::launch::async, [&] {
+        auto tx2 = db->create_transaction();
+        auto st = db->get_storage("S", tx2.get());
+        std::size_t row_count = 0;
+        std::size_t retry_error_count = 0;
+        for (std::size_t i = 0U; i < COUNT; ++i) {
+            auto iter = st->scan(tx2.get(),
+                    "a", EndPointKind::PREFIXED_INCLUSIVE,
+                    "a", EndPointKind::PREFIXED_INCLUSIVE);
+            StatusCode rc{};
+            while((rc = iter->next()) == StatusCode::OK) {
+                EXPECT_EQ(iter->key().to_string_view().substr(0,1), "a");
+                EXPECT_EQ(iter->value().to_string_view().substr(0,1), "A");
+                ++row_count;
+            }
+            EXPECT_TRUE(rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
+            if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+                ++retry_error_count;
+            }
+            EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+            tx2->reset();
+        }
+        EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+        if (retry_error_count > 0) {
+            std::cout << "ERR_ABORT_RETRYABLE returned " << retry_error_count << " times" << std::endl;
+        }
+        return row_count;
+    });
+    auto r2 = std::async(std::launch::async, [&] {
+        auto tx3 = db->create_transaction();
+        auto st = db->get_storage("S", tx3.get());
+        for (std::size_t i = 0U; i < COUNT; ++i) {
+            EXPECT_EQ(st->put(tx3.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
+            EXPECT_EQ(st->put(tx3.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
+            EXPECT_EQ(st->put(tx3.get(), "aZ"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
+            EXPECT_EQ(tx3->commit(false), StatusCode::OK);
+            tx3->reset();
+        }
+        EXPECT_EQ(tx3->commit(false), StatusCode::OK);
+        return true;
+    });
+    EXPECT_GE(r1.get(), 2);
+    EXPECT_TRUE(r2.get());
+    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+}
+
+TEST_F(KVSCCTest, get_concurrently) {
+    // verify detecting ERR_ILLEGAL_STATE - occ error on search_key()
+    const static std::size_t COUNT = 1000;
+    std::unique_ptr<Database> db{};
+    DatabaseOptions options{};
+    Database::open(options, &db);
+    {
+        auto tx = db->create_transaction();
+        auto st = db->create_storage("S", *tx);
+        // prepare data
+        tx->reset();
+        ASSERT_EQ(st->put(tx.get(), "aX0", "A", PutOperation::CREATE), StatusCode::OK);
+        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+    }
+    auto r2 = std::async(std::launch::async, [&] {
+        auto tx3 = db->create_transaction();
+        auto st = db->get_storage("S", tx3.get());
+        for (std::size_t i = 1U; i < COUNT; ++i) {
+            EXPECT_EQ(st->put(tx3.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
+            EXPECT_EQ(st->put(tx3.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
+            EXPECT_EQ(st->put(tx3.get(), "aZ"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            EXPECT_EQ(tx3->commit(false), StatusCode::OK);
+            tx3->reset();
+        }
+        EXPECT_EQ(tx3->commit(false), StatusCode::OK);
+        return true;
+    });
+    auto r1 = std::async(std::launch::async, [&] {
+        auto tx2 = db->create_transaction();
+        auto st = db->get_storage("S", tx2.get());
+        std::size_t row_count = 0;
+        std::size_t retry_error_count = 0;
+        for (std::size_t i = 0U; i < COUNT; ++i) {
+            std::string buf{};
+            auto rc = st->get(tx2.get(), "aX"s+std::to_string(i), buf);
+            EXPECT_TRUE(rc == StatusCode::OK || rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
+            if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                ++retry_error_count;
+            } else
+            if (rc == StatusCode::OK) {
+                ++row_count;
+            }
+            EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+            tx2->reset();
+        }
+        EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+        if (retry_error_count > 0) {
+            std::cout << "ERR_ABORT_RETRYABLE returned " << retry_error_count << " times" << std::endl;
+        }
+        return row_count;
+    });
+    EXPECT_GE(r1.get(), 1);
+    EXPECT_TRUE(r2.get());
     EXPECT_EQ(db->shutdown(), StatusCode::OK);
 }
 

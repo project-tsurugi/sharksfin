@@ -21,6 +21,9 @@
 #include "glog/logging.h"
 #include "kvs/scheme.h"
 #include "kvs/interface.h"
+#include "Error.h"
+
+namespace sharksfin::kvs {
 
 /**
  * @brief RAII class for kvs session id
@@ -28,24 +31,27 @@
 class Session {
 public:
     Session() {
-        if (auto res = kvs::enter(id_); res != kvs::Status::OK) {
-            std::abort();
+        if (auto res = ::kvs::enter(id_); res != ::kvs::Status::OK) {
+            ABORT_MSG("enter should always be successful");
         }
     };
     Session(Session const& other) = default;
     Session(Session&& other) = default;
     Session& operator=(Session const& other) = default;
     Session& operator=(Session&& other) = default;
-    explicit Session(kvs::Token id) noexcept : id_(id) {}
+    explicit Session(::kvs::Token id) noexcept : id_(id) {}
     ~Session() noexcept {
-        if (auto res = kvs::leave(id_); res != kvs::Status::OK) {
-            std::abort();
+        if (auto res = ::kvs::leave(id_); res != ::kvs::Status::OK) {
+            ABORT_MSG("leave should always be successful");
         }
     };
-    kvs::Token id() {
+    ::kvs::Token id() {
         return id_;
     }
 private:
-    kvs::Token id_{};
+    ::kvs::Token id_{};
 };
+
+} // namespace
+
 #endif //SHARKSFIN_KVS_SESSION_H_
