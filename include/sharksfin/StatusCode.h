@@ -73,17 +73,23 @@ enum class StatusCode : std::int64_t {
 
     /**
      * @brief transaction operation met an user-defined error.
+     * @details this code is returned only from transaction_exec() and transaction_commit()
      */
     ERR_USER_ERROR = -6,
 
     /**
      * @brief transaction is aborted
+     * @details this code is returned only from transaction_exec() and transaction_commit()
      */
     ERR_ABORTED = -7,
 
     /**
      * @brief transaction is aborted, but retry might resolve the situation
      * @details transaction engine can return this error on any operation
+     * When you get this error code in callback function,
+     * you should finish the callback instantly returning TransactionOperation::RETRY.
+     * Or, if you get the code between transaction_begin() and transaction_commit(),
+     * you can retry the transaction after calling transaction_abort() to finish the existing transaction.
      */
     ERR_ABORTED_RETRYABLE = -8,
 
