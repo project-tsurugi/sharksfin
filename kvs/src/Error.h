@@ -58,16 +58,15 @@ inline StatusCode resolve(::kvs::Status const& result) {
     return StatusCode::ERR_UNKNOWN;
 }
 
-[[noreturn]] inline void
-abort_with_lineno_(const char *msg, const char *file, int line)
-{
+[[noreturn]] inline void abort_with_lineno_(const char *msg, const char *file, int line) {
     std::stringstream buf{};
     buf << msg;
     buf << " file:";
     buf << file;
     buf << " line:";
     buf << line;
-    throw std::domain_error(buf.str());
+    LOG(ERROR) << buf.str();
+    std::abort();
 }
 
 #define ABORT_MSG(msg) kvs::abort_with_lineno_(msg, __FILE__, __LINE__)
