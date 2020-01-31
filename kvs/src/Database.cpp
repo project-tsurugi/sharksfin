@@ -103,6 +103,9 @@ std::unique_ptr<Storage> Database::create_storage(Slice key, Transaction& tx) {
 }
 
 std::unique_ptr<Storage> Database::get_storage(Slice key, Transaction* tx) {
+    if(storage_cache_.exists(key)) {
+        return std::make_unique<Storage>(this, key);
+    }
     // RAII class to hold received transaction or new one
     // This is to ensure abort on exit if new one is created
     struct Holder {
@@ -143,12 +146,14 @@ std::unique_ptr<Storage> Database::get_storage(Slice key, Transaction* tx) {
             ABORT();
     }
     assert(tuple != nullptr);
+    storage_cache_.add(key);
     return storage;
 }
 
 StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     assert(tx.active());
     std::unique_lock lock{mutex_for_storage_metadata_};
+    storage_cache_.remove(storage.key());
     std::string k{};
     qualify_meta(storage.prefix(), k);
     auto st = ::kvs::delete_record(tx.native_handle(), DefaultStorage, k.data(), k.size());

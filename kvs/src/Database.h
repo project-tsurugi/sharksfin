@@ -26,6 +26,7 @@
 #include "sharksfin/api.h"
 #include "sharksfin/Slice.h"
 #include "Error.h"
+#include "StorageCache.h"
 
 namespace sharksfin::kvs {
 
@@ -170,6 +171,7 @@ public:
 
 private:
     std::mutex mutex_for_storage_metadata_{};
+    StorageCache storage_cache_{};
 
     bool enable_tracking_ { false };
     std::atomic_size_t transaction_count_ {};

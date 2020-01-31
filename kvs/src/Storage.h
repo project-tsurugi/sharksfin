@@ -56,6 +56,14 @@ public:
     }
 
     /**
+     * @brief returns the storage key
+     * @return the key of the storage
+     */
+    inline Slice key() const {
+        return Slice(key_prefix_.data(), key_prefix_.size()-1);
+    }
+
+    /**
      * @brief returns subkey of the given key.
      * @param key the key which includes storage ID
      * @return the subkey
