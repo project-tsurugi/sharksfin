@@ -153,10 +153,10 @@ std::unique_ptr<Storage> Database::get_storage(Slice key, Transaction* tx) {
 StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     assert(tx.active());
     std::unique_lock lock{mutex_for_storage_metadata_};
-    storage_cache_.remove(storage.key());
     std::string k{};
     qualify_meta(storage.prefix(), k);
     auto st = ::kvs::delete_record(tx.native_handle(), DefaultStorage, k.data(), k.size());
+    storage_cache_.remove(storage.key());
     if (st == ::kvs::Status::ERR_NOT_FOUND) {
         return StatusCode::NOT_FOUND;
     }
