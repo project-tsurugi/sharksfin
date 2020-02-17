@@ -26,16 +26,14 @@
 
 namespace sharksfin::kvs {
 
-StatusCode Database::open(DatabaseOptions const &options, std::unique_ptr<Database> *result) {
-    if (options.open_mode() == DatabaseOptions::OpenMode::RESTORE) {
-        // kvs_charkey restore is not supported yet
-        return StatusCode::ERR_UNSUPPORTED;
+StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
+    // kvs default behavior is create or restore
+    *result = std::make_unique<Database>(options);
+    if (options.open_mode() != DatabaseOptions::OpenMode::RESTORE) {
+        // Not opened with restore option. Ensure db to be clean in case previous test has left over.
+        // Remove this when kvs_charkey ensures clean at db open.
+        (*result)->clean();
     }
-    *result = std::make_unique<Database>();
-
-    // Not opened with restore option. Ensure db to be clean in case previous test has left over.
-    // Remove this when kvs_charkey ensures clean at db open.
-    (*result)->clean();
     return StatusCode::OK;
 }
 
@@ -48,6 +46,7 @@ StatusCode Database::shutdown() {
     }
     ::kvs::fin();
     ::kvs::forced_gc_all_records();
+    active_ = false;
     return StatusCode::OK;
 }
 

@@ -27,8 +27,9 @@ static constexpr std::string_view TESTING { "test" }; // around 8 chars cause de
 
 class DatabaseHolder {
 public:
-    DatabaseHolder() {
+    DatabaseHolder(std::string path) {
         DatabaseOptions options{};
+        options.attribute(KEY_LOCATION, path);
         Database::open(options, &db_);
     }
     ~DatabaseHolder() {
@@ -71,7 +72,7 @@ public:
 };
 
 TEST_F(KVSStorageTest, simple) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -85,7 +86,7 @@ TEST_F(KVSStorageTest, simple) {
 }
 
 TEST_F(KVSStorageTest, simple_uncommitted) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -97,7 +98,7 @@ TEST_F(KVSStorageTest, simple_uncommitted) {
 }
 
 TEST_F(KVSStorageTest, get) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -115,7 +116,7 @@ TEST_F(KVSStorageTest, get) {
 }
 
 TEST_F(KVSStorageTest, get_uncommitted) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -131,7 +132,7 @@ TEST_F(KVSStorageTest, get_uncommitted) {
 }
 
 TEST_F(KVSStorageTest, put) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -151,7 +152,7 @@ TEST_F(KVSStorageTest, put) {
 }
 
 TEST_F(KVSStorageTest, put_uncommitted) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -167,7 +168,7 @@ TEST_F(KVSStorageTest, put_uncommitted) {
 }
 
 TEST_F(KVSStorageTest, put_operations) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -204,7 +205,7 @@ TEST_F(KVSStorageTest, put_operations) {
 }
 
 TEST_F(KVSStorageTest, put_operations_uncommitted) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -234,7 +235,7 @@ TEST_F(KVSStorageTest, put_operations_uncommitted) {
 }
 
 TEST_F(KVSStorageTest, remove) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -253,7 +254,7 @@ TEST_F(KVSStorageTest, remove) {
 }
 
 TEST_F(KVSStorageTest, remove_uncommitted) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -270,7 +271,7 @@ TEST_F(KVSStorageTest, remove_uncommitted) {
 }
 
 TEST_F(KVSStorageTest, prefix_conflict) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto s0 = db->create_storage("a", *tx);
@@ -289,7 +290,7 @@ TEST_F(KVSStorageTest, prefix_conflict) {
 }
 
 TEST_F(KVSStorageTest, scan_prefix) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -329,7 +330,7 @@ TEST_F(KVSStorageTest, scan_prefix) {
 }
 
 TEST_F(KVSStorageTest, scan_prefix_uncommitted) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -367,7 +368,7 @@ TEST_F(KVSStorageTest, scan_prefix_uncommitted) {
 }
 
 TEST_F(KVSStorageTest, scan_range) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);
@@ -400,7 +401,7 @@ TEST_F(KVSStorageTest, scan_range) {
 }
 
 TEST_F(KVSStorageTest, scan_range_exclusive) {
-    DatabaseHolder db{};
+    DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
         auto st = db->create_storage("S", *tx);

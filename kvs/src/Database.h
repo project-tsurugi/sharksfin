@@ -21,6 +21,7 @@
 #include <memory>
 #include <mutex>
 
+#include "glog/logging.h"
 #include "kvs/scheme.h"
 #include "kvs/interface.h"
 #include "sharksfin/api.h"
@@ -36,6 +37,7 @@ class Storage;
 
 // default empty storage - remove when kvs supports storage
 inline const ::kvs::Storage DefaultStorage = 0;
+static constexpr std::string_view KEY_LOCATION { "location" };
 
 /**
  * @brief a kvs wrapper.
@@ -60,7 +62,28 @@ public:
     Database() {
         ::kvs::init();
     };
+    /**
+     * @brief constructs a new object.
+     */
+    Database(DatabaseOptions const& options) {
+        if (auto loc = options.attribute(KEY_LOCATION); loc) {
+            ::kvs::init(*loc);
+        } else {
+            ::kvs::init();
+        }
+    };
 
+    /**
+     * @brief
+     */
+    ~Database() {
+        if (active_) {
+            // shutdown should have been called, but ensure it here for safety
+            // this avoids stopping test after a failure
+            LOG(WARNING) << "Database shutdown implicitly";
+            shutdown();
+        }
+    };
     /**
      * @brief shutdown this database.
      */
@@ -181,6 +204,7 @@ private:
 
     bool waits_for_commit_ { true };
     StatusCode erase_storage_(Storage& storage, Transaction& tx);
+    bool active_{ true };
 };
 
 }  // namespace sharksfin::kvs

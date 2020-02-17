@@ -81,8 +81,7 @@ TEST_F(KVSApiTest, simple) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-// kvs not yet support restore
-TEST_F(KVSApiTest, DISABLED_database_restore) {
+TEST_F(KVSApiTest, database_restore) {
     {
         DatabaseOptions options;
         options.attribute(KEY_LOCATION, path());
@@ -139,7 +138,7 @@ TEST_F(KVSApiTest, DISABLED_database_restore) {
     }
 }
 
-TEST_F(KVSApiTest, database_not_found) {
+TEST_F(KVSApiTest, DISABLED_database_not_found) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     options.open_mode(DatabaseOptions::OpenMode::RESTORE);

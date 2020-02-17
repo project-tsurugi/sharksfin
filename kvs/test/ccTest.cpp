@@ -36,6 +36,7 @@ public:
 TEST_F(KVSCCTest, simple) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
+    options.attribute(KEY_LOCATION, path());
     Database::open(options, &db);
     auto tx = db->create_transaction();
     auto st = db->create_storage("S", *tx);
@@ -127,6 +128,7 @@ TEST_F(KVSCCTest, scan_concurrently) {
     const static std::size_t COUNT = 100;
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
+    options.attribute(KEY_LOCATION, path());
     Database::open(options, &db);
     {
         auto tx = db->create_transaction();
@@ -188,6 +190,7 @@ TEST_F(KVSCCTest, get_concurrently) {
     const static std::size_t COUNT = 1000;
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
+    options.attribute(KEY_LOCATION, path());
     Database::open(options, &db);
     {
         auto tx = db->create_transaction();
