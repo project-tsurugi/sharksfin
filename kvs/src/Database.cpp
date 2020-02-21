@@ -80,13 +80,13 @@ static void ensure_end_of_transaction(Transaction& tx, bool to_abort = false) {
 
 std::unique_ptr<Storage> Database::create_storage(Slice key, Transaction& tx) {
     assert(tx.active());
-    if (get_storage(key, &tx)) {
+    if (get_storage(key)) {
         ensure_end_of_transaction(tx, true);
         return {};
     }
     // Not found, let's create new one acquiring lock
     std::unique_lock lock{mutex_for_storage_metadata_};
-    if (get_storage(key, &tx)) {
+    if (get_storage(key)) {
         ensure_end_of_transaction(tx, true);
         return {};
     }
@@ -101,24 +101,19 @@ std::unique_ptr<Storage> Database::create_storage(Slice key, Transaction& tx) {
     return get_storage(key);
 }
 
-std::unique_ptr<Storage> Database::get_storage(Slice key, Transaction* tx) {
+std::unique_ptr<Storage> Database::get_storage(Slice key) {
     if(storage_cache_.exists(key)) {
         return std::make_unique<Storage>(this, key);
     }
-    // RAII class to hold received transaction or new one
-    // This is to ensure abort on exit if new one is created
+    // RAII class to hold transaction
     struct Holder {
-        Holder(Transaction* tx, Database* db) : tx_passed_(tx != nullptr), tx_(tx), db_(db) {
-            if (!tx_passed_) {
-                owner_ = db_->create_transaction();
-                tx_ = owner_.get();
-            }
+        Holder(Database* db) : db_(db) {
+            owner_ = db_->create_transaction();
+            tx_ = owner_.get();
             assert(tx_->active());
         }
         ~Holder() {
-            if (!tx_passed_) {
-                tx_->abort();
-            }
+            tx_->abort();
         }
         Transaction* tx() {
             return tx_;
@@ -132,7 +127,7 @@ std::unique_ptr<Storage> Database::get_storage(Slice key, Transaction* tx) {
     std::string k{};
     qualify_meta(storage->prefix(), k);
     ::kvs::Tuple* tuple{};
-    Holder holder{tx, this};
+    Holder holder{this};
     auto res = ::kvs::search_key(holder.tx()->native_handle(), DefaultStorage, k.data(), k.size(), &tuple);
     switch(res) {
         // TODO retryable error

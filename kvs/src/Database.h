@@ -100,13 +100,11 @@ public:
 
     /**
      * @brief returns a storage space.
-     * @param tx the transaction used to access storage metadata. It will not be committed/aborted.
-     * If tx is nullptr, new transaction will be created and discarded internally in this function.
      * @param key the storage key
      * @return non empty pointer if it exists
      * @return otherwise if it does not exist
      */
-    std::unique_ptr<Storage> get_storage(Slice key, Transaction* tx = nullptr);
+    std::unique_ptr<Storage> get_storage(Slice key);
 
     /**
      * @brief deletes storage.

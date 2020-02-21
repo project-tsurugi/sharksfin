@@ -141,7 +141,7 @@ TEST_F(KVSCCTest, scan_concurrently) {
     }
     auto r1 = std::async(std::launch::async, [&] {
         auto tx2 = db->create_transaction();
-        auto st = db->get_storage("S", tx2.get());
+        auto st = db->get_storage("S");
         std::size_t row_count = 0;
         std::size_t retry_error_count = 0;
         for (std::size_t i = 0U; i < COUNT; ++i) {
@@ -169,7 +169,7 @@ TEST_F(KVSCCTest, scan_concurrently) {
     });
     auto r2 = std::async(std::launch::async, [&] {
         auto tx3 = db->create_transaction();
-        auto st = db->get_storage("S", tx3.get());
+        auto st = db->get_storage("S");
         for (std::size_t i = 0U; i < COUNT; ++i) {
             EXPECT_EQ(st->put(tx3.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx3.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
@@ -202,7 +202,7 @@ TEST_F(KVSCCTest, get_concurrently) {
     }
     auto r2 = std::async(std::launch::async, [&] {
         auto tx3 = db->create_transaction();
-        auto st = db->get_storage("S", tx3.get());
+        auto st = db->get_storage("S");
         for (std::size_t i = 1U; i < COUNT; ++i) {
             EXPECT_EQ(st->put(tx3.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx3.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
@@ -216,7 +216,7 @@ TEST_F(KVSCCTest, get_concurrently) {
     });
     auto r1 = std::async(std::launch::async, [&] {
         auto tx2 = db->create_transaction();
-        auto st = db->get_storage("S", tx2.get());
+        auto st = db->get_storage("S");
         std::size_t row_count = 0;
         std::size_t retry_error_count = 0;
         for (std::size_t i = 0U; i < COUNT; ++i) {
