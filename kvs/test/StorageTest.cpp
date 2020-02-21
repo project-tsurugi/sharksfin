@@ -75,7 +75,8 @@ TEST_F(KVSStorageTest, simple) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
@@ -89,7 +90,8 @@ TEST_F(KVSStorageTest, simple_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
@@ -101,7 +103,8 @@ TEST_F(KVSStorageTest, get) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::NOT_FOUND);
         ASSERT_EQ(st->put(tx, "K", "testing", PutOperation::CREATE), StatusCode::OK);
@@ -119,7 +122,8 @@ TEST_F(KVSStorageTest, get_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::NOT_FOUND);
         ASSERT_EQ(st->put(tx, "K", "testing", PutOperation::CREATE), StatusCode::OK);
@@ -135,7 +139,8 @@ TEST_F(KVSStorageTest, put) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
@@ -155,7 +160,8 @@ TEST_F(KVSStorageTest, put_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
@@ -171,7 +177,8 @@ TEST_F(KVSStorageTest, put_operations) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
@@ -208,7 +215,8 @@ TEST_F(KVSStorageTest, put_operations_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
@@ -238,7 +246,8 @@ TEST_F(KVSStorageTest, remove) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->put(tx, "K", "testing"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
@@ -257,7 +266,8 @@ TEST_F(KVSStorageTest, remove_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
         ASSERT_EQ(st->put(tx, "K", "testing"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
@@ -274,9 +284,10 @@ TEST_F(KVSStorageTest, prefix_conflict) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto s0 = db->create_storage("a", *tx);
+        std::unique_ptr<Storage> s0{}, s1{};
+        db->create_storage("a", *tx, s0);
         tx->reset();
-        auto s1 = db->create_storage("b", *tx);
+        db->create_storage("b", *tx, s1);
         tx->reset();
         s1->put(tx, "a", "B");
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
@@ -293,7 +304,8 @@ TEST_F(KVSStorageTest, scan_prefix) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
 
         ASSERT_EQ(st->put(tx, "a", "a"), StatusCode::OK);
@@ -333,7 +345,8 @@ TEST_F(KVSStorageTest, scan_prefix_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
 
         ASSERT_EQ(st->put(tx, "a", "a"), StatusCode::OK);
@@ -371,7 +384,8 @@ TEST_F(KVSStorageTest, scan_range) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
 
         ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
@@ -404,7 +418,8 @@ TEST_F(KVSStorageTest, scan_range_exclusive) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", *tx, st);
         tx->reset();
 
         ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
@@ -425,4 +440,36 @@ TEST_F(KVSStorageTest, scan_range_exclusive) {
     }
 }
 
+TEST_F(KVSStorageTest, create_storage) {
+    DatabaseHolder db{path()};
+    {
+        TransactionHolder tx{db};
+        std::unique_ptr<Storage> st{};
+        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
+        EXPECT_TRUE(st);
+        st.reset();
+        EXPECT_FALSE(st);
+        tx->reset();
+        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::ALREADY_EXISTS);
+        EXPECT_FALSE(st);
+        tx->reset();
+    }
+}
+
+TEST_F(KVSStorageTest, get_storage) {
+    DatabaseHolder db{path()};
+    {
+        TransactionHolder tx{db};
+        std::unique_ptr<Storage> st{};
+        ASSERT_EQ(db->get_storage("S", st), StatusCode::NOT_FOUND);
+        EXPECT_FALSE(st);
+        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
+        EXPECT_TRUE(st);
+        st.reset();
+        EXPECT_FALSE(st);
+        tx->reset();
+        ASSERT_EQ(db->get_storage("S", st), StatusCode::OK);
+        EXPECT_TRUE(st);
+    }
+}
 }  // namespace

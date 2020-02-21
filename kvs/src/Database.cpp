@@ -78,17 +78,18 @@ static void ensure_end_of_transaction(Transaction& tx, bool to_abort = false) {
     }
 }
 
-std::unique_ptr<Storage> Database::create_storage(Slice key, Transaction& tx) {
+StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<Storage>& result) {
     assert(tx.active());
-    if (get_storage(key)) {
+    std::unique_ptr<Storage> stg{};
+    if (get_storage(key, stg) == StatusCode::OK) {
         ensure_end_of_transaction(tx, true);
-        return {};
+        return StatusCode::ALREADY_EXISTS;
     }
     // Not found, let's create new one acquiring lock
     std::unique_lock lock{mutex_for_storage_metadata_};
-    if (get_storage(key)) {
+    if (get_storage(key, stg) == StatusCode::OK) {
         ensure_end_of_transaction(tx, true);
-        return {};
+        return StatusCode::ALREADY_EXISTS;
     }
     auto storage = std::make_unique<Storage>(this, key);
     std::string k{}, v{};
@@ -98,12 +99,13 @@ std::unique_ptr<Storage> Database::create_storage(Slice key, Transaction& tx) {
         ABORT();
     }
     ensure_end_of_transaction(tx);
-    return get_storage(key);
+    return get_storage(key, result);
 }
 
-std::unique_ptr<Storage> Database::get_storage(Slice key) {
+StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     if(storage_cache_.exists(key)) {
-        return std::make_unique<Storage>(this, key);
+        result = std::make_unique<Storage>(this, key);
+        return StatusCode::OK;
     }
     // RAII class to hold transaction
     struct Holder {
@@ -130,18 +132,20 @@ std::unique_ptr<Storage> Database::get_storage(Slice key) {
     Holder holder{this};
     auto res = ::kvs::search_key(holder.tx()->native_handle(), DefaultStorage, k.data(), k.size(), &tuple);
     switch(res) {
-        // TODO retryable error
         case ::kvs::Status::OK:
         case ::kvs::Status::WARN_READ_FROM_OWN_OPERATION:
             break;
         case ::kvs::Status::ERR_NOT_FOUND:
-            return {};
+            return StatusCode::NOT_FOUND;
+        case ::kvs::Status::ERR_ILLEGAL_STATE:
+            return StatusCode::ERR_ABORTED_RETRYABLE;
         default:
             ABORT();
     }
     assert(tuple != nullptr);
     storage_cache_.add(key);
-    return storage;
+    result = std::move(storage);
+    return StatusCode::OK;
 }
 
 StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {

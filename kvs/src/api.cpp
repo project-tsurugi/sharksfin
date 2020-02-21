@@ -111,9 +111,10 @@ StatusCode storage_create(
         StorageHandle *result) {
     auto db = unwrap(handle);
     auto tx = db->create_transaction();
-    auto stg = db->create_storage(key, *tx);
-    if (!stg) {
-        return StatusCode::ALREADY_EXISTS;
+    std::unique_ptr<kvs::Storage> stg{};
+    auto rc = db->create_storage(key, *tx, stg);
+    if (rc != StatusCode::OK) {
+        return rc;
     }
     *result = wrap(stg.release());
     return StatusCode::OK;
@@ -124,9 +125,10 @@ StatusCode storage_get(
         Slice key,
         StorageHandle *result) {
     auto db = unwrap(handle);
-    auto stg = db->get_storage(key);
-    if (!stg) {
-        return StatusCode::NOT_FOUND;
+    std::unique_ptr<kvs::Storage> stg{};
+    auto rc = db->get_storage(key, stg);
+    if (rc != StatusCode::OK) {
+        return rc;
     }
     *result = wrap(stg.release());
     return StatusCode::OK;

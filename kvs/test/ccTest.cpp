@@ -39,7 +39,8 @@ TEST_F(KVSCCTest, simple) {
     options.attribute(KEY_LOCATION, path());
     Database::open(options, &db);
     auto tx = db->create_transaction();
-    auto st = db->create_storage("S", *tx);
+    std::unique_ptr<Storage> st{};
+    db->create_storage("S", *tx, st);
     {
         // prepare data
         tx->reset();
@@ -132,7 +133,8 @@ TEST_F(KVSCCTest, scan_concurrently) {
     Database::open(options, &db);
     {
         auto tx = db->create_transaction();
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
         // prepare data
         tx->reset();
         ASSERT_EQ(st->put(tx.get(), "aA", "A", PutOperation::CREATE), StatusCode::OK);
@@ -141,7 +143,8 @@ TEST_F(KVSCCTest, scan_concurrently) {
     }
     auto r1 = std::async(std::launch::async, [&] {
         auto tx2 = db->create_transaction();
-        auto st = db->get_storage("S");
+        std::unique_ptr<Storage> st{};
+        EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         std::size_t row_count = 0;
         std::size_t retry_error_count = 0;
         for (std::size_t i = 0U; i < COUNT; ++i) {
@@ -169,7 +172,8 @@ TEST_F(KVSCCTest, scan_concurrently) {
     });
     auto r2 = std::async(std::launch::async, [&] {
         auto tx3 = db->create_transaction();
-        auto st = db->get_storage("S");
+        std::unique_ptr<Storage> st{};
+        EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         for (std::size_t i = 0U; i < COUNT; ++i) {
             EXPECT_EQ(st->put(tx3.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx3.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
@@ -194,7 +198,8 @@ TEST_F(KVSCCTest, get_concurrently) {
     Database::open(options, &db);
     {
         auto tx = db->create_transaction();
-        auto st = db->create_storage("S", *tx);
+        std::unique_ptr<Storage> st{};
+        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
         // prepare data
         tx->reset();
         ASSERT_EQ(st->put(tx.get(), "aX0", "A", PutOperation::CREATE), StatusCode::OK);
@@ -202,7 +207,8 @@ TEST_F(KVSCCTest, get_concurrently) {
     }
     auto r2 = std::async(std::launch::async, [&] {
         auto tx3 = db->create_transaction();
-        auto st = db->get_storage("S");
+        std::unique_ptr<Storage> st{};
+        EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         for (std::size_t i = 1U; i < COUNT; ++i) {
             EXPECT_EQ(st->put(tx3.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx3.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
@@ -216,7 +222,8 @@ TEST_F(KVSCCTest, get_concurrently) {
     });
     auto r1 = std::async(std::launch::async, [&] {
         auto tx2 = db->create_transaction();
-        auto st = db->get_storage("S");
+        std::unique_ptr<Storage> st{};
+        EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         std::size_t row_count = 0;
         std::size_t retry_error_count = 0;
         for (std::size_t i = 0U; i < COUNT; ++i) {
