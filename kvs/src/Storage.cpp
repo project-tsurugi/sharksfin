@@ -20,19 +20,19 @@
 #include "Iterator.h"
 #include "Transaction.h"
 #include "Error.h"
+#include "kvs_api_helper.h"
 
 namespace sharksfin::kvs {
 
 // thread local storage to return temporary Slice
 // only qualify() should write to this buffer
-thread_local std::string bless_buffers[2] = {};
+thread_local std::string bless_buffer{};
 
 Slice Storage::subkey(Slice key) const {
     return { &key[key_prefix_.size()], key.size() - key_prefix_.size() };
 }
 
-Slice Storage::qualify(Slice key, int slot) {
-    auto& bless_buffer = bless_buffers[slot];
+Slice Storage::qualify(Slice key) {
     bless_buffer.assign(key_prefix_);
     bless_buffer.append(key.data<std::string::value_type>(), key.size());
     return Slice(bless_buffer);
@@ -42,7 +42,7 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
     assert(tx->active());
     Slice k = qualify(key);
     ::kvs::Tuple* tuple{};
-    StatusCode rc = resolve(::kvs::search_key(tx->native_handle(), DefaultStorage,
+    auto rc = resolve(search_key_with_retry(*tx, tx->native_handle(), DefaultStorage,
             k.data<std::string::value_type>(), k.size(), &tuple));
     if (rc == StatusCode::OK && tuple != nullptr) {
         buffer.assign(tuple->val.get(), tuple->len_val);
@@ -115,11 +115,9 @@ std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind) {
     assert(tx->active());
-    Slice b = qualify(begin_key, 0);
-    Slice e = qualify(end_key, 1);
     return std::make_unique<Iterator>(this, tx,
-            b, begin_kind,
-            e, end_kind);
+            begin_key, begin_kind,
+            end_key, end_kind);
 }
 
 }  // namespace sharksfin::kvs

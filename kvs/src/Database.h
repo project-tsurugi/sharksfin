@@ -32,7 +32,6 @@
 namespace sharksfin::kvs {
 
 class Transaction;
-class Iterator;
 class Storage;
 
 // default empty storage - remove when kvs supports storage

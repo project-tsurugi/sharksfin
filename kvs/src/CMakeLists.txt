@@ -26,6 +26,12 @@ target_link_libraries(kvs
         )
 
 set_compile_options(kvs)
+
+option(USE_PIECEMEAL_ITERATOR "use newer piecemeal iterator" ON)
+if(USE_PIECEMEAL_ITERATOR)
+    target_compile_definitions(kvs PUBLIC -DUSE_PIECEMEAL_ITERATOR)
+endif()
+
 install_custom(kvs ${export_name})
 
 # for tests

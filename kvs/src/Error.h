@@ -33,7 +33,11 @@ inline StatusCode resolve(::kvs::Status const& result) {
             return StatusCode::OK;
         case ::kvs::Status::ERR_NOT_FOUND:
             return StatusCode::NOT_FOUND;
+        case ::kvs::Status::WARN_NOT_FOUND:
+            return StatusCode::NOT_FOUND;
         case ::kvs::Status::ERR_ALREADY_EXISTS:
+            return StatusCode::ALREADY_EXISTS;
+        case ::kvs::Status::WARN_ALREADY_EXISTS:
             return StatusCode::ALREADY_EXISTS;
         case ::kvs::Status::ERR_ILLEGAL_STATE:
             return StatusCode::ERR_ABORTED_RETRYABLE;
@@ -51,6 +55,10 @@ inline StatusCode resolve(::kvs::Status const& result) {
             return StatusCode::NOT_FOUND;
         case ::kvs::Status::WARN_WRITE_TO_LOCAL_WRITE:
             return StatusCode::OK;
+        case ::kvs::Status::ERR_WRITE_TO_DELETED_RECORD:
+            return StatusCode::ERR_ABORTED_RETRYABLE;
+        case ::kvs::Status::WARN_CONCURRENT_DELETE:
+            return StatusCode::ERR_ABORTED_RETRYABLE;
         default:
             break;
     }

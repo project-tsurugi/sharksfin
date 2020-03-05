@@ -23,6 +23,7 @@
 #include "Transaction.h"
 #include "Storage.h"
 #include "Error.h"
+#include "kvs_api_helper.h"
 
 namespace sharksfin::kvs {
 
@@ -129,18 +130,14 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     std::string k{};
     qualify_meta(storage->prefix(), k);
     ::kvs::Tuple* tuple{};
+
     Holder holder{this};
-    auto res = ::kvs::search_key(holder.tx()->native_handle(), DefaultStorage, k.data(), k.size(), &tuple);
-    switch(res) {
-        case ::kvs::Status::OK:
-        case ::kvs::Status::WARN_READ_FROM_OWN_OPERATION:
-            break;
-        case ::kvs::Status::ERR_NOT_FOUND:
-            return StatusCode::NOT_FOUND;
-        case ::kvs::Status::ERR_ILLEGAL_STATE:
-            return StatusCode::ERR_ABORTED_RETRYABLE;
-        default:
-            ABORT();
+    StatusCode rc = resolve(search_key_with_retry(*holder.tx(), holder.tx()->native_handle(), DefaultStorage, k.data(), k.size(), &tuple));
+    if (rc != StatusCode::OK) {
+        if (rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+            return rc;
+        }
+        ABORT();
     }
     assert(tuple != nullptr);
     storage_cache_.add(key);
@@ -153,12 +150,12 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     std::unique_lock lock{mutex_for_storage_metadata_};
     std::string k{};
     qualify_meta(storage.prefix(), k);
-    auto st = ::kvs::delete_record(tx.native_handle(), DefaultStorage, k.data(), k.size());
+    auto rc1 = resolve(::kvs::delete_record(tx.native_handle(), DefaultStorage, k.data(), k.size()));
     storage_cache_.remove(storage.key());
-    if (st == ::kvs::Status::ERR_NOT_FOUND) {
+    if (rc1 == StatusCode::NOT_FOUND) {
         return StatusCode::NOT_FOUND;
     }
-    if (st != ::kvs::Status::OK) {
+    if (rc1 != StatusCode::OK) {
         ABORT();
     }
     std::string prefix{ storage.prefix().data<char>(), storage.prefix().size() };
@@ -167,17 +164,17 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     auto b = Slice(prefix);
     auto e = Slice(end);
     std::vector<::kvs::Tuple*> records{};
-    if(auto rc = resolve(::kvs::scan_key(tx.native_handle(),
-                DefaultStorage,
-                b.data<char>(),
-                b.size(),
-                false,
-                e.data<char>(),
-                e.size(),
-                true,
-                records)); rc != StatusCode::OK) {
-        if (rc == StatusCode::ERR_INVALID_STATE) {
-            // TODO check the cause of this
+    ::kvs::Status res = scan_key_with_retry(tx, tx.native_handle(),
+            DefaultStorage,
+            b.data<char>(),
+            b.size(),
+            false,
+            e.data<char>(),
+            e.size(),
+            true,
+            records);
+    if(auto rc = resolve(res); rc != StatusCode::OK) {
+        if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
             return rc;
         }
         ABORT();

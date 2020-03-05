@@ -23,7 +23,7 @@
 
 namespace sharksfin::kvs {
 
-static constexpr std::string_view TESTING { "test" }; // around 8 chars cause delete_record crash TODO verify fix
+static constexpr std::string_view TESTING { "testing" };
 
 class DatabaseHolder {
 public:

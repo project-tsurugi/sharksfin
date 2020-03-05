@@ -26,7 +26,14 @@ namespace sharksfin::kvs {
 
 class Transaction;
 class Database;
-class Iterator;
+
+#ifdef USE_PIECEMEAL_ITERATOR
+class PiecemealIterator;
+using Iterator = PiecemealIterator;
+#else
+class OneshotIterator;
+using Iterator = OneshotIterator;
+#endif
 
 /**
  * @brief storage class to interact with kvs
@@ -122,7 +129,7 @@ private:
     /**
      * @brief add storage prefix to the key
      */
-    Slice qualify(Slice key, int slot = 0);
+    Slice qualify(Slice key);
 };
 
 }  // namespace sharksfin::KVS

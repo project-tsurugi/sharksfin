@@ -125,7 +125,7 @@ TEST_F(KVSCCTest, simple) {
 }
 
 TEST_F(KVSCCTest, scan_concurrently) {
-    // verify detecting ERR_ILLEGAL_STATE - occ error on scan_key()
+    // verify detecting WARN_CONCURRENT_DELETE - occ error on scan_key()
     const static std::size_t COUNT = 100;
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
@@ -160,8 +160,9 @@ TEST_F(KVSCCTest, scan_concurrently) {
             EXPECT_TRUE(rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
             if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                 ++retry_error_count;
+            } else {
+                EXPECT_EQ(tx2->commit(false), StatusCode::OK);
             }
-            EXPECT_EQ(tx2->commit(false), StatusCode::OK);
             tx2->reset();
         }
         EXPECT_EQ(tx2->commit(false), StatusCode::OK);
@@ -190,7 +191,7 @@ TEST_F(KVSCCTest, scan_concurrently) {
 }
 
 TEST_F(KVSCCTest, get_concurrently) {
-    // verify detecting ERR_ILLEGAL_STATE - occ error on search_key()
+    // verify detecting WARN_CONCURRENT_DELETE - occ error on search_key()
     const static std::size_t COUNT = 1000;
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
@@ -233,11 +234,12 @@ TEST_F(KVSCCTest, get_concurrently) {
             if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(2));
                 ++retry_error_count;
-            } else
-            if (rc == StatusCode::OK) {
-                ++row_count;
+            } else {
+                EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+                if (rc == StatusCode::OK) {
+                    ++row_count;
+                }
             }
-            EXPECT_EQ(tx2->commit(false), StatusCode::OK);
             tx2->reset();
         }
         EXPECT_EQ(tx2->commit(false), StatusCode::OK);
