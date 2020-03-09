@@ -66,7 +66,7 @@ public:
     ~PiecemealIterator() {
         if(handle_open_) {
             auto rc = ::kvs::close_scan(tx_->native_handle(), DefaultStorage, handle_);
-            if(rc == ::kvs::Status::ERR_INVALID_HANDLE || rc == ::kvs::Status::WARN_INVALID_HANDLE) {
+            if(rc == ::kvs::Status::WARN_INVALID_HANDLE) {
                 // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on kvs_charkey
                 // we can safely ignore this error since the handle is already released on kvs_charkey side
             } else if (rc != ::kvs::Status::OK) {
@@ -217,6 +217,9 @@ private:
                 res == ::kvs::Status::WARN_NOT_FOUND) {
             state_ = State::SAW_EOF;
             return StatusCode::NOT_FOUND;
+        } else if(res == ::kvs::Status::WARN_SCAN_LIMIT) {
+            LOG(ERROR) << "too many open scan";
+            return StatusCode::ERR_UNKNOWN;
         } else {
             handle_open_ = true;
             return resolve(res);

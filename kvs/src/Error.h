@@ -35,18 +35,12 @@ inline StatusCode resolve(::kvs::Status const& result) {
             return StatusCode::NOT_FOUND;
         case ::kvs::Status::WARN_NOT_FOUND:
             return StatusCode::NOT_FOUND;
-        case ::kvs::Status::ERR_ALREADY_EXISTS:
-            return StatusCode::ALREADY_EXISTS;
         case ::kvs::Status::WARN_ALREADY_EXISTS:
             return StatusCode::ALREADY_EXISTS;
-        case ::kvs::Status::ERR_ILLEGAL_STATE:
-            return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::kvs::Status::ERR_INVALID_ARGS:
             return StatusCode::ERR_INVALID_ARGUMENT;
         case ::kvs::Status::ERR_VALIDATION:
             return StatusCode::ERR_ABORTED_RETRYABLE;
-        case ::kvs::Status::WARN_ALREADY_INSERT:
-            return StatusCode::ALREADY_EXISTS;
         case ::kvs::Status::WARN_READ_FROM_OWN_OPERATION:
             return StatusCode::OK;
         case ::kvs::Status::WARN_CANCEL_PREVIOUS_OPERATION:
@@ -59,10 +53,16 @@ inline StatusCode resolve(::kvs::Status const& result) {
             return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::kvs::Status::WARN_CONCURRENT_DELETE:
             return StatusCode::ERR_ABORTED_RETRYABLE;
-        default:
-            break;
+        case ::kvs::Status::WARN_INVALID_HANDLE:
+            return StatusCode::ERR_INVALID_ARGUMENT;
+        case ::kvs::Status::WARN_NOT_IN_A_SESSION:
+            return StatusCode::ERR_INVALID_ARGUMENT;
+        case ::kvs::Status::WARN_SCAN_LIMIT:
+            break; // WARN_SCAN_LIMIT has multiple meanings, so should not be mapped to a single StatusCode here
+        case ::kvs::Status::ERR_SESSION_LIMIT:
+            return StatusCode::ERR_INVALID_STATE;
     }
-    LOG(ERROR) << "KVS error : " << static_cast<std::int32_t>(result);
+    LOG(ERROR) << "KVS error : " << result;
     return StatusCode::ERR_UNKNOWN;
 }
 
