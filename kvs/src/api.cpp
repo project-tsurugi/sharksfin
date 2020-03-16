@@ -203,6 +203,7 @@ StatusCode transaction_exec(
                 return StatusCode::ERR_USER_ERROR;
             case TransactionOperation::RETRY:
                 // simply return retryable error so that caller can retry
+                tx->abort();
                 return StatusCode::ERR_ABORTED_RETRYABLE;
         }
     } while (true); // currently retry infinitely
