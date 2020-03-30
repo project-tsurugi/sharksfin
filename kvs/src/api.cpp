@@ -188,7 +188,7 @@ StatusCode transaction_exec(
                 if(rc != StatusCode::OK) {
                     if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                         // retry
-                        LOG(INFO) << "commit failed. retry transaction.";
+                        VLOG(1) << "commit failed. retry transaction.";
                         continue;
                     }
                     ABORT();
