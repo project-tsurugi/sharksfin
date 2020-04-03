@@ -37,7 +37,6 @@ public:
             Database* owner
     ) : owner_(owner), session_(std::make_unique<Session>()) {
         buffer_.reserve(1024); // TODO auto expand - currently assuming values are shorter than this
-        ::kvs::tbegin(session_->id());
     }
 
     /**
@@ -122,7 +121,6 @@ public:
         if(is_active_) {
             ABORT();
         }
-        ::kvs::tbegin(session_->id());
         is_active_ = true;
     }
 
