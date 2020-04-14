@@ -61,12 +61,11 @@ static void qualify_meta(Slice key, std::string& buffer) {
 
 StatusCode Database::clean() {
     auto tx = create_transaction();
-    std::vector<::kvs::Tuple*> tuples{};
+    std::vector<::kvs::Tuple const*> tuples{};
     ::kvs::scan_key(tx->native_handle(), kvs::DefaultStorage, nullptr, 0, false, nullptr, 0, false, tuples);
     auto tx2 = create_transaction();
     for(auto t : tuples) {
-        (void)t;
-        ::kvs::delete_record(tx2->native_handle(), kvs::DefaultStorage, t->key.get(), t->len_key);
+        ::kvs::delete_record(tx2->native_handle(), kvs::DefaultStorage, t->get_key().data(), t->get_key().size());
     }
     tx2->commit(false);
     tx->abort();
@@ -163,7 +162,7 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     end[end.size()-1] += 1;
     auto b = Slice(prefix);
     auto e = Slice(end);
-    std::vector<::kvs::Tuple*> records{};
+    std::vector<::kvs::Tuple const*> records{};
     ::kvs::Status res = scan_key_with_retry(tx, tx.native_handle(),
             DefaultStorage,
             b.data<char>(),
@@ -180,7 +179,7 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
         ABORT();
     }
     for(auto t : records) {
-        auto rc2 = resolve(::kvs::delete_record(tx.native_handle(), DefaultStorage, t->key.get(), t->len_key));
+        auto rc2 = resolve(::kvs::delete_record(tx.native_handle(), DefaultStorage, t->get_key().data(), t->get_key().size()));
         if (rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
             ABORT();
         }

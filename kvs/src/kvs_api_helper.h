@@ -35,7 +35,7 @@ inline ::kvs::Status search_key_with_retry(Transaction& tx, ::kvs::Token token, 
 inline ::kvs::Status scan_key_with_retry(Transaction& tx, ::kvs::Token token, ::kvs::Storage storage,
         const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
         const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-        std::vector<::kvs::Tuple*>& result) {
+        std::vector<::kvs::Tuple const*>& result) {
 
     int retry = 3;
     ::kvs::Status res{::kvs::Status::OK};

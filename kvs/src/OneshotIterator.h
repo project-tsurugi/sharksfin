@@ -164,7 +164,7 @@ public:
      * @return key on the current position
      */
     inline Slice key() {
-        auto s = owner_->subkey(Slice{ (*it_)->key.get(), (*it_)->len_key});
+        auto s = owner_->subkey(Slice{ (*it_)->get_key()});
         buffer_key_.assign(s.to_string_view());
         return Slice(buffer_key_);
     }
@@ -173,14 +173,14 @@ public:
      * @return value on the current position
      */
     inline Slice value() {
-        buffer_value_.assign((*it_)->val.get(), (*it_)->len_val);
+        buffer_value_.assign((*it_)->get_value());
         return Slice(buffer_value_);
     }
 
 private:
     Storage* owner_{};
-    std::vector<::kvs::Tuple*> records_{};
-    std::vector<::kvs::Tuple*>::iterator it_{};
+    std::vector<::kvs::Tuple const*> records_{};
+    std::vector<::kvs::Tuple const*>::iterator it_{};
     State state_{};
     std::string buffer_key_{};
     std::string buffer_value_{};

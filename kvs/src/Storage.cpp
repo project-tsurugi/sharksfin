@@ -45,7 +45,7 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
     auto rc = resolve(search_key_with_retry(*tx, tx->native_handle(), DefaultStorage,
             k.data<std::string::value_type>(), k.size(), &tuple));
     if (rc == StatusCode::OK && tuple != nullptr) {
-        buffer.assign(tuple->val.get(), tuple->len_val);
+        buffer.assign(tuple->get_value());
     }
     return rc;
 }

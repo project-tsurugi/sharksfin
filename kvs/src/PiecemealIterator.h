@@ -111,7 +111,7 @@ public:
      * @return key on the current position
      */
     inline Slice key() {
-        auto s = owner_->subkey(Slice{ tuple_->key.get(), tuple_->len_key});
+        auto s = owner_->subkey(Slice{ tuple_->get_key()});
         buffer_key_.assign(s.to_string_view());
         return Slice(buffer_key_);
     }
@@ -120,7 +120,7 @@ public:
      * @return value on the current position
      */
     inline Slice value() {
-        buffer_value_.assign(tuple_->val.get(), tuple_->len_val);
+        buffer_value_.assign(tuple_->get_value());
         return Slice(buffer_value_);
     }
 
