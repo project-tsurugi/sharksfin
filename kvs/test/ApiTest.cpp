@@ -81,7 +81,8 @@ TEST_F(KVSApiTest, simple) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, database_restore) {
+// kvs WAL is disabled for now
+TEST_F(KVSApiTest, DISABLED_database_restore) {
     {
         DatabaseOptions options;
         options.attribute(KEY_LOCATION, path());
