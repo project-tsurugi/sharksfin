@@ -1,5 +1,5 @@
-if(NOT kvs_charkey_FOUND)
-    message(FATAL_ERROR "kvs_charkey was not installed, please configure with -DBUILD_KVS=OFF to skip")
+if(NOT shirakami_FOUND)
+    message(FATAL_ERROR "shirakami was not installed, please configure with -DBUILD_KVS=OFF to skip")
 endif()
 
 file(GLOB SOURCES
@@ -22,7 +22,7 @@ target_include_directories(kvs
 target_link_libraries(kvs
         PUBLIC api
         PRIVATE glog::glog
-        PRIVATE kvs_charkey-kvs_charkey
+        PRIVATE shirakami-shirakami
         )
 
 set_compile_options(kvs)

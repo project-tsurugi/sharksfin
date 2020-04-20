@@ -34,7 +34,7 @@ public:
                 path_ = candidate;
                 auto log_path = candidate;
 				
-				// kvs_charkey requires "log" directory in the specified path 
+				// shirakami requires "log" directory in the specified path 
                 log_path /= "log";
                 boost::filesystem::create_directories(log_path);
                 break;

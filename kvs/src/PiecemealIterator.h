@@ -67,8 +67,8 @@ public:
         if(handle_open_) {
             auto rc = ::kvs::close_scan(tx_->native_handle(), DefaultStorage, handle_);
             if(rc == ::kvs::Status::WARN_INVALID_HANDLE) {
-                // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on kvs_charkey
-                // we can safely ignore this error since the handle is already released on kvs_charkey side
+                // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on shirakami
+                // we can safely ignore this error since the handle is already released on shirakami side
             } else if (rc != ::kvs::Status::OK) {
                 ABORT();
             }

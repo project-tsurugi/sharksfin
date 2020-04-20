@@ -4,6 +4,6 @@
 [submodule "third_party/foedus_code"]
 	path = third_party/foedus
 	url = https://github.com/large-scale-oltp-team/foedus_code.git
-[submodule "third_party/kvs_charkey"]
-	path = third_party/kvs_charkey
-	url = git@github.com:project-tsurugi/kvs_charkey.git
+[submodule "third_party/shirakami"]
+	path = third_party/shirakami
+	url = git@github.com:project-tsurugi/shirakami.git

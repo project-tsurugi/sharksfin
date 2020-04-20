@@ -32,7 +32,7 @@ StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Databa
     *result = std::make_unique<Database>(options);
     if (options.open_mode() != DatabaseOptions::OpenMode::RESTORE) {
         // Not opened with restore option. Ensure db to be clean in case previous test has left over.
-        // Remove this when kvs_charkey ensures clean at db open.
+        // Remove this when shirakami ensures clean at db open.
         (*result)->clean();
     }
     return StatusCode::OK;

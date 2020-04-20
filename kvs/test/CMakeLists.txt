@@ -24,7 +24,7 @@ register_tests(
     TARGET kvs
     DEPENDS
         kvs-impl
-        kvs_charkey-kvs_charkey
+        shirakami-shirakami
         Boost::filesystem
     SOURCES ${TEST_SOURCES}
 )

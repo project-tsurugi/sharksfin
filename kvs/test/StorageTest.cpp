@@ -222,7 +222,7 @@ TEST_F(KVSStorageTest, put_operations_uncommitted) {
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "a");
 
-        // TODO due to kvs_charkey restriction, unable to distinguish existing record from new one under uncommitted tx
+        // TODO due to shirakami restriction, unable to distinguish existing record from new one under uncommitted tx
         // ASSERT_EQ(st->put(tx, "K", "b1", PutOperation::CREATE), StatusCode::ALREADY_EXISTS);
         ASSERT_EQ(st->put(tx, "K", "b2", PutOperation::UPDATE), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);

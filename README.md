@@ -5,7 +5,7 @@
 * CMake `>= 3.10`
 * C++ Compiler `>= C++17`
 * [FOEDUS](https://github.com/large-scale-oltp-team/foedus_code) if you want to run this API with it.
-* [kvs_charkey](https://github.com/project-tsurugi/kvs_charkey) if you want to run this API with it.
+* [shirakami](https://github.com/project-tsurugi/shirakami) if you want to run this API with it.
 * and see *Dockerfile* section
 
 ```sh
@@ -39,12 +39,12 @@ If it's not specified, FOEDUS will be installed in /usr/local.
 
 For details of FOEDUS environment setup, refer to the [guide](https://github.com/large-scale-oltp-team/foedus_code/tree/master/foedus-core).
 
-## How to setup kvs_charkey 
+## How to setup shirakami 
 
-If you want to run sharksfin with kvs_charkey, install it before building the api code. Follow the procedure below.
+If you want to run sharksfin with shirakami, install it before building the api code. Follow the procedure below.
 
 ```sh
-cd sharksfin/third_party/kvs_charkey
+cd sharksfin/third_party/shirakami
 ./bootstrap.sh
 mkdir build
 cd build
@@ -67,7 +67,7 @@ available options:
 * `-DBUILD_MEMORY=OFF` - never build API in-memory implementation
 * `-DBUILD_MOCK=OFF` - never build API mock implementation
 * `-DBUILD_FOEDUS_BRIDGE=ON` - build FOEDUS bridge
-* `-DBUILD_KVS=OFF` - never build kvs_charkey bridge
+* `-DBUILD_KVS=OFF` - never build shirakami bridge
 * `-DBUILD_EXAMPLES=OFF` - never build example programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
 * `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths
@@ -76,7 +76,7 @@ available options:
   * `mock` - link to mock implementation (default)
   * `memory` - link to in-memory implementation
   * `foedus-bridge` - link to FOEDUS (requires `-DBUILD_FOEDUS_BRIDGE=ON`)
-  * `kvs` - link to kvs_charkey implementation
+  * `kvs` - link to shirakami implementation
 * `-DCMAKE_PREFIX_PATH=<installation directory>` - indicate FOEDUS installation directory
 * for debugging only
   * `-DENABLE_SANITIZER=OFF` - disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug`)

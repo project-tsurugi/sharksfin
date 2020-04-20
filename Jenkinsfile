@@ -46,10 +46,10 @@ pipeline {
                 '''
             }
         }
-        stage ('Install kvs_charkey') {
+        stage ('Install shirakami') {
             steps {
                 sh '''
-                    cd third_party/kvs_charkey
+                    cd third_party/shirakami
                     git log -n 1 --format=%H
                     ./bootstrap.sh
                     mkdir -p build
