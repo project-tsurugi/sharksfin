@@ -46,7 +46,6 @@ StatusCode Database::shutdown() {
         std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
     ::kvs::fin();
-    ::kvs::forced_gc_all_records();
     active_ = false;
     return StatusCode::OK;
 }
