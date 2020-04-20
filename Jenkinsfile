@@ -79,7 +79,7 @@ pipeline {
             steps {
                 sh '''
                     cd build
-                    make test ARGS="--verbose --timeout 100"
+                    make test ARGS="--verbose --timeout 1000"
                 '''
             }
         }
