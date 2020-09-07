@@ -19,11 +19,11 @@
 namespace sharksfin::kvs {
 
 inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
-        const char* const key, const std::size_t len_key, ::shirakami::Tuple** const tuple) {
+        const std::string_view key, ::shirakami::Tuple** const tuple) {
     ::shirakami::Status res{::shirakami::Status::OK};
     int retry = 3;
     do {
-        res = ::shirakami::cc_silo_variant::search_key(token, {key, len_key}, tuple);
+        res = ::shirakami::cc_silo_variant::search_key(token, key, tuple);
         --retry;
     } while (res == ::shirakami::Status::WARN_CONCURRENT_DELETE && retry > 0);
     if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {

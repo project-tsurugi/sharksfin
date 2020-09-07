@@ -130,7 +130,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     ::shirakami::Tuple* tuple{};
 
     Holder holder{this};
-    StatusCode rc = resolve(search_key_with_retry(*holder.tx(), holder.tx()->native_handle(), k.data(), k.size(), &tuple));
+    StatusCode rc = resolve(search_key_with_retry(*holder.tx(), holder.tx()->native_handle(), k, &tuple));
     if (rc != StatusCode::OK) {
         if (rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
             return rc;

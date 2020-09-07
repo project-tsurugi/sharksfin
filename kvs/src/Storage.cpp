@@ -43,7 +43,7 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
     Slice k = qualify(key);
     ::shirakami::Tuple* tuple{};
     auto rc = resolve(search_key_with_retry(*tx, tx->native_handle(),
-            k.data<std::string::value_type>(), k.size(), &tuple));
+            k.to_string_view(), &tuple));
     if (rc == StatusCode::OK && tuple != nullptr) {
         buffer.assign(tuple->get_value());
     }
