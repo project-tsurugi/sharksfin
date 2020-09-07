@@ -1,6 +1,6 @@
 # Shark's fin CLI
 
-* [`examples/cli`] (../examples/cli)
+* `examples/cli` (../examples/cli)
 
 ## 概要
 
@@ -10,7 +10,7 @@
 
 ## ビルド手順
 
-* [README.md] (../README.md) を参照
+* `README.md` (../README.md) を参照
 * 以下のオプションが関連する
   * `-DBUILD_EXAMPLES=OFF` - never build example programs
   * `-DINSTALL_EXAMPLES=ON` - also install example programs (requires `BUILD_EXAMPLES` is enables)
