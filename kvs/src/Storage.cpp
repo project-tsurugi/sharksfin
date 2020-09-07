@@ -56,27 +56,24 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
     StatusCode rc{};
     switch(operation) {
         case PutOperation::CREATE: {
-            rc = resolve(::shirakami::cc_silo_variant::insert(tx->native_handle(),
-                                                              {k.data<std::string::value_type>(), k.size()},
-                                                              {value.data<std::string::value_type>(), value.size()}));
+            rc = resolve(::shirakami::cc_silo_variant::insert(tx->native_handle(), k.to_string_view(),
+                                                              value.to_string_view()));
             if (rc != StatusCode::OK && rc != StatusCode::ALREADY_EXISTS) {
                 ABORT();
             }
             break;
         }
         case PutOperation::UPDATE: {
-            rc = resolve(::shirakami::cc_silo_variant::update(tx->native_handle(),
-                                                              {k.data<std::string::value_type>(), k.size()},
-                                                              {value.data<std::string::value_type>(), value.size()}));
+            rc = resolve(::shirakami::cc_silo_variant::update(tx->native_handle(), k.to_string_view(),
+                                                              value.to_string_view()));
             if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
                 ABORT();
             }
             break;
         }
         case PutOperation::CREATE_OR_UPDATE:
-            rc = resolve(::shirakami::cc_silo_variant::upsert(tx->native_handle(),
-                                                              {k.data<std::string::value_type>(), k.size()},
-                                                              {value.data<std::string::value_type>(), value.size()}));
+            rc = resolve(::shirakami::cc_silo_variant::upsert(tx->native_handle(), k.to_string_view(),
+                                                              value.to_string_view()));
             if (rc != StatusCode::OK) {
                 ABORT();
             }
@@ -88,8 +85,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
 StatusCode Storage::remove(Transaction* tx, Slice key) {
     assert(tx->active());
     Slice k = qualify(key);
-    auto rc = resolve(::shirakami::cc_silo_variant::delete_record(tx->native_handle(),
-                                                                  {k.data<std::string::value_type>(), k.size()}));
+    auto rc = resolve(::shirakami::cc_silo_variant::delete_record(tx->native_handle(), k.to_string_view()));
     if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
         ABORT();
     }
