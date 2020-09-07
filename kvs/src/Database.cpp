@@ -162,14 +162,8 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     auto b = Slice(prefix);
     auto e = Slice(end);
     std::vector<::shirakami::Tuple const*> records{};
-    ::shirakami::Status res = scan_key_with_retry(tx, tx.native_handle(),
-            b.data<char>(),
-            b.size(),
-            false,
-            e.data<char>(),
-            e.size(),
-            true,
-            records);
+    ::shirakami::Status res = scan_key_with_retry(tx, tx.native_handle(), b.to_string_view(), false,
+            e.to_string_view(), true, records);
     if(auto rc = resolve(res); rc != StatusCode::OK) {
         if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
             return rc;

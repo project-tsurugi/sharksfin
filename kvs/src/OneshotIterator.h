@@ -112,9 +112,8 @@ public:
                 break;
         }
 
-        if(auto res = scan_key_with_retry(*tx, tx->native_handle(),
-                    begin_key_.data(), begin_key_.size(), begin_exclusive,
-                    end_key_.data(), end_key_.size(), end_exclusive, records_);
+        if(auto res = scan_key_with_retry(*tx, tx->native_handle(), begin_key_, begin_exclusive, end_key_,
+                                          end_exclusive, records_);
                 res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
             state_ = State::RETRYABLE_ERROR;
         } else if (res != ::shirakami::Status::OK) {
