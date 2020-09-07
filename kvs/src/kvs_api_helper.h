@@ -18,46 +18,46 @@
 
 namespace sharksfin::kvs {
 
-inline ::kvs::Status search_key_with_retry(Transaction& tx, ::kvs::Token token, ::kvs::Storage storage,
-        const char* const key, const std::size_t len_key, ::kvs::Tuple** const tuple) {
-    ::kvs::Status res{::kvs::Status::OK};
+inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
+        const char* const key, const std::size_t len_key, ::shirakami::Tuple** const tuple) {
+    ::shirakami::Status res{::shirakami::Status::OK};
     int retry = 3;
     do {
-        res = ::kvs::search_key(token, storage, key, len_key, tuple);
+        res = ::shirakami::cc_silo_variant::search_key(token, {key, len_key}, tuple);
         --retry;
-    } while (res == ::kvs::Status::WARN_CONCURRENT_DELETE && retry > 0);
-    if (res == ::kvs::Status::WARN_CONCURRENT_DELETE) {
+    } while (res == ::shirakami::Status::WARN_CONCURRENT_DELETE && retry > 0);
+    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
         tx.abort();
     }
     return res;
 }
 
-inline ::kvs::Status scan_key_with_retry(Transaction& tx, ::kvs::Token token, ::kvs::Storage storage,
+inline ::shirakami::Status scan_key_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
         const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
         const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-        std::vector<::kvs::Tuple const*>& result) {
+        std::vector<::shirakami::Tuple const*>& result) {
 
     int retry = 3;
-    ::kvs::Status res{::kvs::Status::OK};
+    ::shirakami::Status res{::shirakami::Status::OK};
     do {
-        res = ::kvs::scan_key(token, storage, lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, result);
+        res = ::shirakami::cc_silo_variant::scan_key(token, {lkey, len_lkey}, l_exclusive, {rkey, len_rkey}, r_exclusive, result);
         --retry;
-    } while (res == ::kvs::Status::WARN_CONCURRENT_DELETE && retry > 0);
-    if (res == ::kvs::Status::WARN_CONCURRENT_DELETE) {
+    } while (res == ::shirakami::Status::WARN_CONCURRENT_DELETE && retry > 0);
+    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
         tx.abort();
     }
     return res;
 }
 
-inline ::kvs::Status read_from_scan_with_retry(Transaction& tx, ::kvs::Token token, ::kvs::Storage storage,
-        const ::kvs::ScanHandle handle, ::kvs::Tuple** const result) {
+inline ::shirakami::Status read_from_scan_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
+        const ::shirakami::ScanHandle handle, ::shirakami::Tuple** const result) {
     int retry = 3;
-    ::kvs::Status res{::kvs::Status::OK};
+    ::shirakami::Status res{::shirakami::Status::OK};
     do {
-        res = ::kvs::read_from_scan(token, storage, handle, result);
+        res = ::shirakami::cc_silo_variant::read_from_scan(token, handle, result);
         --retry;
-    } while (res == ::kvs::Status::WARN_CONCURRENT_DELETE && retry > 0);
-    if (res == ::kvs::Status::WARN_CONCURRENT_DELETE) {
+    } while (res == ::shirakami::Status::WARN_CONCURRENT_DELETE && retry > 0);
+    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
         tx.abort();
     }
     return res;

@@ -27,39 +27,39 @@ namespace sharksfin::kvs {
  * @param result the kvs error
  * @return sharksfin status code
  */
-inline StatusCode resolve(::kvs::Status const& result) {
+inline StatusCode resolve(::shirakami::Status const& result) {
     switch(result) {
-        case ::kvs::Status::OK:
+        case ::shirakami::Status::OK:
             return StatusCode::OK;
-        case ::kvs::Status::ERR_NOT_FOUND:
+        case ::shirakami::Status::ERR_NOT_FOUND:
             return StatusCode::NOT_FOUND;
-        case ::kvs::Status::WARN_NOT_FOUND:
+        case ::shirakami::Status::WARN_NOT_FOUND:
             return StatusCode::NOT_FOUND;
-        case ::kvs::Status::WARN_ALREADY_EXISTS:
+        case ::shirakami::Status::WARN_ALREADY_EXISTS:
             return StatusCode::ALREADY_EXISTS;
-        case ::kvs::Status::ERR_INVALID_ARGS:
+        case ::shirakami::Status::ERR_INVALID_ARGS:
             return StatusCode::ERR_INVALID_ARGUMENT;
-        case ::kvs::Status::ERR_VALIDATION:
+        case ::shirakami::Status::ERR_VALIDATION:
             return StatusCode::ERR_ABORTED_RETRYABLE;
-        case ::kvs::Status::WARN_READ_FROM_OWN_OPERATION:
+        case ::shirakami::Status::WARN_READ_FROM_OWN_OPERATION:
             return StatusCode::OK;
-        case ::kvs::Status::WARN_CANCEL_PREVIOUS_OPERATION:
+        case ::shirakami::Status::WARN_CANCEL_PREVIOUS_OPERATION:
             return StatusCode::OK;
-        case ::kvs::Status::WARN_ALREADY_DELETE:
+        case ::shirakami::Status::WARN_ALREADY_DELETE:
             return StatusCode::NOT_FOUND;
-        case ::kvs::Status::WARN_WRITE_TO_LOCAL_WRITE:
+        case ::shirakami::Status::WARN_WRITE_TO_LOCAL_WRITE:
             return StatusCode::OK;
-        case ::kvs::Status::ERR_WRITE_TO_DELETED_RECORD:
+        case ::shirakami::Status::ERR_WRITE_TO_DELETED_RECORD:
             return StatusCode::ERR_ABORTED_RETRYABLE;
-        case ::kvs::Status::WARN_CONCURRENT_DELETE:
+        case ::shirakami::Status::WARN_CONCURRENT_DELETE:
             return StatusCode::ERR_ABORTED_RETRYABLE;
-        case ::kvs::Status::WARN_INVALID_HANDLE:
+        case ::shirakami::Status::WARN_INVALID_HANDLE:
             return StatusCode::ERR_INVALID_ARGUMENT;
-        case ::kvs::Status::WARN_NOT_IN_A_SESSION:
+        case ::shirakami::Status::WARN_NOT_IN_A_SESSION:
             return StatusCode::ERR_INVALID_ARGUMENT;
-        case ::kvs::Status::WARN_SCAN_LIMIT:
+        case ::shirakami::Status::WARN_SCAN_LIMIT:
             break; // WARN_SCAN_LIMIT has multiple meanings, so should not be mapped to a single StatusCode here
-        case ::kvs::Status::ERR_SESSION_LIMIT:
+        case ::shirakami::Status::ERR_SESSION_LIMIT:
             return StatusCode::ERR_INVALID_STATE;
     }
     LOG(ERROR) << "KVS error : " << result;

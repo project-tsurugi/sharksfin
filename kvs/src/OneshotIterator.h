@@ -112,12 +112,12 @@ public:
                 break;
         }
 
-        if(auto res = scan_key_with_retry(*tx, tx->native_handle(), DefaultStorage,
+        if(auto res = scan_key_with_retry(*tx, tx->native_handle(),
                     begin_key_.data(), begin_key_.size(), begin_exclusive,
                     end_key_.data(), end_key_.size(), end_exclusive, records_);
-                res == ::kvs::Status::WARN_CONCURRENT_DELETE) {
+                res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
             state_ = State::RETRYABLE_ERROR;
-        } else if (res != ::kvs::Status::OK) {
+        } else if (res != ::shirakami::Status::OK) {
             ABORT_MSG("invalid rc from scan_key");
         }
     }
@@ -156,14 +156,14 @@ public:
      * @return true if this points a valid entry
      * @return false otherwise
      */
-    inline bool is_valid() const {
+    [[nodiscard]] inline bool is_valid() const { // NOLINT
         return state_ != State::RETRYABLE_ERROR && test() != State::SAW_EOF;
     }
 
     /**
      * @return key on the current position
      */
-    inline Slice key() {
+    inline Slice key() { // NOLINT
         auto s = owner_->subkey(Slice{ (*it_)->get_key()});
         buffer_key_.assign(s.to_string_view());
         return Slice(buffer_key_);
@@ -172,29 +172,29 @@ public:
     /**
      * @return value on the current position
      */
-    inline Slice value() {
+    inline Slice value() { // NOLINT
         buffer_value_.assign((*it_)->get_value());
         return Slice(buffer_value_);
     }
 
 private:
     Storage* owner_{};
-    std::vector<::kvs::Tuple const*> records_{};
-    std::vector<::kvs::Tuple const*>::iterator it_{};
+    std::vector<::shirakami::Tuple const*> records_{};
+    std::vector<::shirakami::Tuple const*>::iterator it_{};
     State state_{};
     std::string buffer_key_{};
     std::string buffer_value_{};
 
     std::string begin_key_{};
     std::string end_key_{};
-    inline State test() const {
+    [[nodiscard]] inline State test() const { // NOLINT
         if (it_ < records_.end()) {
             return State::BODY;
         }
         return State::SAW_EOF;
     }
 
-    inline StatusCode open_cursor_() {
+    inline StatusCode open_cursor_() { // NOLINT
         it_ = records_.begin();
         return StatusCode::OK;
     }
@@ -221,7 +221,7 @@ private:
         return {};
     }
 
-    static inline std::string qualified_(Storage* owner, Slice key) {
+    static inline std::string qualified_(Storage* owner, Slice key) { // NOLINT
         std::string result;
         result.reserve(owner->prefix().size() + key.size());
         owner->prefix().append_to(result);

@@ -34,8 +34,6 @@ namespace sharksfin::kvs {
 class Transaction;
 class Storage;
 
-// default empty storage - remove when kvs supports storage
-inline const ::kvs::Storage DefaultStorage = 0;
 static constexpr std::string_view KEY_LOCATION { "location" };
 
 /**
@@ -59,16 +57,16 @@ public:
      * @brief constructs a new object.
      */
     Database() {
-        ::kvs::init();
+        ::shirakami::cc_silo_variant::init();
     };
     /**
      * @brief constructs a new object.
      */
     Database(DatabaseOptions const& options) {
         if (auto loc = options.attribute(KEY_LOCATION); loc) {
-            ::kvs::init(*loc);
+            ::shirakami::cc_silo_variant::init(*loc);
         } else {
-            ::kvs::init();
+            ::shirakami::cc_silo_variant::init();
         }
     };
 

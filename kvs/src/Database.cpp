@@ -45,7 +45,7 @@ StatusCode Database::shutdown() {
         std::cout << "transaction process time: " << transaction_process_time().load().count() << std::endl;
         std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
-    ::kvs::fin();
+    ::shirakami::cc_silo_variant::fin();
     active_ = false;
     return StatusCode::OK;
 }
@@ -60,11 +60,11 @@ static void qualify_meta(Slice key, std::string& buffer) {
 
 StatusCode Database::clean() {
     auto tx = create_transaction();
-    std::vector<::kvs::Tuple const*> tuples{};
-    ::kvs::scan_key(tx->native_handle(), kvs::DefaultStorage, nullptr, 0, false, nullptr, 0, false, tuples);
+    std::vector<::shirakami::Tuple const*> tuples{};
+    ::shirakami::cc_silo_variant::scan_key(tx->native_handle(), "", false, "", false, tuples);
     auto tx2 = create_transaction();
     for(auto t : tuples) {
-        ::kvs::delete_record(tx2->native_handle(), kvs::DefaultStorage, t->get_key().data(), t->get_key().size());
+        ::shirakami::cc_silo_variant::delete_record(tx2->native_handle(), t->get_key());
     }
     tx2->commit(false);
     tx->abort();
@@ -93,7 +93,7 @@ StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<
     auto storage = std::make_unique<Storage>(this, key);
     std::string k{}, v{};
     qualify_meta(storage->prefix(), k);
-    auto rc = resolve(::kvs::upsert(tx.native_handle(), DefaultStorage, k.data(), k.size(), v.data(), v.size()));
+    auto rc = resolve(::shirakami::cc_silo_variant::upsert(tx.native_handle(), k, v));
     if (rc != StatusCode::OK) {
         ABORT();
     }
@@ -127,10 +127,10 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     auto storage = std::make_unique<Storage>(this, key);
     std::string k{};
     qualify_meta(storage->prefix(), k);
-    ::kvs::Tuple* tuple{};
+    ::shirakami::Tuple* tuple{};
 
     Holder holder{this};
-    StatusCode rc = resolve(search_key_with_retry(*holder.tx(), holder.tx()->native_handle(), DefaultStorage, k.data(), k.size(), &tuple));
+    StatusCode rc = resolve(search_key_with_retry(*holder.tx(), holder.tx()->native_handle(), k.data(), k.size(), &tuple));
     if (rc != StatusCode::OK) {
         if (rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
             return rc;
@@ -148,7 +148,7 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     std::unique_lock lock{mutex_for_storage_metadata_};
     std::string k{};
     qualify_meta(storage.prefix(), k);
-    auto rc1 = resolve(::kvs::delete_record(tx.native_handle(), DefaultStorage, k.data(), k.size()));
+    auto rc1 = resolve(::shirakami::cc_silo_variant::delete_record(tx.native_handle(),  k));
     storage_cache_.remove(storage.key());
     if (rc1 == StatusCode::NOT_FOUND) {
         return StatusCode::NOT_FOUND;
@@ -161,9 +161,8 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     end[end.size()-1] += 1;
     auto b = Slice(prefix);
     auto e = Slice(end);
-    std::vector<::kvs::Tuple const*> records{};
-    ::kvs::Status res = scan_key_with_retry(tx, tx.native_handle(),
-            DefaultStorage,
+    std::vector<::shirakami::Tuple const*> records{};
+    ::shirakami::Status res = scan_key_with_retry(tx, tx.native_handle(),
             b.data<char>(),
             b.size(),
             false,
@@ -178,7 +177,7 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
         ABORT();
     }
     for(auto t : records) {
-        auto rc2 = resolve(::kvs::delete_record(tx.native_handle(), DefaultStorage, t->get_key().data(), t->get_key().size()));
+        auto rc2 = resolve(::shirakami::cc_silo_variant::delete_record(tx.native_handle(), t->get_key()));
         if (rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
             ABORT();
         }

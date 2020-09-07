@@ -65,7 +65,7 @@ public:
         if(!is_active_) {
             ABORT();
         }
-        auto rc = resolve(::kvs::commit(session_->id()));
+        auto rc = resolve(::shirakami::cc_silo_variant::commit(session_->id()));
         if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
             is_active_ = false;
         }
@@ -81,7 +81,7 @@ public:
         if(!is_active_) {
             return StatusCode::OK;
         }
-        auto rc = resolve(::kvs::abort(session_->id()));
+        auto rc = resolve(::shirakami::cc_silo_variant::abort(session_->id()));
         if (rc != StatusCode::OK) {
             ABORT_MSG("abort should always be successful");
         }
@@ -109,7 +109,7 @@ public:
      * @brief returns the native transaction handle object.
      * @return the kvs native handle
      */
-    inline ::kvs::Token native_handle() {
+    inline ::shirakami::Token native_handle() {
         return session_.get()->id();
     }
 

@@ -65,11 +65,11 @@ public:
      */
     ~PiecemealIterator() {
         if(handle_open_) {
-            auto rc = ::kvs::close_scan(tx_->native_handle(), DefaultStorage, handle_);
-            if(rc == ::kvs::Status::WARN_INVALID_HANDLE) {
+            auto rc = ::shirakami::cc_silo_variant::close_scan(tx_->native_handle(), handle_);
+            if(rc == ::shirakami::Status::WARN_INVALID_HANDLE) {
                 // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on shirakami
                 // we can safely ignore this error since the handle is already released on shirakami side
-            } else if (rc != ::kvs::Status::OK) {
+            } else if (rc != ::shirakami::Status::OK) {
                 ABORT();
             }
         }
@@ -126,7 +126,7 @@ public:
 
 private:
     Storage* owner_{};
-    ::kvs::ScanHandle handle_{};
+    ::shirakami::ScanHandle handle_{};
     State state_{};
     std::string buffer_key_{};
     std::string buffer_value_{};
@@ -135,17 +135,17 @@ private:
     EndPointKind begin_kind_{};
     std::string end_key_{};
     EndPointKind end_kind_{};
-    ::kvs::Tuple* tuple_{};
+    ::shirakami::Tuple* tuple_{};
     bool is_valid_{false};
     bool handle_open_{false};
 
     inline StatusCode next_cursor_() {
-        auto res = read_from_scan_with_retry(*tx_, tx_->native_handle(), DefaultStorage, handle_, &tuple_);
-        if (res == ::kvs::Status::WARN_CONCURRENT_DELETE) {
+        auto res = read_from_scan_with_retry(*tx_, tx_->native_handle(), handle_, &tuple_);
+        if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
             is_valid_ = false;
             return StatusCode::ERR_ABORTED_RETRYABLE;
         }
-        if (res == ::kvs::Status::WARN_SCAN_LIMIT) {
+        if (res == ::shirakami::Status::WARN_SCAN_LIMIT) {
             state_ = State::SAW_EOF;
             is_valid_ = false;
             return StatusCode::NOT_FOUND;
@@ -211,13 +211,13 @@ private:
                 end_exclusive = true;
                 break;
         }
-        if (auto res = ::kvs::open_scan(tx_->native_handle(), DefaultStorage,
-                    begin_key_.data(), begin_key_.size(), begin_exclusive,
-                    end_key_.data(), end_key_.size(), end_exclusive, handle_);
-                res == ::kvs::Status::WARN_NOT_FOUND) {
+        if (auto res = ::shirakami::cc_silo_variant::open_scan(tx_->native_handle(),
+                    begin_key_, begin_exclusive,
+                    end_key_, end_exclusive, handle_);
+                res == ::shirakami::Status::WARN_NOT_FOUND) {
             state_ = State::SAW_EOF;
             return StatusCode::NOT_FOUND;
-        } else if(res == ::kvs::Status::WARN_SCAN_LIMIT) {
+        } else if(res == ::shirakami::Status::WARN_SCAN_LIMIT) {
             LOG(ERROR) << "too many open scan";
             return StatusCode::ERR_UNKNOWN;
         } else {

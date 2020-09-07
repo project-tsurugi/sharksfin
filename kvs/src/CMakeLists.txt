@@ -32,6 +32,9 @@ if(USE_PIECEMEAL_ITERATOR)
     target_compile_definitions(kvs PUBLIC -DUSE_PIECEMEAL_ITERATOR)
 endif()
 
+# To enable pre-processor macro
+target_compile_definitions(kvs PUBLIC -DCC_SILO_VARIANT)
+
 install_custom(kvs ${export_name})
 
 # for tests

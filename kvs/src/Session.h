@@ -31,7 +31,7 @@ namespace sharksfin::kvs {
 class Session {
 public:
     Session() {
-        if (auto res = ::kvs::enter(id_); res != ::kvs::Status::OK) {
+        if (auto res = ::shirakami::cc_silo_variant::enter(id_); res != ::shirakami::Status::OK) {
             ABORT_MSG("enter should always be successful");
         }
     };
@@ -39,17 +39,17 @@ public:
     Session(Session&& other) = default;
     Session& operator=(Session const& other) = default;
     Session& operator=(Session&& other) = default;
-    explicit Session(::kvs::Token id) noexcept : id_(id) {}
+    explicit Session(::shirakami::Token id) noexcept : id_(id) {}
     ~Session() noexcept {
-        if (auto res = ::kvs::leave(id_); res != ::kvs::Status::OK) {
+        if (auto res = ::shirakami::cc_silo_variant::leave(id_); res != ::shirakami::Status::OK) {
             ABORT_MSG("leave should always be successful");
         }
     };
-    ::kvs::Token id() {
+    ::shirakami::Token id() {
         return id_;
     }
 private:
-    ::kvs::Token id_{};
+    ::shirakami::Token id_{};
 };
 
 } // namespace
