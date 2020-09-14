@@ -61,7 +61,7 @@ static void qualify_meta(Slice key, std::string& buffer) {
 StatusCode Database::clean() {
     auto tx = create_transaction();
     std::vector<::shirakami::Tuple const*> tuples{};
-    ::shirakami::cc_silo_variant::scan_key(tx->native_handle(), "", false, "", false, tuples);
+    ::shirakami::cc_silo_variant::scan_key(tx->native_handle(), "", shirakami::scan_endpoint::INF, "", shirakami::scan_endpoint::INF, tuples);
     auto tx2 = create_transaction();
     for(auto t : tuples) {
         ::shirakami::cc_silo_variant::delete_record(tx2->native_handle(), t->get_key());
@@ -162,8 +162,8 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     auto b = Slice(prefix);
     auto e = Slice(end);
     std::vector<::shirakami::Tuple const*> records{};
-    ::shirakami::Status res = scan_key_with_retry(tx, tx.native_handle(), b.to_string_view(), false,
-            e.to_string_view(), true, records);
+    ::shirakami::Status res = scan_key_with_retry(tx, tx.native_handle(), b.to_string_view(), shirakami::scan_endpoint::INCLUSIVE,
+            e.to_string_view(), shirakami::scan_endpoint::EXCLUSIVE, records);
     if(auto rc = resolve(res); rc != StatusCode::OK) {
         if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
             return rc;

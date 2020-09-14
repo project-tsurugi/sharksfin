@@ -33,13 +33,13 @@ inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::T
 }
 
 inline ::shirakami::Status scan_key_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
-        const std::string_view lkey, const bool l_exclusive,
-        const std::string_view rkey, const bool r_exclusive,
+        const std::string_view lkey, const shirakami::scan_endpoint l_end,
+        const std::string_view rkey, const shirakami::scan_endpoint r_end,
         std::vector<::shirakami::Tuple const*>& result) {
     int retry = 3;
     ::shirakami::Status res{::shirakami::Status::OK};
     do {
-        res = ::shirakami::cc_silo_variant::scan_key(token, lkey, l_exclusive, rkey, r_exclusive, result);
+        res = ::shirakami::cc_silo_variant::scan_key(token, lkey, l_end, rkey, r_end, result);
         --retry;
     } while (res == ::shirakami::Status::WARN_CONCURRENT_DELETE && retry > 0);
     if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {

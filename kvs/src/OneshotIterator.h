@@ -57,8 +57,8 @@ public:
     ) : owner_(owner), state_(State::INIT),
         begin_key_(begin_kind == EndPointKind::UNBOUND ? qualified_(owner_, {}) : qualified_(owner_, begin_key)),
         end_key_(end_kind == EndPointKind::UNBOUND ? qualified_(owner_, {}) : qualified_(owner_, end_key)) {
-        bool begin_exclusive = false;
-        bool end_exclusive = false;
+        shirakami::scan_endpoint begin_endpoint{shirakami::scan_endpoint::INF};
+        shirakami::scan_endpoint end_endpoint{shirakami::scan_endpoint::INF};
         switch (begin_kind) {
             case EndPointKind::UNBOUND:
                 // begin_key_ can contain storage prefix
@@ -66,13 +66,13 @@ public:
                 break;
             case EndPointKind::PREFIXED_INCLUSIVE:
             case EndPointKind::INCLUSIVE:
-                begin_exclusive = false;
+                begin_endpoint = shirakami::scan_endpoint::INCLUSIVE;
                 break;
             case EndPointKind::EXCLUSIVE:
-                begin_exclusive = true;
+                begin_endpoint = shirakami::scan_endpoint::EXCLUSIVE;
                 break;
             case EndPointKind::PREFIXED_EXCLUSIVE:
-                begin_exclusive = false; // equal or larger than next neighbor
+                begin_endpoint = shirakami::scan_endpoint::INCLUSIVE; // equal or larger than next neighbor
                 auto n = next_neighbor_(begin_key_).to_string_view();
                 if (n.empty()) {
                     // there is no neighbor - exclude everything
@@ -90,7 +90,7 @@ public:
 
                 // fall-through
             case EndPointKind::PREFIXED_INCLUSIVE: {
-                end_exclusive = true;  // strictly less than next neighbor
+                end_endpoint = shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
                 if (end_key_.empty()) {
                     break;
                 }
@@ -104,16 +104,16 @@ public:
                 break;
             }
             case EndPointKind::INCLUSIVE:
-                end_exclusive = false;
+                end_endpoint = shirakami::scan_endpoint::INCLUSIVE;
                 break;
             case EndPointKind::EXCLUSIVE:
             case EndPointKind::PREFIXED_EXCLUSIVE:
-                end_exclusive = true;
+                end_endpoint = shirakami::scan_endpoint::EXCLUSIVE;
                 break;
         }
 
-        if(auto res = scan_key_with_retry(*tx, tx->native_handle(), begin_key_, begin_exclusive, end_key_,
-                                          end_exclusive, records_);
+        if(auto res = scan_key_with_retry(*tx, tx->native_handle(), begin_key_, begin_endpoint, end_key_,
+                                          end_endpoint, records_);
                 res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
             state_ = State::RETRYABLE_ERROR;
         } else if (res != ::shirakami::Status::OK) {

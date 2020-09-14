@@ -155,8 +155,8 @@ private:
         return rc;
     }
     inline StatusCode open_cursor_() {
-        bool begin_exclusive = false;
-        bool end_exclusive = false;
+        shirakami::scan_endpoint begin_endpoint{shirakami::scan_endpoint::INF};
+        shirakami::scan_endpoint end_endpoint{shirakami::scan_endpoint::INF};
         is_valid_ = false;
         switch (begin_kind_) {
             case EndPointKind::UNBOUND:
@@ -165,13 +165,13 @@ private:
                 break;
             case EndPointKind::PREFIXED_INCLUSIVE:
             case EndPointKind::INCLUSIVE:
-                begin_exclusive = false;
+                begin_endpoint = shirakami::scan_endpoint::INCLUSIVE;
                 break;
             case EndPointKind::EXCLUSIVE:
-                begin_exclusive = true;
+                begin_endpoint = shirakami::scan_endpoint::EXCLUSIVE;
                 break;
             case EndPointKind::PREFIXED_EXCLUSIVE:
-                begin_exclusive = false; // equal or larger than next neighbor
+                begin_endpoint = shirakami::scan_endpoint::INCLUSIVE; // equal or larger than next neighbor
                 auto n = next_neighbor_(begin_key_).to_string_view();
                 if (n.empty()) {
                     // there is no neighbor - exclude everything
@@ -190,7 +190,7 @@ private:
 
                 // fall-through
             case EndPointKind::PREFIXED_INCLUSIVE: {
-                end_exclusive = true;  // strictly less than next neighbor
+                end_endpoint = shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
                 if (end_key_.empty()) {
                     break;
                 }
@@ -204,16 +204,16 @@ private:
                 break;
             }
             case EndPointKind::INCLUSIVE:
-                end_exclusive = false;
+                end_endpoint = shirakami::scan_endpoint::INCLUSIVE;
                 break;
             case EndPointKind::EXCLUSIVE:
             case EndPointKind::PREFIXED_EXCLUSIVE:
-                end_exclusive = true;
+                end_endpoint = shirakami::scan_endpoint::EXCLUSIVE;
                 break;
         }
         if (auto res = ::shirakami::cc_silo_variant::open_scan(tx_->native_handle(),
-                    begin_key_, begin_exclusive,
-                    end_key_, end_exclusive, handle_);
+                                                               begin_key_, begin_endpoint,
+                                                               end_key_, end_endpoint, handle_);
                 res == ::shirakami::Status::WARN_NOT_FOUND) {
             state_ = State::SAW_EOF;
             return StatusCode::NOT_FOUND;
