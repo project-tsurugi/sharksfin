@@ -27,7 +27,7 @@ jobs:
           cd build
           rm -f CMakeCache.txt
           cmake -DCMAKE_BUILD_TYPE=Debug -DGFLAGS_INTTYPES_FORMAT=C99 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
-          cmake --build . --target install --clean-first -- -j8
+          cmake --build . --target install --clean-first -- -j
 
       - id: Install_shirakami
         name: Install_shirakami
@@ -37,7 +37,7 @@ jobs:
           mkdir -p build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
-          cmake --build . --target install --clean-first -- -j8
+          cmake --build . --target install --clean-first -- -j
 
       - id: CMake_Build
         name: CMake_Build
@@ -45,7 +45,7 @@ jobs:
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_FOEDUS_BRIDGE=ON -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-          cmake --build . --target all --clean-first -- -j8
+          cmake --build . --target all --clean-first -- -j
 
       - id: CTest
         name: CTest
