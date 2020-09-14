@@ -57,8 +57,8 @@ public:
     ) : owner_(owner), state_(State::INIT),
         begin_key_(begin_kind == EndPointKind::UNBOUND ? qualified_(owner_, {}) : qualified_(owner_, begin_key)),
         end_key_(end_kind == EndPointKind::UNBOUND ? qualified_(owner_, {}) : qualified_(owner_, end_key)) {
-        shirakami::scan_endpoint begin_endpoint{shirakami::scan_endpoint::INF};
-        shirakami::scan_endpoint end_endpoint{shirakami::scan_endpoint::INF};
+        shirakami::scan_endpoint begin_endpoint{shirakami::scan_endpoint::INCLUSIVE};
+        shirakami::scan_endpoint end_endpoint{shirakami::scan_endpoint::INCLUSIVE};
         switch (begin_kind) {
             case EndPointKind::UNBOUND:
                 // begin_key_ can contain storage prefix

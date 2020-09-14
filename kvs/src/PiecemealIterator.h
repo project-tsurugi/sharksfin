@@ -155,8 +155,8 @@ private:
         return rc;
     }
     inline StatusCode open_cursor_() {
-        shirakami::scan_endpoint begin_endpoint{shirakami::scan_endpoint::INF};
-        shirakami::scan_endpoint end_endpoint{shirakami::scan_endpoint::INF};
+        shirakami::scan_endpoint begin_endpoint{shirakami::scan_endpoint::INCLUSIVE};
+        shirakami::scan_endpoint end_endpoint{shirakami::scan_endpoint::INCLUSIVE};
         is_valid_ = false;
         switch (begin_kind_) {
             case EndPointKind::UNBOUND:
