@@ -68,4 +68,35 @@ TEST_F(TransactionContextTest, block) {
     }
 }
 
+TEST_F(TransactionContextTest, readonly) {
+    Database db;
+    {
+        auto tx = db.create_transaction(true);
+        ASSERT_TRUE(tx->readonly());
+        ASSERT_TRUE(tx->try_acquire());
+        {
+            auto ntx = db.create_transaction(true);
+            ASSERT_TRUE(ntx->try_acquire());
+            ASSERT_TRUE(ntx->release());
+        }
+        {
+            auto ntx = db.create_transaction();
+            ASSERT_FALSE(ntx->try_acquire());
+            ASSERT_FALSE(ntx->release());
+        }
+        ASSERT_TRUE(tx->release());
+    }
+    {
+        auto tx = db.create_transaction();
+        ASSERT_FALSE(tx->readonly());
+        ASSERT_TRUE(tx->try_acquire());
+        {
+            auto ntx = db.create_transaction(true);
+            ASSERT_FALSE(ntx->try_acquire());
+            ASSERT_FALSE(ntx->release());
+        }
+        ASSERT_TRUE(tx->release());
+    }
+}
+
 }  // namespace sharksfin::memory

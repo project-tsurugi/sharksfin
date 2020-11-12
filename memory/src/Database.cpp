@@ -69,10 +69,14 @@ bool Database::delete_storage(Slice key) {
     return false;
 }
 
-std::unique_ptr<TransactionContext> Database::create_transaction() {
+std::unique_ptr<TransactionContext> Database::create_transaction(bool readonly) {
     check_alive();
     auto id = transaction_id_sequence_.fetch_add(1U);
     if (enable_transaction_lock()) {
+        if (readonly) {
+            std::shared_lock lock { transaction_mutex_, std::defer_lock };
+            return std::make_unique<TransactionContext>(this, id, std::move(lock));
+        }
         std::unique_lock lock { transaction_mutex_, std::defer_lock };
         return std::make_unique<TransactionContext>(this, id, std::move(lock));
     }

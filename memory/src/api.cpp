@@ -141,11 +141,13 @@ StatusCode storage_dispose([[maybe_unused]] StorageHandle handle) {
 
 StatusCode transaction_exec(
         DatabaseHandle handle,
-        [[maybe_unused]] TransactionOptions const& options,
+        TransactionOptions const& options,
         TransactionCallback callback,
         void *arguments) {
+    bool readonly =
+        options.operation_kind() == TransactionOptions::OperationKind::READ_ONLY;
     auto database = unwrap(handle);
-    auto tx = database->create_transaction();
+    auto tx = database->create_transaction(readonly);
     tx->acquire();
     auto status = callback(wrap(tx.get()), arguments);
     if (status == TransactionOperation::COMMIT) {
@@ -169,10 +171,12 @@ StatusCode transaction_borrow_owner(TransactionHandle handle, DatabaseHandle* re
 
 StatusCode transaction_begin(
         DatabaseHandle handle,
-        [[maybe_unused]] TransactionOptions const& options,
+        TransactionOptions const& options,
         TransactionControlHandle *result) {
+    bool readonly =
+        options.operation_kind() == TransactionOptions::OperationKind::READ_ONLY;
     auto database = unwrap(handle);
-    auto tx = database->create_transaction();
+    auto tx = database->create_transaction(readonly);
     tx->acquire();
     *result = wrap_as_control_handle(tx.release());
     return StatusCode::OK;
@@ -249,6 +253,9 @@ StatusCode content_put(
     if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
     }
+    if (tx->readonly()) {
+        return StatusCode::ERR_UNSUPPORTED;
+    }
     switch (operation) {
         case PutOperation::CREATE:
             if (st->create(key, value)) {
@@ -278,6 +285,9 @@ StatusCode content_delete(
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
         return StatusCode::ERR_INVALID_STATE;
+    }
+    if (tx->readonly()) {
+        return StatusCode::ERR_UNSUPPORTED;
     }
     if (st->remove(key)) {
         return StatusCode::OK;

@@ -1276,4 +1276,39 @@ TEST_F(ApiTest, transaction_begin_and_abort) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ApiTest, readonly_transaction) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static bool run(DatabaseHandle db, S& s) {
+            HandleHolder<TransactionControlHandle> tch{};
+            TransactionOptions options{};
+            options.operation_kind(TransactionOptions::OperationKind::READ_ONLY);
+            if (auto c = transaction_begin(db, options, &tch.get()); c != StatusCode::OK) {
+                return false;
+            }
+            TransactionHandle tx{};
+            if (auto c = transaction_borrow_handle(tch.get(), &tx); c != StatusCode::OK) {
+                return false;
+            }
+            if (content_put(tx, s.st, "a", "A") == StatusCode::OK) {
+                return false;
+            }
+            if (content_delete(tx, s.st, "a") == StatusCode::OK) {
+                return false;
+            }
+            return transaction_abort(tch.get(), true) == StatusCode::OK;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+    EXPECT_EQ(S::run(db, s), true);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin
