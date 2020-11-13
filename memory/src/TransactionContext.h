@@ -17,7 +17,7 @@
 #define SHARKSFIN_MEMORY_TRANSACTION_CONTEXT_H_
 
 #include <cstddef>
-#include <mutex>
+#include <shared_mutex>
 
 #include "Database.h"
 
@@ -39,7 +39,7 @@ public:
     using mutex_type = Database::transaction_mutex_type;
 
     /**
-     * @brief constructs a new object.
+     * @brief constructs a new object for generic(read/write) transaction
      * @param owner the owner
      * @param id the transaction ID
      * @param lock the transaction lock, or lock unsupported if no mutex is bound
@@ -51,6 +51,21 @@ public:
         : owner_(owner)
         , id_(id)
         , lock_(std::move(lock))
+    {}
+
+    /**
+     * @brief constructs a new object for read-only transaction
+     * @param owner the owner
+     * @param id the transaction ID
+     * @param shared_lock the shared transaction lock
+     */
+    explicit TransactionContext(
+        Database* owner,
+        id_type id,
+        std::shared_lock<mutex_type> shared_lock) noexcept
+        : owner_(owner)
+        , id_(id)
+        , shared_lock_(std::move(shared_lock))
     {}
 
     /**
@@ -70,7 +85,7 @@ public:
      * @return false otherwise
      */
     inline bool is_alive() const noexcept {
-        return !enable_lock() || lock_.owns_lock();
+        return !enable_lock() || lock_.owns_lock() || shared_lock_.owns_lock();
     }
 
     /**
@@ -86,6 +101,10 @@ public:
      */
     inline void acquire() {
         if (enable_lock()) {
+            if (readonly()) {
+                shared_lock_.lock();
+                return;
+            }
             lock_.lock();
         }
     }
@@ -97,6 +116,9 @@ public:
      */
     inline bool try_acquire() {
         if (enable_lock()) {
+            if (readonly()) {
+                return shared_lock_.try_lock();
+            }
             return lock_.try_lock();
         }
         return true;
@@ -110,6 +132,10 @@ public:
     inline bool release() {
         if (enable_lock()) {
             if (is_alive()) {
+                if (readonly()) {
+                    shared_lock_.unlock();
+                    return true;
+                }
                 lock_.unlock();
                 return true;
             }
@@ -118,13 +144,22 @@ public:
         return true;
     }
 
+    /**
+     * @brief return whether the transaction is read-only
+     * @return true if the transaction is readonly
+     * @return false otherwise
+     */
+    inline bool readonly() const noexcept {
+        return shared_lock_.mutex() != nullptr;
+    }
 private:
     Database* owner_;
     Database::transaction_id_type id_;
     std::unique_lock<Database::transaction_mutex_type> lock_;
+    std::shared_lock<Database::transaction_mutex_type> shared_lock_;
 
     bool enable_lock() const noexcept {
-        return lock_.mutex() != nullptr;
+        return lock_.mutex() != nullptr || shared_lock_.mutex() != nullptr;
     }
 };
 

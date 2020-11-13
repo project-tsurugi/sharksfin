@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 
 #include "sharksfin/Slice.h"
 #include "Buffer.h"
@@ -39,7 +40,7 @@ public:
     /**
      * @brief the transaction mutex type.
      */
-    using transaction_mutex_type = std::mutex;
+    using transaction_mutex_type = std::shared_mutex;
 
     /**
      * @brief shutdown this database.
@@ -72,9 +73,10 @@ public:
 
     /**
      * @brief creates a new transaction context.
+     * @param readonly specify whether the transaction is readonly
      * @return the created context
      */
-    std::unique_ptr<TransactionContext> create_transaction();
+    std::unique_ptr<TransactionContext> create_transaction(bool readonly = false);
 
     /**
      * @brief returns whether or not this database is alive.
