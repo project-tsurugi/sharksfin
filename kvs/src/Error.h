@@ -41,6 +41,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             return StatusCode::ERR_INVALID_ARGUMENT;
         case ::shirakami::Status::ERR_VALIDATION:
             return StatusCode::ERR_ABORTED_RETRYABLE;
+        case ::shirakami::Status::ERR_PHANTOM:
+            return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::shirakami::Status::WARN_READ_FROM_OWN_OPERATION:
             return StatusCode::OK;
         case ::shirakami::Status::WARN_CANCEL_PREVIOUS_OPERATION:
