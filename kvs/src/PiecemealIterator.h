@@ -141,7 +141,12 @@ private:
 
     inline StatusCode next_cursor_() {
         auto res = read_from_scan_with_retry(*tx_, tx_->native_handle(), handle_, &tuple_);
-        if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
+        if (res == ::shirakami::Status::ERR_PHANTOM) {
+            tx_->deactivate();
+            is_valid_ = false;
+            return StatusCode::ERR_ABORTED_RETRYABLE;
+        }
+        if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE || res == ::shirakami::Status::WARN_CONCURRENT_INSERT) {
             is_valid_ = false;
             return StatusCode::ERR_ABORTED_RETRYABLE;
         }

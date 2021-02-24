@@ -130,7 +130,11 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     ::shirakami::Tuple* tuple{};
 
     Holder holder{this};
-    StatusCode rc = resolve(search_key_with_retry(*holder.tx(), holder.tx()->native_handle(), k, &tuple));
+    auto res = search_key_with_retry(*holder.tx(), holder.tx()->native_handle(), k, &tuple);
+    if (res == shirakami::Status::ERR_PHANTOM) {
+        holder.tx()->deactivate();
+    }
+    StatusCode rc = resolve(res);
     if (rc != StatusCode::OK) {
         if (rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
             return rc;
@@ -163,7 +167,10 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     auto e = Slice(end);
     std::vector<::shirakami::Tuple const*> records{};
     ::shirakami::Status res = scan_key_with_retry(tx, tx.native_handle(), b.to_string_view(), shirakami::scan_endpoint::INCLUSIVE,
-            e.to_string_view(), shirakami::scan_endpoint::EXCLUSIVE, records);
+        e.to_string_view(), shirakami::scan_endpoint::EXCLUSIVE, records);
+    if (res == shirakami::Status::ERR_PHANTOM) {
+        tx.deactivate();
+    }
     if(auto rc = resolve(res); rc != StatusCode::OK) {
         if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
             return rc;

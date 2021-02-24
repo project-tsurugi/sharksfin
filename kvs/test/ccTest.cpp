@@ -141,6 +141,7 @@ TEST_F(KVSCCTest, scan_concurrently) {
         ASSERT_EQ(st->put(tx.get(), "az", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }
+    std::size_t retry_error_count = 0;
     auto r1 = std::async(std::launch::async, [&] {
         auto tx2 = db->create_transaction();
         std::unique_ptr<Storage> st{};
@@ -156,9 +157,12 @@ TEST_F(KVSCCTest, scan_concurrently) {
                 EXPECT_EQ(iter->value().to_string_view().substr(0,1), "A");
                 ++row_count;
             }
-            EXPECT_TRUE(rc == StatusCode::NOT_FOUND);
-            //EXPECT_EQ(tx2->commit(false), StatusCode::OK);
-            tx2->commit(false);
+            EXPECT_TRUE(rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
+            if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+                ++retry_error_count;
+            } else {
+                tx2->commit(false);
+            }
             tx2->reset();
         }
         EXPECT_EQ(tx2->commit(false), StatusCode::OK);
@@ -175,12 +179,11 @@ TEST_F(KVSCCTest, scan_concurrently) {
             EXPECT_EQ(tx3->commit(false), StatusCode::OK);
             tx3->reset();
         }
-        //EXPECT_EQ(tx3->commit(false), StatusCode::OK);
         tx3->commit(false);
         return true;
     });
     r1.get();
-    //EXPECT_GE(r1.get(), 2);
+    std::cout << "ERR_ABORT_RETRYABLE returned " << retry_error_count << " times" << std::endl;
     EXPECT_TRUE(r2.get());
     EXPECT_EQ(db->shutdown(), StatusCode::OK);
 }
@@ -226,15 +229,12 @@ TEST_F(KVSCCTest, scan_and_delete) {
             if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                 ++retry_error_count;
             } else {
-                EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+                tx2->commit(false);
             }
             tx2->reset();
         }
         EXPECT_EQ(tx2->commit(false), StatusCode::OK);
-        EXPECT_LT(0, retry_error_count); // expect retry happens at least once
-        if (retry_error_count > 0) {
-            std::cout << "ERR_ABORT_RETRYABLE returned " << retry_error_count << " times" << std::endl;
-        }
+        std::cout << "ERR_ABORT_RETRYABLE returned " << retry_error_count << " times" << std::endl;
         return row_count;
     });
     auto r2 = std::async(std::launch::async, [&] {

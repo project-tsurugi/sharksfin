@@ -25,8 +25,12 @@ inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::T
     do {
         res = ::shirakami::cc_silo_variant::search_key(token, key, tuple);
         --retry;
-    } while (res == ::shirakami::Status::WARN_CONCURRENT_DELETE && retry > 0);
-    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
+    } while (
+        (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
+            res == ::shirakami::Status::WARN_CONCURRENT_INSERT)
+            && retry > 0);
+    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
+        res == ::shirakami::Status::WARN_CONCURRENT_INSERT) {
         tx.abort();
     }
     return res;
@@ -41,8 +45,12 @@ inline ::shirakami::Status scan_key_with_retry(Transaction& tx, ::shirakami::Tok
     do {
         res = ::shirakami::cc_silo_variant::scan_key(token, lkey, l_end, rkey, r_end, result);
         --retry;
-    } while (res == ::shirakami::Status::WARN_CONCURRENT_DELETE && retry > 0);
-    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
+    } while (
+        (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
+            res == ::shirakami::Status::WARN_CONCURRENT_INSERT)
+            && retry > 0);
+    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
+        res == ::shirakami::Status::WARN_CONCURRENT_INSERT) {
         tx.abort();
     }
     return res;
@@ -55,8 +63,12 @@ inline ::shirakami::Status read_from_scan_with_retry(Transaction& tx, ::shirakam
     do {
         res = ::shirakami::cc_silo_variant::read_from_scan(token, handle, result);
         --retry;
-    } while (res == ::shirakami::Status::WARN_CONCURRENT_DELETE && retry > 0);
-    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
+    } while (
+        (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
+            res == ::shirakami::Status::WARN_CONCURRENT_INSERT)
+            && retry > 0);
+    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
+        res == ::shirakami::Status::WARN_CONCURRENT_INSERT) {
         tx.abort();
     }
     return res;

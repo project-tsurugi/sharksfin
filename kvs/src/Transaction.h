@@ -128,6 +128,9 @@ public:
         return is_active_;
     }
 
+    void deactivate() noexcept {
+        is_active_ = false;
+    }
 private:
     Database* owner_{};
     std::unique_ptr<Session> session_{};

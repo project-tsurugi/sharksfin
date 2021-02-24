@@ -112,9 +112,13 @@ public:
                 break;
         }
 
-        if(auto res = scan_key_with_retry(*tx, tx->native_handle(), begin_key_, begin_endpoint, end_key_,
-                                          end_endpoint, records_);
-                res == ::shirakami::Status::WARN_CONCURRENT_DELETE) {
+        auto res = scan_key_with_retry(*tx, tx->native_handle(), begin_key_, begin_endpoint, end_key_,
+            end_endpoint, records_);
+        if (res == ::shirakami::Status::ERR_PHANTOM) {
+            tx->deactivate();
+            state_ = State::RETRYABLE_ERROR;
+        } else if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
+            res == ::shirakami::Status::WARN_CONCURRENT_INSERT) {
             state_ = State::RETRYABLE_ERROR;
         } else if (res != ::shirakami::Status::OK) {
             ABORT_MSG("invalid rc from scan_key");

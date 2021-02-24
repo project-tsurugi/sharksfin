@@ -42,8 +42,11 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
     assert(tx->active());
     Slice k = qualify(key);
     ::shirakami::Tuple* tuple{};
-    auto rc = resolve(search_key_with_retry(*tx, tx->native_handle(),
-            k.to_string_view(), &tuple));
+    auto res = search_key_with_retry(*tx, tx->native_handle(), k.to_string_view(), &tuple);
+    if (res == shirakami::Status::ERR_PHANTOM) {
+        tx->deactivate();
+    }
+    auto rc = resolve(res);
     if (rc == StatusCode::OK && tuple != nullptr) {
         buffer.assign(tuple->get_value());
     }
@@ -56,9 +59,13 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
     StatusCode rc{};
     switch(operation) {
         case PutOperation::CREATE: {
-            rc = resolve(::shirakami::cc_silo_variant::insert(tx->native_handle(), k.to_string_view(),
-                                                              value.to_string_view()));
-            if (rc != StatusCode::OK && rc != StatusCode::ALREADY_EXISTS) {
+            auto res = ::shirakami::cc_silo_variant::insert(tx->native_handle(), k.to_string_view(),
+                value.to_string_view());
+            if (res == ::shirakami::Status::ERR_PHANTOM) {
+                tx->deactivate();
+            }
+            rc = resolve(res);
+            if (rc != StatusCode::OK && rc != StatusCode::ALREADY_EXISTS && rc != StatusCode::ERR_ABORTED_RETRYABLE) {
                 ABORT();
             }
             break;
@@ -72,8 +79,13 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
             break;
         }
         case PutOperation::CREATE_OR_UPDATE:
-            rc = resolve(::shirakami::cc_silo_variant::upsert(tx->native_handle(), k.to_string_view(),
-                                                              value.to_string_view()));
+            auto res = ::shirakami::cc_silo_variant::upsert(tx->native_handle(), k.to_string_view(),
+                value.to_string_view());
+            rc = resolve(res);
+            if (res == ::shirakami::Status::ERR_PHANTOM) {
+                tx->deactivate();
+                break;
+            }
             if (rc != StatusCode::OK) {
                 ABORT();
             }
