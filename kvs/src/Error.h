@@ -57,6 +57,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::shirakami::Status::WARN_CONCURRENT_INSERT:
             return StatusCode::ERR_ABORTED_RETRYABLE;
+        case ::shirakami::Status::WARN_CONCURRENT_UPDATE:
+            return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::shirakami::Status::WARN_INVALID_HANDLE:
             return StatusCode::ERR_INVALID_ARGUMENT;
         case ::shirakami::Status::WARN_NOT_IN_A_SESSION:

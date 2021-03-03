@@ -295,7 +295,12 @@ TEST_F(KVSCCTest, get_concurrently) {
         for (std::size_t i = 0U; i < COUNT; ++i) {
             std::string buf{};
             auto rc = st->get(tx2.get(), "aX"s+std::to_string(i), buf);
-            EXPECT_TRUE(rc == StatusCode::OK || rc == StatusCode::NOT_FOUND);
+            EXPECT_TRUE(rc == StatusCode::OK || rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
+            if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                tx2->reset();
+                continue;
+            }
             EXPECT_EQ(tx2->commit(false), StatusCode::OK);
             if (rc == StatusCode::OK) {
                 ++row_count;

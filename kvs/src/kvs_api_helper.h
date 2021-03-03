@@ -27,10 +27,12 @@ inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::T
         --retry;
     } while (
         (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
-            res == ::shirakami::Status::WARN_CONCURRENT_INSERT)
+            res == ::shirakami::Status::WARN_CONCURRENT_INSERT ||
+            res == ::shirakami::Status::WARN_CONCURRENT_UPDATE)
             && retry > 0);
     if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
-        res == ::shirakami::Status::WARN_CONCURRENT_INSERT) {
+        res == ::shirakami::Status::WARN_CONCURRENT_INSERT ||
+        res == ::shirakami::Status::WARN_CONCURRENT_UPDATE) {
         tx.abort();
     }
     return res;
@@ -47,10 +49,12 @@ inline ::shirakami::Status scan_key_with_retry(Transaction& tx, ::shirakami::Tok
         --retry;
     } while (
         (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
-            res == ::shirakami::Status::WARN_CONCURRENT_INSERT)
+            res == ::shirakami::Status::WARN_CONCURRENT_INSERT ||
+            res == ::shirakami::Status::WARN_CONCURRENT_UPDATE)
             && retry > 0);
     if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
-        res == ::shirakami::Status::WARN_CONCURRENT_INSERT) {
+        res == ::shirakami::Status::WARN_CONCURRENT_INSERT ||
+        res == ::shirakami::Status::WARN_CONCURRENT_UPDATE) {
         tx.abort();
     }
     return res;
@@ -65,10 +69,13 @@ inline ::shirakami::Status read_from_scan_with_retry(Transaction& tx, ::shirakam
         --retry;
     } while (
         (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
-            res == ::shirakami::Status::WARN_CONCURRENT_INSERT)
+            res == ::shirakami::Status::WARN_CONCURRENT_INSERT ||
+            res == ::shirakami::Status::WARN_CONCURRENT_UPDATE
+            )
             && retry > 0);
     if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
-        res == ::shirakami::Status::WARN_CONCURRENT_INSERT) {
+        res == ::shirakami::Status::WARN_CONCURRENT_INSERT ||
+        res == ::shirakami::Status::WARN_CONCURRENT_UPDATE) {
         tx.abort();
     }
     return res;
