@@ -31,6 +31,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
     switch(result) {
         case ::shirakami::Status::OK:
             return StatusCode::OK;
+        case ::shirakami::Status::ERR_CPR_ORDER_VIOLATION:
+            return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::shirakami::Status::ERR_NOT_FOUND:
             return StatusCode::NOT_FOUND;
         case ::shirakami::Status::WARN_NOT_FOUND:
