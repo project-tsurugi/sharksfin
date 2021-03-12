@@ -386,4 +386,53 @@ StatusCode iterator_dispose(IteratorHandle handle) {
     return StatusCode::OK;
 }
 
+extern "C" StatusCode sequence_create(
+    DatabaseHandle handle,
+    SequenceId* id) {
+    auto db = unwrap(handle);
+    auto& seq = db->sequences();
+    *id = seq.create();
+    return StatusCode::OK;
+}
+
+extern "C" StatusCode sequence_put(
+    TransactionHandle transaction,
+    SequenceId id,
+    SequenceVersion version,
+    SequenceValue value) {
+    auto tx = unwrap(transaction);
+    auto db = tx->owner();
+    auto& seq = db->sequences();
+    auto res = seq.put(id, version, value);
+    return res ? StatusCode::OK : StatusCode::ERR_INVALID_ARGUMENT;
+}
+
+extern "C" StatusCode sequence_get(
+    DatabaseHandle handle,
+    SequenceId id,
+    SequenceVersion* version,
+    SequenceValue* value) {
+    auto db = unwrap(handle);
+    auto& seq = db->sequences();
+    auto v = seq.get(id);
+    if (v) {
+        *version = v.version();
+        *value = v.value();
+        return StatusCode::OK;
+    }
+    return StatusCode::NOT_FOUND;
+}
+
+extern "C" StatusCode sequence_delete(
+    DatabaseHandle handle,
+    SequenceId id) {
+    auto db = unwrap(handle);
+    auto& seq = db->sequences();
+    auto res = seq.remove(id);
+    if (res) {
+        return StatusCode::OK;
+    }
+    return StatusCode::NOT_FOUND;
+}
+
 }  // namespace sharksfin

@@ -398,4 +398,45 @@ StatusCode iterator_dispose(
     delete iter;  // NOLINT
     return StatusCode::OK;
 }
+
+extern "C" StatusCode sequence_create(
+    DatabaseHandle handle,
+    SequenceId* id) {
+    (void)handle;
+    (void)id;
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
+extern "C" StatusCode sequence_put(
+    TransactionHandle transaction,
+    SequenceId id,
+    SequenceVersion version,
+    SequenceValue value) {
+    (void)transaction;
+    (void)id;
+    (void)version;
+    (void)value;
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
+extern "C" StatusCode sequence_get(
+    DatabaseHandle handle,
+    SequenceId id,
+    SequenceVersion* version,
+    SequenceValue* value) {
+    (void)handle;
+    (void)id;
+    (void)version;
+    (void)value;
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
+extern "C" StatusCode sequence_delete(
+    DatabaseHandle handle,
+    SequenceId id) {
+    (void)handle;
+    (void)id;
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
 }  // namespace sharksfin

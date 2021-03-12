@@ -1311,4 +1311,35 @@ TEST_F(ApiTest, readonly_transaction) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ApiTest, sequence) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    SequenceId id0;
+    SequenceId id1;
+    ASSERT_EQ(StatusCode::OK, sequence_create(db, &id0));
+    ASSERT_EQ(StatusCode::OK, sequence_create(db, &id1));
+
+    HandleHolder<TransactionControlHandle> tch{};
+    ASSERT_EQ(StatusCode::OK, transaction_begin(db, {}, &tch.get()));
+    TransactionHandle tx{};
+    ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch.get(), &tx));
+    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 1UL, 10));
+    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id1, 1UL, 100));
+    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 2UL, 20));
+    ASSERT_EQ(StatusCode::OK, transaction_commit(tch.get()));
+
+    // wait for the transaction become durable
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    SequenceVersion ver{};
+    SequenceValue val{};
+    ASSERT_EQ(StatusCode::OK, sequence_get(db, id0, &ver, &val));
+    EXPECT_EQ(2, ver);
+    EXPECT_EQ(20, val);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin

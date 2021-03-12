@@ -170,6 +170,6 @@ private:
     }
 };
 
-}  // naespace sharksfin::memory
+}  // namespace sharksfin::memory
 
 #endif  //SHARKSFIN_MEMORY_ITERATOR_H_

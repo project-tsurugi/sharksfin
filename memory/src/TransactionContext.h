@@ -163,6 +163,6 @@ private:
     }
 };
 
-}  // naespace sharksfin::memory
+}  // namespace sharksfin::memory
 
 #endif  //SHARKSFIN_MEMORY_TRANSACTION_CONTEXT_H_

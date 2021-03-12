@@ -84,4 +84,4 @@ std::unique_ptr<TransactionContext> Database::create_transaction(bool readonly) 
     return std::make_unique<TransactionContext>(this, id, std::move(lock));
 }
 
-}  // naespace sharksfin::memory
+}  // namespace sharksfin::memory

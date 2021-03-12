@@ -154,6 +154,6 @@ private:
     Buffer::allocator_type allocator_ {};
 };
 
-}  // naespace sharksfin::memory
+}  // namespace sharksfin::memory
 
 #endif  //SHARKSFIN_MEMORY_STORAGE_H_

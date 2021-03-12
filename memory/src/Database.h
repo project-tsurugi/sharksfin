@@ -24,6 +24,7 @@
 
 #include "sharksfin/Slice.h"
 #include "Buffer.h"
+#include "SequenceMap.h"
 
 namespace sharksfin::memory {
 
@@ -106,6 +107,10 @@ public:
         return *this;
     }
 
+    SequenceMap& sequences() noexcept {
+        return sequences_;
+    }
+
 private:
     bool alive_ { true };
     std::map<Buffer, std::shared_ptr<Storage>> storages_ {};
@@ -114,10 +119,11 @@ private:
     std::mutex storages_mutex_ {};
 
     bool enable_transaction_lock_ { true };
+    SequenceMap sequences_{};
 
     void check_alive() const;
 };
 
-}  // naespace sharksfin::memory
+}  // namespace sharksfin::memory
 
 #endif  //SHARKSFIN_MEMORY_DATABASE_H_

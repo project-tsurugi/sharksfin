@@ -513,6 +513,93 @@ extern "C" StatusCode iterator_get_value(
 extern "C" StatusCode iterator_dispose(
         IteratorHandle handle);
 
+/**
+ * @brief sequence id
+ * @details the identifier that uniquely identifies the sequence in the database
+ */
+using SequenceId = std::size_t;
+
+/**
+ * @brief sequence value
+ * @details the value of the sequence. Each value in the sequence is associated with some version number.
+ */
+using SequenceValue = std::int64_t;
+
+/**
+ * @brief sequence version
+ * @details the version number of the sequence that begins at 0 and increases monotonically.
+ * For each version in the sequence, there is the associated value with it.
+ */
+using SequenceVersion = std::size_t;
+
+/**
+ * @brief create new sequence
+ * @param handle the database handle where the sequence is created.
+ * @param [out] id the newly assigned sequence id, that is valid only when this function is successful with StatusCode::OK.
+ * @return StatusCode::OK if the creation was successful
+ * @return otherwise if any error occurs
+ * @note This function is not intended to be called concurrently with running transactions.
+ * Typical usage is in DDL to register sequence objects.
+ */
+extern "C" StatusCode sequence_create(
+    DatabaseHandle handle,
+    SequenceId* id);
+
+/**
+ * @brief put sequence value and version
+ * @details request the transaction engine to make the sequence value for the specified version durable together
+ * with the associated transaction.
+ * @param transaction the handle of the transaction associated with the sequence value and version
+ * @param id the sequence id whose value/version will be put
+ * @param version the version of the sequence value
+ * @param value the new sequence value
+ * @return StatusCode::OK if the put operation is successful
+ * @return otherwise if any error occurs
+ * @warning multiple put calls to a sequence with same version number cause undefined behavior.
+ */
+extern "C" StatusCode sequence_put(
+    TransactionHandle transaction,
+    SequenceId id,
+    SequenceVersion version,
+    SequenceValue value);
+
+/**
+ * @brief get sequence value
+ * @details retrieve sequence value of the "latest" version from the transaction engine.
+ * Transaction engine determines the latest version by finding maximum version number of
+ * the sequence from the transactions that are durable at the time this function call is made.
+ * It's up to transaction engine when to make transactions durable, so there can be delay of indeterminate length
+ * before put operations become visible to this function. As for concurrent put operations, it's only guaranteed that
+ * the version number retrieved by this function is equal or greater than the one that is previously retrieved.
+ * @param handle the database handle where the sequence exists
+ * @param id the sequence id whose value/version are to be retrieved
+ * @param [out] version the sequence's latest version number, that is valid only when this function is
+ * successful with StatusCode::OK.
+ * @param [out] value the sequence value, that is valid only when this function is successful with StatusCode::OK.
+ * @return StatusCode::OK if the retrieval is successful
+ * @return otherwise if any error occurs
+ * @note This function is not intended to be called concurrently with running transactions.
+ * Typical usage is to retrieve sequence initial value at the time of database recovery.
+ */
+extern "C" StatusCode sequence_get(
+    DatabaseHandle handle,
+    SequenceId id,
+    SequenceVersion* version,
+    SequenceValue* value);
+
+/**
+ * @brief delete the sequence
+ * @param handle the database handle where the sequence exists
+ * @param id the sequence id that will be deleted
+ * @return StatusCode::OK if the deletion was successful
+ * @return otherwise if any error occurs
+ * @note This function is not intended to be called concurrently with running transactions.
+ * Typical usage is in DDL to unregister sequence objects.
+ */
+extern "C" StatusCode sequence_delete(
+    DatabaseHandle handle,
+    SequenceId id);
+
 }  // namespace sharksfin
 
 #endif  // SHARKSFIN_API_H_
