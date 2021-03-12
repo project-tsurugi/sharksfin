@@ -44,7 +44,7 @@ SequenceId SequenceMap::create() {
 }
 
 bool SequenceMap::put(SequenceId id, SequenceVersion version, SequenceValue value) {
-    assert(version > 0);
+    assert(version > 0);  //NOLINT
     std::unique_lock lock{mutex_};
     if (values_.size() <= id || !values_[id]) {
         return false;
