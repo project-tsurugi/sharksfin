@@ -39,7 +39,7 @@ Slice Storage::qualify(Slice key) {
 }
 
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
-    assert(tx->active());
+    assert(tx->active());  //NOLINT
     Slice k = qualify(key);
     ::shirakami::Tuple* tuple{};
     auto res = search_key_with_retry(*tx, tx->native_handle(), k.to_string_view(), &tuple);
@@ -54,7 +54,7 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
 }
 
 StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {
-    assert(tx->active());
+    assert(tx->active());  //NOLINT
     Slice k = qualify(key);
     StatusCode rc{};
     switch(operation) {
@@ -95,7 +95,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
 }
 
 StatusCode Storage::remove(Transaction* tx, Slice key) {
-    assert(tx->active());
+    assert(tx->active());  //NOLINT
     Slice k = qualify(key);
     auto rc = resolve(::shirakami::cc_silo_variant::delete_record(tx->native_handle(), k.to_string_view()));
     if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
@@ -107,7 +107,7 @@ StatusCode Storage::remove(Transaction* tx, Slice key) {
 std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind) {
-    assert(tx->active());
+    assert(tx->active());  //NOLINT
     return std::make_unique<Iterator>(this, tx,
             begin_key, begin_kind,
             end_key, end_kind);

@@ -164,7 +164,7 @@ StatusCode transaction_exec(
         TransactionCallback callback,
         void *arguments) {
     auto database = unwrap(handle);
-    kvs::Database::clock::time_point at_begin, at_process, at_end;
+    kvs::Database::clock::time_point at_begin, at_process, at_end;  //NOLINT
     do {
         if (database->enable_tracking()) {
             ++database->transaction_count();
@@ -401,7 +401,7 @@ StatusCode iterator_dispose(
 
 extern "C" StatusCode sequence_create(
     DatabaseHandle handle,
-    SequenceId* id) {
+    SequenceId* id) {  //NOLINT
     (void)handle;
     (void)id;
     return StatusCode::ERR_UNSUPPORTED;
@@ -422,8 +422,8 @@ extern "C" StatusCode sequence_put(
 extern "C" StatusCode sequence_get(
     DatabaseHandle handle,
     SequenceId id,
-    SequenceVersion* version,
-    SequenceValue* value) {
+    SequenceVersion* version,  //NOLINT
+    SequenceValue* value) {  //NOLINT
     (void)handle;
     (void)id;
     (void)version;

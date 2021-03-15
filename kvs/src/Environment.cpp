@@ -47,9 +47,7 @@ void Environment::Impl::initialize() {
     ::google::InstallFailureSignalHandler();
 }
 
-Environment::Impl::~Impl() {
-
-}
+Environment::Impl::~Impl() = default;
 
 void Environment::initialize() {
     impl_->initialize();

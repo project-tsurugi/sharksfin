@@ -78,7 +78,7 @@ static void ensure_end_of_transaction(Transaction& tx, bool to_abort = false) {
 }
 
 StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<Storage>& result) {
-    assert(tx.active());
+    assert(tx.active());  //NOLINT
     std::unique_ptr<Storage> stg{};
     if (get_storage(key, stg) == StatusCode::OK) {
         ensure_end_of_transaction(tx, true);
@@ -107,11 +107,11 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
         return StatusCode::OK;
     }
     // RAII class to hold transaction
-    struct Holder {
-        Holder(Database* db) : db_(db) {
+    struct Holder {  //NOLINT
+        explicit Holder(Database* db) : db_(db) {
             owner_ = db_->create_transaction();
             tx_ = owner_.get();
-            assert(tx_->active());
+            assert(tx_->active());  //NOLINT
         }
         ~Holder() {
             tx_->abort();
@@ -141,14 +141,14 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
         }
         ABORT();
     }
-    assert(tuple != nullptr);
+    assert(tuple != nullptr);  //NOLINT
     storage_cache_.add(key);
     result = std::move(storage);
     return StatusCode::OK;
 }
 
 StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
-    assert(tx.active());
+    assert(tx.active());  //NOLINT
     std::unique_lock lock{mutex_for_storage_metadata_};
     std::string k{};
     qualify_meta(storage.prefix(), k);
