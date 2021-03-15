@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_ITERATOR_H_
-#define SHARKSFIN_KVS_ITERATOR_H_
+#ifndef SHARKSFIN_SHIRAKAMI_ITERATOR_H_
+#define SHARKSFIN_SHIRAKAMI_ITERATOR_H_
 
 #include "OneshotIterator.h"
 #include "PiecemealIterator.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 #ifdef USE_PIECEMEAL_ITERATOR
 using Iterator = PiecemealIterator;
@@ -27,6 +27,6 @@ using Iterator = PiecemealIterator;
 using Iterator = OneshotIterator;
 #endif
 
-}  // namespace sharksfin::kvs
+}  // namespace sharksfin::shirakami
 
-#endif  // SHARKSFIN_KVS_ITERATOR_H_
+#endif  // SHARKSFIN_SHIRAKAMI_ITERATOR_H_

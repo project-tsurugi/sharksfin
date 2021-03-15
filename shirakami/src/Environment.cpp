@@ -43,7 +43,7 @@ void Environment::Impl::initialize() {
     if (FLAGS_log_dir.empty()) {
         FLAGS_logtostderr = true;
     }
-    ::google::InitGoogleLogging("sharksfin-kvs");
+    ::google::InitGoogleLogging("sharksfin-shirakami");
     ::google::InstallFailureSignalHandler();
 }
 

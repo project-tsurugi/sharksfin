@@ -34,7 +34,7 @@ static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };
 
 static constexpr std::string_view TESTING { "test" }; // around 8 chars cause delete_record crash
 
-class KVSApiTest : public testing::TestRoot {
+class ShirakamiApiTest : public testing::TestRoot {
 public:
 };
 
@@ -43,7 +43,7 @@ static StorageHandle extract(void* args) {
     return reinterpret_cast<T*>(args)->st;
 }
 
-TEST_F(KVSApiTest, simple) {
+TEST_F(ShirakamiApiTest, simple) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -81,8 +81,8 @@ TEST_F(KVSApiTest, simple) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-// kvs WAL is disabled for now
-TEST_F(KVSApiTest, DISABLED_database_restore) {
+// shirakami WAL is disabled for now
+TEST_F(ShirakamiApiTest, DISABLED_database_restore) {
     {
         DatabaseOptions options;
         options.attribute(KEY_LOCATION, path());
@@ -139,7 +139,7 @@ TEST_F(KVSApiTest, DISABLED_database_restore) {
     }
 }
 
-TEST_F(KVSApiTest, DISABLED_database_not_found) {
+TEST_F(ShirakamiApiTest, DISABLED_database_not_found) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     options.open_mode(DatabaseOptions::OpenMode::RESTORE);
@@ -151,7 +151,7 @@ TEST_F(KVSApiTest, DISABLED_database_not_found) {
     }
 }
 
-TEST_F(KVSApiTest, storage_create) {
+TEST_F(ShirakamiApiTest, storage_create) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -200,7 +200,7 @@ TEST_F(KVSApiTest, storage_create) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, storage_create_exists) {
+TEST_F(ShirakamiApiTest, storage_create_exists) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -234,7 +234,7 @@ TEST_F(KVSApiTest, storage_create_exists) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, storage_get) {
+TEST_F(ShirakamiApiTest, storage_get) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -283,7 +283,7 @@ TEST_F(KVSApiTest, storage_get) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, storage_get_missing) {
+TEST_F(ShirakamiApiTest, storage_get_missing) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -312,7 +312,7 @@ TEST_F(KVSApiTest, storage_get_missing) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, storage_delete) {
+TEST_F(ShirakamiApiTest, storage_delete) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -378,7 +378,7 @@ TEST_F(KVSApiTest, storage_delete) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, transaction_wait) {
+TEST_F(ShirakamiApiTest, transaction_wait) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -442,7 +442,7 @@ TEST_F(KVSApiTest, transaction_wait) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, transaction_failed) {
+TEST_F(ShirakamiApiTest, transaction_failed) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -464,7 +464,7 @@ TEST_F(KVSApiTest, transaction_failed) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, transaction_borrow_owner) {
+TEST_F(ShirakamiApiTest, transaction_borrow_owner) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -518,7 +518,7 @@ TEST_F(KVSApiTest, transaction_borrow_owner) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, contents) {
+TEST_F(ShirakamiApiTest, contents) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -590,7 +590,7 @@ TEST_F(KVSApiTest, contents) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, put_operations) {
+TEST_F(ShirakamiApiTest, put_operations) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -689,7 +689,7 @@ TEST_F(KVSApiTest, put_operations) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, scan_prefix) {
+TEST_F(ShirakamiApiTest, scan_prefix) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -759,7 +759,7 @@ TEST_F(KVSApiTest, scan_prefix) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, scan_range) {
+TEST_F(ShirakamiApiTest, scan_range) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -828,7 +828,7 @@ TEST_F(KVSApiTest, scan_range) {
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
-TEST_F(KVSApiTest, scan) {
+TEST_F(ShirakamiApiTest, scan) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
@@ -916,7 +916,7 @@ TEST_F(KVSApiTest, scan) {
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
-TEST_F(KVSApiTest, scan_empty_prefix) {
+TEST_F(ShirakamiApiTest, scan_empty_prefix) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -980,7 +980,7 @@ TEST_F(KVSApiTest, scan_empty_prefix) {
 }
 
 
-TEST_F(KVSApiTest, scan_empty_table) {
+TEST_F(ShirakamiApiTest, scan_empty_table) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -1023,7 +1023,7 @@ TEST_F(KVSApiTest, scan_empty_table) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, scan_range_to_end) {
+TEST_F(ShirakamiApiTest, scan_range_to_end) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -1102,7 +1102,7 @@ TEST_F(KVSApiTest, scan_range_to_end) {
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
-TEST_F(KVSApiTest, scan_data_variation) {
+TEST_F(ShirakamiApiTest, scan_data_variation) {
     using namespace std::literals::string_view_literals;
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
@@ -1173,7 +1173,7 @@ TEST_F(KVSApiTest, scan_data_variation) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, long_data) {
+TEST_F(ShirakamiApiTest, long_data) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -1211,7 +1211,7 @@ TEST_F(KVSApiTest, long_data) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, scan_join) {
+TEST_F(ShirakamiApiTest, scan_join) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
@@ -1293,7 +1293,7 @@ TEST_F(KVSApiTest, scan_join) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, tracking) {
+TEST_F(ShirakamiApiTest, tracking) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     options.attribute(KEY_PERFORMANCE_TRACKING, "1");
@@ -1332,7 +1332,7 @@ TEST_F(KVSApiTest, tracking) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, transaction_begin_and_commit) {
+TEST_F(ShirakamiApiTest, transaction_begin_and_commit) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
@@ -1366,7 +1366,7 @@ TEST_F(KVSApiTest, transaction_begin_and_commit) {
             if (content_put(tx, s.st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
                 return false;
             }
-            // kvs doesn't support async commit
+            // shirakami doesn't support async commit
             // if (transaction_commit(tch.get(), true) != StatusCode::OK) {
             //     return false;
             // }
@@ -1422,7 +1422,7 @@ TEST_F(KVSApiTest, transaction_begin_and_commit) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(KVSApiTest, transaction_begin_and_abort) {
+TEST_F(ShirakamiApiTest, transaction_begin_and_abort) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;

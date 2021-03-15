@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_STORAGE_H_
-#define SHARKSFIN_KVS_STORAGE_H_
+#ifndef SHARKSFIN_SHIRAKAMI_STORAGE_H_
+#define SHARKSFIN_SHIRAKAMI_STORAGE_H_
 
 #include <string>
 #include <stdexcept>
@@ -22,7 +22,7 @@
 
 #include "sharksfin/api.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 class Transaction;
 class Database;
@@ -36,7 +36,7 @@ using Iterator = OneshotIterator;
 #endif
 
 /**
- * @brief storage class to interact with kvs
+ * @brief storage class to interact with shirakami
  */
 class Storage {
 public:
@@ -83,7 +83,7 @@ public:
      * @param key the entry key
      * @param buffer the destination buffer
      * @return the operation status
-     * @return StatusCode::ERR_ABORTED_RETRYABLE when kvs reads uncommitted record
+     * @return StatusCode::ERR_ABORTED_RETRYABLE when shirakami reads uncommitted record
      */
     StatusCode get(Transaction* tx, Slice key, std::string& buffer);
 
@@ -132,6 +132,6 @@ private:
     Slice qualify(Slice key);
 };
 
-}  // namespace sharksfin::KVS
+}  // namespace sharksfin::shirakami
 
-#endif  // SHARKSFIN_KVS_STORAGE_H_
+#endif  // SHARKSFIN_SHIRAKAMI_STORAGE_H_

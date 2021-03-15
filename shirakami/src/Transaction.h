@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_TRANSACTION_H_
-#define SHARKSFIN_KVS_TRANSACTION_H_
+#ifndef SHARKSFIN_SHIRAKAMI_TRANSACTION_H_
+#define SHARKSFIN_SHIRAKAMI_TRANSACTION_H_
 
 #include "glog/logging.h"
 #include "sharksfin/api.h"
@@ -22,7 +22,7 @@
 #include "Session.h"
 #include "Error.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 /**
  * @brief a transaction
@@ -107,7 +107,7 @@ public:
 
     /**
      * @brief returns the native transaction handle object.
-     * @return the kvs native handle
+     * @return the shirakami native handle
      */
     inline ::shirakami::Token native_handle() {
         return session_.get()->id();
@@ -138,6 +138,6 @@ private:
     bool is_active_{true};
 };
 
-}  // namespace sharksfin::kvs
+}  // namespace sharksfin::shirakami
 
-#endif  // SHARKSFIN_KVS_TRANSACTION_H_
+#endif  // SHARKSFIN_SHIRAKAMI_TRANSACTION_H_

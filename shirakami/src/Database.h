@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_DATABASE_H_
-#define SHARKSFIN_KVS_DATABASE_H_
+#ifndef SHARKSFIN_SHIRAKAMI_DATABASE_H_
+#define SHARKSFIN_SHIRAKAMI_DATABASE_H_
 
 #include <atomic>
 #include <chrono>
@@ -29,7 +29,7 @@
 #include "Error.h"
 #include "StorageCache.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 class Transaction;
 class Storage;
@@ -37,7 +37,7 @@ class Storage;
 static constexpr std::string_view KEY_LOCATION { "location" };
 
 /**
- * @brief a kvs wrapper.
+ * @brief a shirakami wrapper.
  */
 class Database {
 public:
@@ -49,7 +49,7 @@ public:
     using tracking_time_period = std::chrono::microseconds;
 
     /**
-     * @brief setup kvs engine and return Database.
+     * @brief setup shirakami engine and return Database.
      */
     static StatusCode open(DatabaseOptions const& options, std::unique_ptr<Database>* result);
 
@@ -206,6 +206,6 @@ private:
     bool active_{ true };
 };
 
-}  // namespace sharksfin::kvs
+}  // namespace sharksfin::shirakami
 
-#endif  // SHARKSFIN_KVS_DATABASE_H_
+#endif  // SHARKSFIN_SHIRAKAMI_DATABASE_H_

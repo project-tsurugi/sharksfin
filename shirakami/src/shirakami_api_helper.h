@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_API_HELPER_H
-#define SHARKSFIN_KVS_API_HELPER_H
+#ifndef SHARKSFIN_SHIRAKAMI_API_HELPER_H
+#define SHARKSFIN_SHIRAKAMI_API_HELPER_H
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
         const std::string_view key, ::shirakami::Tuple** const tuple) {
@@ -39,8 +39,8 @@ inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::T
 }
 
 inline ::shirakami::Status scan_key_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
-        const std::string_view lkey, const shirakami::scan_endpoint l_end,
-        const std::string_view rkey, const shirakami::scan_endpoint r_end,
+        const std::string_view lkey, const ::shirakami::scan_endpoint l_end,
+        const std::string_view rkey, const ::shirakami::scan_endpoint r_end,
         std::vector<::shirakami::Tuple const*>& result) {
     int retry = 3;
     ::shirakami::Status res{::shirakami::Status::OK};
@@ -81,6 +81,6 @@ inline ::shirakami::Status read_from_scan_with_retry(Transaction& tx, ::shirakam
     return res;
 }
 
-} // namespace sharksfin::kvs
+} // namespace sharksfin::shirakami
 
-#endif //SHARKSFIN_KVS_API_HELPER_H
+#endif //SHARKSFIN_SHIRAKAMI_API_HELPER_H

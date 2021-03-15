@@ -23,12 +23,12 @@
 #include "Transaction.h"
 #include "Storage.h"
 #include "Error.h"
-#include "kvs_api_helper.h"
+#include "shirakami_api_helper.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
-    // kvs default behavior is create or restore
+    // shirakami default behavior is create or restore
     *result = std::make_unique<Database>(options);
     if (options.open_mode() != DatabaseOptions::OpenMode::RESTORE) {
         // Not opened with restore option. Ensure db to be clean in case previous test has left over.
@@ -61,7 +61,7 @@ static void qualify_meta(Slice key, std::string& buffer) {
 StatusCode Database::clean() {
     auto tx = create_transaction();
     std::vector<::shirakami::Tuple const*> tuples{};
-    ::shirakami::cc_silo_variant::scan_key(tx->native_handle(), "", shirakami::scan_endpoint::INF, "", shirakami::scan_endpoint::INF, tuples);
+    ::shirakami::cc_silo_variant::scan_key(tx->native_handle(), "", ::shirakami::scan_endpoint::INF, "", ::shirakami::scan_endpoint::INF, tuples);
     auto tx2 = create_transaction();
     for(auto t : tuples) {
         ::shirakami::cc_silo_variant::delete_record(tx2->native_handle(), t->get_key());
@@ -131,7 +131,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
 
     Holder holder{this};
     auto res = search_key_with_retry(*holder.tx(), holder.tx()->native_handle(), k, &tuple);
-    if (res == shirakami::Status::ERR_PHANTOM) {
+    if (res == ::shirakami::Status::ERR_PHANTOM) {
         holder.tx()->deactivate();
     }
     StatusCode rc = resolve(res);
@@ -166,9 +166,9 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     auto b = Slice(prefix);
     auto e = Slice(end);
     std::vector<::shirakami::Tuple const*> records{};
-    ::shirakami::Status res = scan_key_with_retry(tx, tx.native_handle(), b.to_string_view(), shirakami::scan_endpoint::INCLUSIVE,
-        e.to_string_view(), shirakami::scan_endpoint::EXCLUSIVE, records);
-    if (res == shirakami::Status::ERR_PHANTOM) {
+    ::shirakami::Status res = scan_key_with_retry(tx, tx.native_handle(), b.to_string_view(), ::shirakami::scan_endpoint::INCLUSIVE,
+        e.to_string_view(), ::shirakami::scan_endpoint::EXCLUSIVE, records);
+    if (res == ::shirakami::Status::ERR_PHANTOM) {
         tx.deactivate();
     }
     if(auto rc = resolve(res); rc != StatusCode::OK) {
@@ -198,4 +198,4 @@ std::unique_ptr<Transaction> Database::create_transaction() {
     return std::make_unique<Transaction>(this);
 }
 
-}  // namespace sharksfin::kvs
+}  // namespace sharksfin::shirakami

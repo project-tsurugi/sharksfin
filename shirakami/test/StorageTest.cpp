@@ -21,7 +21,7 @@
 #include "Database.h"
 #include "Iterator.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 static constexpr std::string_view TESTING { "testing" };
 
@@ -66,12 +66,12 @@ public:
 
     std::unique_ptr<Transaction> tx_{};
 };
-class KVSStorageTest : public testing::TestRoot {
+class ShirakamiStorageTest : public testing::TestRoot {
 public:
     std::string buf;
 };
 
-TEST_F(KVSStorageTest, simple) {
+TEST_F(ShirakamiStorageTest, simple) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -86,7 +86,7 @@ TEST_F(KVSStorageTest, simple) {
     }
 }
 
-TEST_F(KVSStorageTest, simple_uncommitted) {
+TEST_F(ShirakamiStorageTest, simple_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -99,7 +99,7 @@ TEST_F(KVSStorageTest, simple_uncommitted) {
     }
 }
 
-TEST_F(KVSStorageTest, get) {
+TEST_F(ShirakamiStorageTest, get) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -118,7 +118,7 @@ TEST_F(KVSStorageTest, get) {
     }
 }
 
-TEST_F(KVSStorageTest, get_uncommitted) {
+TEST_F(ShirakamiStorageTest, get_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -135,7 +135,7 @@ TEST_F(KVSStorageTest, get_uncommitted) {
     }
 }
 
-TEST_F(KVSStorageTest, put) {
+TEST_F(ShirakamiStorageTest, put) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -156,7 +156,7 @@ TEST_F(KVSStorageTest, put) {
     }
 }
 
-TEST_F(KVSStorageTest, put_uncommitted) {
+TEST_F(ShirakamiStorageTest, put_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -173,7 +173,7 @@ TEST_F(KVSStorageTest, put_uncommitted) {
     }
 }
 
-TEST_F(KVSStorageTest, put_operations) {
+TEST_F(ShirakamiStorageTest, put_operations) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -211,7 +211,7 @@ TEST_F(KVSStorageTest, put_operations) {
     }
 }
 
-TEST_F(KVSStorageTest, put_operations_uncommitted) {
+TEST_F(ShirakamiStorageTest, put_operations_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -242,7 +242,7 @@ TEST_F(KVSStorageTest, put_operations_uncommitted) {
     }
 }
 
-TEST_F(KVSStorageTest, remove) {
+TEST_F(ShirakamiStorageTest, remove) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -262,7 +262,7 @@ TEST_F(KVSStorageTest, remove) {
     }
 }
 
-TEST_F(KVSStorageTest, remove_uncommitted) {
+TEST_F(ShirakamiStorageTest, remove_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -280,7 +280,7 @@ TEST_F(KVSStorageTest, remove_uncommitted) {
     }
 }
 
-TEST_F(KVSStorageTest, prefix_conflict) {
+TEST_F(ShirakamiStorageTest, prefix_conflict) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -300,7 +300,7 @@ TEST_F(KVSStorageTest, prefix_conflict) {
     }
 }
 
-TEST_F(KVSStorageTest, scan_prefix) {
+TEST_F(ShirakamiStorageTest, scan_prefix) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -341,7 +341,7 @@ TEST_F(KVSStorageTest, scan_prefix) {
     }
 }
 
-TEST_F(KVSStorageTest, scan_prefix_uncommitted) {
+TEST_F(ShirakamiStorageTest, scan_prefix_uncommitted) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -380,7 +380,7 @@ TEST_F(KVSStorageTest, scan_prefix_uncommitted) {
     }
 }
 
-TEST_F(KVSStorageTest, scan_range) {
+TEST_F(ShirakamiStorageTest, scan_range) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -414,7 +414,7 @@ TEST_F(KVSStorageTest, scan_range) {
     }
 }
 
-TEST_F(KVSStorageTest, scan_range_exclusive) {
+TEST_F(ShirakamiStorageTest, scan_range_exclusive) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -440,7 +440,7 @@ TEST_F(KVSStorageTest, scan_range_exclusive) {
     }
 }
 
-TEST_F(KVSStorageTest, create_storage) {
+TEST_F(ShirakamiStorageTest, create_storage) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};
@@ -456,7 +456,7 @@ TEST_F(KVSStorageTest, create_storage) {
     }
 }
 
-TEST_F(KVSStorageTest, get_storage) {
+TEST_F(ShirakamiStorageTest, get_storage) {
     DatabaseHolder db{path()};
     {
         TransactionHolder tx{db};

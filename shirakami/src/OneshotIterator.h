@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_ONESHOT_ITERATOR_H_
-#define SHARKSFIN_KVS_ONESHOT_ITERATOR_H_
+#ifndef SHARKSFIN_SHIRAKAMI_ONESHOT_ITERATOR_H_
+#define SHARKSFIN_SHIRAKAMI_ONESHOT_ITERATOR_H_
 
 #include "glog/logging.h"
 #include "sharksfin/api.h"
@@ -23,12 +23,12 @@
 #include "Storage.h"
 #include "Transaction.h"
 #include "Error.h"
-#include "kvs_api_helper.h"
+#include "shirakami_api_helper.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 /**
- * @brief an iterator for result from kvs
+ * @brief an iterator for result from shirakami
  */
 class OneshotIterator {
 public:
@@ -57,8 +57,8 @@ public:
     ) : owner_(owner), state_(State::INIT),
         begin_key_(begin_kind == EndPointKind::UNBOUND ? qualified_(owner_, {}) : qualified_(owner_, begin_key)),
         end_key_(end_kind == EndPointKind::UNBOUND ? qualified_(owner_, {}) : qualified_(owner_, end_key)) {
-        shirakami::scan_endpoint begin_endpoint{shirakami::scan_endpoint::INCLUSIVE};
-        shirakami::scan_endpoint end_endpoint{shirakami::scan_endpoint::INCLUSIVE};
+        ::shirakami::scan_endpoint begin_endpoint{::shirakami::scan_endpoint::INCLUSIVE};
+        ::shirakami::scan_endpoint end_endpoint{::shirakami::scan_endpoint::INCLUSIVE};
         switch (begin_kind) {
             case EndPointKind::UNBOUND:
                 // begin_key_ can contain storage prefix
@@ -66,13 +66,13 @@ public:
                 break;
             case EndPointKind::PREFIXED_INCLUSIVE:
             case EndPointKind::INCLUSIVE:
-                begin_endpoint = shirakami::scan_endpoint::INCLUSIVE;
+                begin_endpoint = ::shirakami::scan_endpoint::INCLUSIVE;
                 break;
             case EndPointKind::EXCLUSIVE:
-                begin_endpoint = shirakami::scan_endpoint::EXCLUSIVE;
+                begin_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;
                 break;
             case EndPointKind::PREFIXED_EXCLUSIVE:
-                begin_endpoint = shirakami::scan_endpoint::INCLUSIVE; // equal or larger than next neighbor
+                begin_endpoint = ::shirakami::scan_endpoint::INCLUSIVE; // equal or larger than next neighbor
                 auto n = next_neighbor_(begin_key_).to_string_view();
                 if (n.empty()) {
                     // there is no neighbor - exclude everything
@@ -90,7 +90,7 @@ public:
 
                 // fall-through
             case EndPointKind::PREFIXED_INCLUSIVE: {
-                end_endpoint = shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
+                end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
                 if (end_key_.empty()) {
                     break;
                 }
@@ -104,11 +104,11 @@ public:
                 break;
             }
             case EndPointKind::INCLUSIVE:
-                end_endpoint = shirakami::scan_endpoint::INCLUSIVE;
+                end_endpoint = ::shirakami::scan_endpoint::INCLUSIVE;
                 break;
             case EndPointKind::EXCLUSIVE:
             case EndPointKind::PREFIXED_EXCLUSIVE:
-                end_endpoint = shirakami::scan_endpoint::EXCLUSIVE;
+                end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;
                 break;
         }
 
@@ -128,7 +128,7 @@ public:
      * @brief advances this iterator position.
      * @return StatusCode::OK if next entry exists
      * @return StatusCode::NOT_FOUND if next entry does not exist
-     * @return StatusCode::ERR_ABORTED_RETRYABLE when kvs scans uncommitted record
+     * @return StatusCode::ERR_ABORTED_RETRYABLE when shirakami scans uncommitted record
      * @return otherwise if error occurred
      */
     inline StatusCode next() {
@@ -233,6 +233,6 @@ private:
     }
 };
 
-}  // namespace sharksfin::kvs
+}  // namespace sharksfin::shirakami
 
-#endif  // SHARKSFIN_KVS_ONESHOT_ITERATOR_H_
+#endif  // SHARKSFIN_SHIRAKAMI_ONESHOT_ITERATOR_H_

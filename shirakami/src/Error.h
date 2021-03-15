@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_ERROR_H_
-#define SHARKSFIN_KVS_ERROR_H_
+#ifndef SHARKSFIN_SHIRAKAMI_ERROR_H_
+#define SHARKSFIN_SHIRAKAMI_ERROR_H_
 
 #include "glog/logging.h"
 #include "sharksfin/StatusCode.h"
 #include "kvs/scheme.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 /**
- * @brief map kvs error stack to sharksfin StatusCode
- * @param result the kvs error
+ * @brief map shirakami error stack to sharksfin StatusCode
+ * @param result the shirakami error
  * @return sharksfin status code
  */
 inline StatusCode resolve(::shirakami::Status const& result) {
@@ -70,7 +70,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case ::shirakami::Status::ERR_SESSION_LIMIT:
             return StatusCode::ERR_INVALID_STATE;
     }
-    LOG(ERROR) << "KVS error : " << result;
+    LOG(ERROR) << "Shirakami error : " << result;
     return StatusCode::ERR_UNKNOWN;
 }
 
@@ -85,9 +85,9 @@ inline StatusCode resolve(::shirakami::Status const& result) {
     std::abort();
 }
 
-#define ABORT_MSG(msg) kvs::abort_with_lineno_(msg, __FILE__, __LINE__)
-#define ABORT() kvs::abort_with_lineno_("", __FILE__, __LINE__)
+#define ABORT_MSG(msg) sharksfin::shirakami::abort_with_lineno_(msg, __FILE__, __LINE__)
+#define ABORT() sharksfin::shirakami::abort_with_lineno_("", __FILE__, __LINE__)
 
-}  // namespace sharksfin::kvs
+}  // namespace sharksfin::shirakami
 
-#endif  // SHARKSFIN_KVS_ERROR_H_
+#endif  // SHARKSFIN_SHIRAKAMI_ERROR_H_

@@ -20,9 +20,9 @@
 #include "Iterator.h"
 #include "Transaction.h"
 #include "Error.h"
-#include "kvs_api_helper.h"
+#include "shirakami_api_helper.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 // thread local storage to return temporary Slice
 // only qualify() should write to this buffer
@@ -43,7 +43,7 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
     Slice k = qualify(key);
     ::shirakami::Tuple* tuple{};
     auto res = search_key_with_retry(*tx, tx->native_handle(), k.to_string_view(), &tuple);
-    if (res == shirakami::Status::ERR_PHANTOM) {
+    if (res == ::shirakami::Status::ERR_PHANTOM) {
         tx->deactivate();
     }
     auto rc = resolve(res);
@@ -113,4 +113,4 @@ std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
             end_key, end_kind);
 }
 
-}  // namespace sharksfin::kvs
+}  // namespace sharksfin::shirakami

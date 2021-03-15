@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_STORAGE_CACHE_H_
-#define SHARKSFIN_KVS_STORAGE_CACHE_H_
+#ifndef SHARKSFIN_SHIRAKAMI_STORAGE_CACHE_H_
+#define SHARKSFIN_SHIRAKAMI_STORAGE_CACHE_H_
 
 #include <set>
 #include <string>
 #include <shared_mutex>
 #include "sharksfin/Slice.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 class StorageCache {
 public:
@@ -45,4 +45,4 @@ private:
 };
 
 }
-#endif //SHARKSFIN_KVS_STORAGE_CACHE_H_
+#endif //SHARKSFIN_SHIRAKAMI_STORAGE_CACHE_H_

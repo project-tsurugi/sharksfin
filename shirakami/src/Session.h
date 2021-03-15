@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_SESSION_H_
-#define SHARKSFIN_KVS_SESSION_H_
+#ifndef SHARKSFIN_SHIRAKAMI_SESSION_H_
+#define SHARKSFIN_SHIRAKAMI_SESSION_H_
 
 #include <cstdlib>
 
@@ -23,10 +23,10 @@
 #include "kvs/interface.h"
 #include "Error.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 /**
- * @brief RAII class for kvs session id
+ * @brief RAII class for shirakami session id
  */
 class Session {
 public:
@@ -54,4 +54,4 @@ private:
 
 } // namespace
 
-#endif //SHARKSFIN_KVS_SESSION_H_
+#endif //SHARKSFIN_SHIRAKAMI_SESSION_H_

@@ -30,52 +30,52 @@ namespace sharksfin {
  */
 static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLINT
 
-static inline DatabaseHandle wrap(kvs::Database* object) {
+static inline DatabaseHandle wrap(shirakami::Database* object) {
     return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
 }
 
-[[maybe_unused]] static inline StorageHandle wrap(kvs::Storage* object) {
+[[maybe_unused]] static inline StorageHandle wrap(shirakami::Storage* object) {
     return reinterpret_cast<StorageHandle>(object);  // NOLINT
 }
 
-[[maybe_unused]] static inline TransactionHandle wrap(kvs::Transaction* object) {
+[[maybe_unused]] static inline TransactionHandle wrap(shirakami::Transaction* object) {
     return reinterpret_cast<TransactionHandle>(object);  // NOLINT
 }
 
 // TransactionContext* can be interpreted as TransactionControlHandle and TransactionHandle
-static inline TransactionControlHandle wrap_as_control_handle(kvs::Transaction* object) {
+static inline TransactionControlHandle wrap_as_control_handle(shirakami::Transaction* object) {
     return reinterpret_cast<TransactionControlHandle>(object);  // NOLINT
 }
 
-static inline IteratorHandle wrap(kvs::Iterator* object) {
+static inline IteratorHandle wrap(shirakami::Iterator* object) {
     return reinterpret_cast<IteratorHandle>(object);  // NOLINT
 }
 
-static inline kvs::Database* unwrap(DatabaseHandle handle) {
-    return reinterpret_cast<kvs::Database*>(handle);  // NOLINT
+static inline shirakami::Database* unwrap(DatabaseHandle handle) {
+    return reinterpret_cast<shirakami::Database*>(handle);  // NOLINT
 }
 
-static inline kvs::Storage* unwrap(StorageHandle handle) {
-    return reinterpret_cast<kvs::Storage*>(handle);  // NOLINT
+static inline shirakami::Storage* unwrap(StorageHandle handle) {
+    return reinterpret_cast<shirakami::Storage*>(handle);  // NOLINT
 }
 
-static inline kvs::Transaction* unwrap(TransactionHandle handle) {
-    return reinterpret_cast<kvs::Transaction*>(handle);  // NOLINT
+static inline shirakami::Transaction* unwrap(TransactionHandle handle) {
+    return reinterpret_cast<shirakami::Transaction*>(handle);  // NOLINT
 }
 
-static inline kvs::Transaction* unwrap(TransactionControlHandle handle) {
-    return reinterpret_cast<kvs::Transaction*>(handle);  // NOLINT
+static inline shirakami::Transaction* unwrap(TransactionControlHandle handle) {
+    return reinterpret_cast<shirakami::Transaction*>(handle);  // NOLINT
 }
 
-static inline kvs::Iterator* unwrap(IteratorHandle handle) {
-    return reinterpret_cast<kvs::Iterator*>(handle);  // NOLINT
+static inline shirakami::Iterator* unwrap(IteratorHandle handle) {
+    return reinterpret_cast<shirakami::Iterator*>(handle);  // NOLINT
 }
 
 StatusCode database_open(
         DatabaseOptions const& options,
         DatabaseHandle* result) {
-    std::unique_ptr<kvs::Database> db{};
-    auto rc = kvs::Database::open(options, &db);
+    std::unique_ptr<shirakami::Database> db{};
+    auto rc = shirakami::Database::open(options, &db);
     if (rc == StatusCode::OK) {
         bool tracking = false;
         if (auto option = options.attribute(KEY_PERFORMANCE_TRACKING); option.has_value()) {
@@ -111,7 +111,7 @@ StatusCode storage_create(
         StorageHandle *result) {
     auto db = unwrap(handle);
     auto tx = db->create_transaction();
-    std::unique_ptr<kvs::Storage> stg{};
+    std::unique_ptr<shirakami::Storage> stg{};
     auto rc = db->create_storage(key, *tx, stg);
     if (rc != StatusCode::OK) {
         return rc;
@@ -125,7 +125,7 @@ StatusCode storage_get(
         Slice key,
         StorageHandle *result) {
     auto db = unwrap(handle);
-    std::unique_ptr<kvs::Storage> stg{};
+    std::unique_ptr<shirakami::Storage> stg{};
     auto rc = db->get_storage(key, stg);
     if (rc != StatusCode::OK) {
         return rc;
@@ -164,23 +164,23 @@ StatusCode transaction_exec(
         TransactionCallback callback,
         void *arguments) {
     auto database = unwrap(handle);
-    kvs::Database::clock::time_point at_begin, at_process, at_end;  //NOLINT
+    shirakami::Database::clock::time_point at_begin, at_process, at_end;  //NOLINT
     do {
         if (database->enable_tracking()) {
             ++database->transaction_count();
-            at_begin = kvs::Database::clock::now();
+            at_begin = shirakami::Database::clock::now();
         }
         auto tx = database->create_transaction();
         if (database->enable_tracking()) {
-            at_process = kvs::Database::clock::now();
+            at_process = shirakami::Database::clock::now();
         }
         auto status = callback(wrap(tx.get()), arguments);
         if (database->enable_tracking()) {
-            at_end = kvs::Database::clock::now();
+            at_end = shirakami::Database::clock::now();
             add(database->transaction_wait_time(),
-                    std::chrono::duration_cast<kvs::Database::tracking_time_period>(at_process - at_begin));
+                    std::chrono::duration_cast<shirakami::Database::tracking_time_period>(at_process - at_begin));
             add(database->transaction_process_time(),
-                    std::chrono::duration_cast<kvs::Database::tracking_time_period>(at_end - at_process));
+                    std::chrono::duration_cast<shirakami::Database::tracking_time_period>(at_end - at_process));
         }
         switch (status) {
             case TransactionOperation::COMMIT: {
@@ -241,7 +241,7 @@ StatusCode transaction_commit(
         TransactionControlHandle handle,
         bool async) {
     if (async) {
-        // kvs doesn't support async commit yet
+        // shirakami doesn't support async commit yet
         return StatusCode::ERR_UNSUPPORTED;
     }
     auto tx = unwrap(handle);
@@ -250,7 +250,7 @@ StatusCode transaction_commit(
 
 StatusCode transaction_abort(
         TransactionControlHandle handle,
-        [[maybe_unused]] bool rollback) { // kvs always rolls back on abort
+        [[maybe_unused]] bool rollback) { // shirakami always rolls back on abort
     auto tx = unwrap(handle);
     auto rc = tx->abort();
     if (rc != StatusCode::OK) {

@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_KVS_PIECEMEAL_ITERATOR_H_
-#define SHARKSFIN_KVS_PIECEMEAL_ITERATOR_H_
+#ifndef SHARKSFIN_SHIRAKAMI_PIECEMEAL_ITERATOR_H_
+#define SHARKSFIN_SHIRAKAMI_PIECEMEAL_ITERATOR_H_
 
 #include "glog/logging.h"
 #include "sharksfin/api.h"
@@ -23,12 +23,12 @@
 #include "Storage.h"
 #include "Transaction.h"
 #include "Error.h"
-#include "kvs_api_helper.h"
+#include "shirakami_api_helper.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 /**
- * @brief an iterator to fetch result from kvs piece by piece
+ * @brief an iterator to fetch result from shirakami piece by piece
  * Contrary to Iterator, this avoids
  */
 class PiecemealIterator {
@@ -79,7 +79,7 @@ public:
      * @brief advances this iterator position.
      * @return StatusCode::OK if next entry exists
      * @return StatusCode::NOT_FOUND if next entry does not exist
-     * @return StatusCode::ERR_ABORTED_RETRYABLE when kvs scans uncommitted record
+     * @return StatusCode::ERR_ABORTED_RETRYABLE when shirakami scans uncommitted record
      * @return otherwise if error occurred
      */
     inline StatusCode next() {
@@ -160,8 +160,8 @@ private:
         return rc;
     }
     inline StatusCode open_cursor_() {
-        shirakami::scan_endpoint begin_endpoint{shirakami::scan_endpoint::INCLUSIVE};
-        shirakami::scan_endpoint end_endpoint{shirakami::scan_endpoint::INCLUSIVE};
+        ::shirakami::scan_endpoint begin_endpoint{::shirakami::scan_endpoint::INCLUSIVE};
+        ::shirakami::scan_endpoint end_endpoint{::shirakami::scan_endpoint::INCLUSIVE};
         is_valid_ = false;
         switch (begin_kind_) {
             case EndPointKind::UNBOUND:
@@ -170,13 +170,13 @@ private:
                 break;
             case EndPointKind::PREFIXED_INCLUSIVE:
             case EndPointKind::INCLUSIVE:
-                begin_endpoint = shirakami::scan_endpoint::INCLUSIVE;
+                begin_endpoint = ::shirakami::scan_endpoint::INCLUSIVE;
                 break;
             case EndPointKind::EXCLUSIVE:
-                begin_endpoint = shirakami::scan_endpoint::EXCLUSIVE;
+                begin_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;
                 break;
             case EndPointKind::PREFIXED_EXCLUSIVE:
-                begin_endpoint = shirakami::scan_endpoint::INCLUSIVE; // equal or larger than next neighbor
+                begin_endpoint = ::shirakami::scan_endpoint::INCLUSIVE; // equal or larger than next neighbor
                 auto n = next_neighbor_(begin_key_).to_string_view();
                 if (n.empty()) {
                     // there is no neighbor - exclude everything
@@ -195,7 +195,7 @@ private:
 
                 // fall-through
             case EndPointKind::PREFIXED_INCLUSIVE: {
-                end_endpoint = shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
+                end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
                 if (end_key_.empty()) {
                     break;
                 }
@@ -209,11 +209,11 @@ private:
                 break;
             }
             case EndPointKind::INCLUSIVE:
-                end_endpoint = shirakami::scan_endpoint::INCLUSIVE;
+                end_endpoint = ::shirakami::scan_endpoint::INCLUSIVE;
                 break;
             case EndPointKind::EXCLUSIVE:
             case EndPointKind::PREFIXED_EXCLUSIVE:
-                end_endpoint = shirakami::scan_endpoint::EXCLUSIVE;
+                end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;
                 break;
         }
         if (auto res = ::shirakami::cc_silo_variant::open_scan(tx_->native_handle(),
@@ -262,6 +262,6 @@ private:
     }
 };
 
-}  // namespace sharksfin::kvs
+}  // namespace sharksfin::shirakami
 
-#endif  // SHARKSFIN_KVS_PIECEMEAL_ITERATOR_H_
+#endif  // SHARKSFIN_SHIRAKAMI_PIECEMEAL_ITERATOR_H_

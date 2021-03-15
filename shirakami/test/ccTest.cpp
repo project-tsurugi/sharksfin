@@ -22,18 +22,18 @@
 #include "Database.h"
 #include "Iterator.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
 using namespace std::string_literals;
 
 static constexpr std::string_view TESTING { "test" }; // around 8 chars cause delete_record crash
 
-class KVSCCTest : public testing::TestRoot {
+class ShirakamiCCTest : public testing::TestRoot {
 public:
     std::string buf;
 };
 
-TEST_F(KVSCCTest, simple) {
+TEST_F(ShirakamiCCTest, simple) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());
@@ -124,7 +124,7 @@ TEST_F(KVSCCTest, simple) {
     EXPECT_EQ(db->shutdown(), StatusCode::OK);
 }
 
-TEST_F(KVSCCTest, scan_concurrently) {
+TEST_F(ShirakamiCCTest, scan_concurrently) {
     // verify concurrent scan and read works correctly
     const static std::size_t COUNT = 10;
     std::unique_ptr<Database> db{};
@@ -188,7 +188,7 @@ TEST_F(KVSCCTest, scan_concurrently) {
     EXPECT_EQ(db->shutdown(), StatusCode::OK);
 }
 
-TEST_F(KVSCCTest, scan_and_delete) {
+TEST_F(ShirakamiCCTest, scan_and_delete) {
     // verify concurrent scan and delete works correctly with retry when needed
     const static std::size_t COUNT = 30;
     std::unique_ptr<Database> db{};
@@ -256,7 +256,7 @@ TEST_F(KVSCCTest, scan_and_delete) {
     EXPECT_EQ(db->shutdown(), StatusCode::OK);
 }
 
-TEST_F(KVSCCTest, get_concurrently) {
+TEST_F(ShirakamiCCTest, get_concurrently) {
     // verify concurrent get works correctly issued from different threads/transactions
     const static std::size_t COUNT = 100;
     std::unique_ptr<Database> db{};

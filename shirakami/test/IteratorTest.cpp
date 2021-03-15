@@ -21,9 +21,9 @@
 #include "TestRoot.h"
 #include "Storage.h"
 
-namespace sharksfin::kvs {
+namespace sharksfin::shirakami {
 
-class KVSIteratorTest : public testing::TestRoot {
+class ShirakamiIteratorTest : public testing::TestRoot {
 public:
     void SetUp() override {
         testing::TestRoot::SetUp();
@@ -67,7 +67,7 @@ private:
     std::shared_ptr<Transaction> tx_;
 };
 
-TEST_F(KVSIteratorTest, prefix) {
+TEST_F(ShirakamiIteratorTest, prefix) {
     put("a", "NG");
     put("a/", "A");
     put("a/a", "B");
@@ -92,7 +92,7 @@ TEST_F(KVSIteratorTest, prefix) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(KVSIteratorTest, prefix_empty) {
+TEST_F(ShirakamiIteratorTest, prefix_empty) {
     Iterator it {
             storage(),
             transaction(),
@@ -103,7 +103,7 @@ TEST_F(KVSIteratorTest, prefix_empty) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(KVSIteratorTest, range_empty) {
+TEST_F(ShirakamiIteratorTest, range_empty) {
     Iterator it {
             storage(),
             transaction(),
@@ -113,7 +113,7 @@ TEST_F(KVSIteratorTest, range_empty) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(KVSIteratorTest, range_ex_empty) {
+TEST_F(ShirakamiIteratorTest, range_ex_empty) {
     Iterator it {
             storage(),
             transaction(),
@@ -123,7 +123,7 @@ TEST_F(KVSIteratorTest, range_ex_empty) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(KVSIteratorTest, endpoint_unbound) {
+TEST_F(ShirakamiIteratorTest, endpoint_unbound) {
     put("a", "A");
     put("b", "B");
     put("c", "C");
@@ -159,7 +159,7 @@ TEST_F(KVSIteratorTest, endpoint_unbound) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(KVSIteratorTest, endpoint_inclusive) {
+TEST_F(ShirakamiIteratorTest, endpoint_inclusive) {
     put("a", "NG");
     put("b", "B");
     put("c", "C");
@@ -188,7 +188,7 @@ TEST_F(KVSIteratorTest, endpoint_inclusive) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(KVSIteratorTest, endpoint_exclusive) {
+TEST_F(ShirakamiIteratorTest, endpoint_exclusive) {
     put("a", "NG");
     put("b", "NG");
     put("c", "C");
@@ -208,7 +208,7 @@ TEST_F(KVSIteratorTest, endpoint_exclusive) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(KVSIteratorTest, endpoint_prefixed_inclusive) {
+TEST_F(ShirakamiIteratorTest, endpoint_prefixed_inclusive) {
     put("a", "NG");
     put("b", "B");
     put("c", "C");
@@ -241,7 +241,7 @@ TEST_F(KVSIteratorTest, endpoint_prefixed_inclusive) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(KVSIteratorTest, endpoint_prefixed_exclusive) {
+TEST_F(ShirakamiIteratorTest, endpoint_prefixed_exclusive) {
     put("a", "NG");
     put("b", "NG");
     put("b1", "NG");
@@ -263,7 +263,7 @@ TEST_F(KVSIteratorTest, endpoint_prefixed_exclusive) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
-TEST_F(KVSIteratorTest, join) {
+TEST_F(ShirakamiIteratorTest, join) {
     putv("a/1", 1);
     putv("a/2", 2);
     putv("a/3", 3);
@@ -305,7 +305,7 @@ TEST_F(KVSIteratorTest, join) {
     EXPECT_EQ(results[8], std::make_pair(3, 6));
 }
 
-TEST_F(KVSIteratorTest, join_using_seek) {
+TEST_F(ShirakamiIteratorTest, join_using_seek) {
     putv("a/1", 1);
     putv("a/2", 2);
 

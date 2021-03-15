@@ -16,7 +16,7 @@
   * `-DINSTALL_EXAMPLES=ON` - also install example programs (requires `BUILD_EXAMPLES` is enables)
   * `-DEXAMPLE_IMPLEMENTATION=...` - link the specified target-name implementation to example programs
     * `memory` - link to memory implementation (default)
-    * `kvs` - link to shirakami (requires `-DBUILD_KVS`)
+    * `shirakami` - link to shirakami (requires `-DBUILD_SHIRAKAMI`)
 
 ## 利用方法
 
