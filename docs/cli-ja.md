@@ -15,8 +15,8 @@
   * `-DBUILD_EXAMPLES=OFF` - never build example programs
   * `-DINSTALL_EXAMPLES=ON` - also install example programs (requires `BUILD_EXAMPLES` is enables)
   * `-DEXAMPLE_IMPLEMENTATION=...` - link the specified target-name implementation to example programs
-    * `mock` - link to mock implementation (default)
-    * `foedus-bridge` - link to FOEDUS (requires `-DBUILD_FOEDUS_BRIDGE`)
+    * `memory` - link to memory implementation (default)
+    * `kvs` - link to shirakami (requires `-DBUILD_KVS`)
 
 ## 利用方法
 

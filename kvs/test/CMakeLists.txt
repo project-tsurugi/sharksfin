@@ -13,7 +13,7 @@
 # limitations under the License.
 
 if(NOT TARGET Boost::filesystem)
-    message(FATAL_ERROR "Boost::filesystem was not installed, please configure with -DBUILD_FOEDUS_BRIDGE=OFF or -DBUILD_TESTS=OFF to skip")
+    message(FATAL_ERROR "Boost::filesystem was not installed, please configure with -DBUILD_KVS=OFF or -DBUILD_TESTS=OFF to skip")
 endif()
 
 file(GLOB TEST_SOURCES

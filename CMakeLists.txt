@@ -23,8 +23,6 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 option(BUILD_TESTS "Build test programs" ON)
 option(BUILD_MEMORY "Build in-memory implementation" ON)
-option(BUILD_MOCK "Build mock implementation" ON)
-option(BUILD_FOEDUS_ENGINE "Build transaction engine with foedus" OFF)
 option(BUILD_KVS "Build transaction engine with shirakami" ON)
 option(BUILD_EXAMPLES "Build and test example programs" ON)
 option(BUILD_DOCUMENTS "Build documents" ON)
@@ -38,7 +36,7 @@ option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 
 if(NOT EXAMPLE_IMPLEMENTATION)
     set(
-        EXAMPLE_IMPLEMENTATION "mock"
+        EXAMPLE_IMPLEMENTATION "memory"
         CACHE STRING
         "Target name to link implementation with example programs"
     )
@@ -46,8 +44,6 @@ endif()
 
 find_package(Doxygen)
 find_package(Threads REQUIRED)
-find_package(LevelDB)
-find_package(FOEDUS)
 find_package(Boost
     COMPONENTS filesystem)
 find_package(glog)
@@ -109,12 +105,6 @@ if(BUILD_TESTS)
 endif()
 if(BUILD_MEMORY)
     add_subdirectory(memory)
-endif()
-if(BUILD_MOCK)
-    add_subdirectory(mock)
-endif()
-if(BUILD_FOEDUS_BRIDGE)
-    add_subdirectory(foedus)
 endif()
 if(BUILD_KVS)
     add_subdirectory(kvs)

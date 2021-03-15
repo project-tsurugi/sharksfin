@@ -14,8 +14,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      BUILD_FOEDUS_BRIDGE: OFF
 
     steps:
       - id: Checkout
@@ -24,17 +22,6 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.GHA_PAT }}
-
-      - id: Install_FOEDUS
-        name: Install_FOEDUS
-        run: |
-          cd third_party/foedus
-          mkdir -p build
-          cd build
-          rm -f CMakeCache.txt
-          cmake -DCMAKE_BUILD_TYPE=Debug -DGFLAGS_INTTYPES_FORMAT=C99 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
-          cmake --build . --target install --clean-first -- -j
-        if: env.BUILD_FOEDUS_BRIDGE == 'ON'
 
       - id: Install_shirakami
         name: Install_shirakami
@@ -50,7 +37,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_FOEDUS_BRIDGE=${BUILD_FOEDUS_BRIDGE} -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
           cmake --build . --target all --clean-first -- -j
 
       - id: CTest
@@ -66,7 +53,7 @@ jobs:
       - id: Clang-Tidy
         name: Clang-Tidy
         run: |
-          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -header-filter=$(pwd)'/(include|memory|mock|foedus|examples)/.*\\.h$' $(pwd)'/(memory/src|mock/src|foedus/src|examples)/.*' 2>&1 | tee build/clang-tidy.log
+          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -header-filter=$(pwd)'/(include|memory|kvs|examples)/.*\\.h$' $(pwd)'/(memory/src|kvs/src|examples)/.*' 2>&1 | tee build/clang-tidy.log
 
       - id: Doxygen
         name: Doxygen
