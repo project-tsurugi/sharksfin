@@ -60,7 +60,7 @@ TEST_F(SequenceMapTest, multiple_put) {
     auto v1 = seq.get(id);
     EXPECT_EQ(1, v1.version());
     EXPECT_EQ(10, v1.value());
-    EXPECT_FALSE(seq.put(id, 1, 20));
+    EXPECT_TRUE(seq.put(id, 1, 20));
     v1 = seq.get(id);
     EXPECT_EQ(1, v1.version());
     EXPECT_EQ(10, v1.value());
@@ -68,7 +68,7 @@ TEST_F(SequenceMapTest, multiple_put) {
     auto v3 = seq.get(id);
     EXPECT_EQ(3, v3.version());
     EXPECT_EQ(30, v3.value());
-    EXPECT_FALSE(seq.put(id, 2, 20));
+    EXPECT_TRUE(seq.put(id, 2, 20));
     v3 = seq.get(id);
     EXPECT_EQ(3, v3.version());
     EXPECT_EQ(30, v3.value());
