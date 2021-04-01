@@ -51,7 +51,7 @@ bool SequenceMap::put(SequenceId id, SequenceVersion version, SequenceValue valu
     }
     if (version <= values_[id].version()) {
         LOG(INFO) << "obsolete sequence version. No update. ";
-        return false;
+        return true;
     }
     values_[id] = {version, value};
     return true;
