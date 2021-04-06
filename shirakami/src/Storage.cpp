@@ -59,7 +59,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
     StatusCode rc{};
     switch(operation) {
         case PutOperation::CREATE: {
-            auto res = ::shirakami::cc_silo_variant::insert(tx->native_handle(), k.to_string_view(),
+            auto res = ::shirakami::insert(tx->native_handle(), k.to_string_view(),
                 value.to_string_view());
             if (res == ::shirakami::Status::ERR_PHANTOM) {
                 tx->deactivate();
@@ -71,7 +71,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
             break;
         }
         case PutOperation::UPDATE: {
-            rc = resolve(::shirakami::cc_silo_variant::update(tx->native_handle(), k.to_string_view(),
+            rc = resolve(::shirakami::update(tx->native_handle(), k.to_string_view(),
                                                               value.to_string_view()));
             if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
                 ABORT();
@@ -79,7 +79,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
             break;
         }
         case PutOperation::CREATE_OR_UPDATE:
-            auto res = ::shirakami::cc_silo_variant::upsert(tx->native_handle(), k.to_string_view(),
+            auto res = ::shirakami::upsert(tx->native_handle(), k.to_string_view(),
                 value.to_string_view());
             rc = resolve(res);
             if (res == ::shirakami::Status::ERR_PHANTOM) {
@@ -97,7 +97,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
 StatusCode Storage::remove(Transaction* tx, Slice key) {
     assert(tx->active());  //NOLINT
     Slice k = qualify(key);
-    auto rc = resolve(::shirakami::cc_silo_variant::delete_record(tx->native_handle(), k.to_string_view()));
+    auto rc = resolve(::shirakami::delete_record(tx->native_handle(), k.to_string_view()));
     if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
         ABORT();
     }

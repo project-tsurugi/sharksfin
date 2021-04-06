@@ -45,7 +45,7 @@ StatusCode Database::shutdown() {
         std::cout << "transaction process time: " << transaction_process_time().load().count() << std::endl;
         std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
-    ::shirakami::cc_silo_variant::fin();
+    ::shirakami::fin();
     active_ = false;
     return StatusCode::OK;
 }
@@ -61,10 +61,10 @@ static void qualify_meta(Slice key, std::string& buffer) {
 StatusCode Database::clean() {
     auto tx = create_transaction();
     std::vector<::shirakami::Tuple const*> tuples{};
-    ::shirakami::cc_silo_variant::scan_key(tx->native_handle(), "", ::shirakami::scan_endpoint::INF, "", ::shirakami::scan_endpoint::INF, tuples);
+    ::shirakami::scan_key(tx->native_handle(), "", ::shirakami::scan_endpoint::INF, "", ::shirakami::scan_endpoint::INF, tuples);
     auto tx2 = create_transaction();
     for(auto t : tuples) {
-        ::shirakami::cc_silo_variant::delete_record(tx2->native_handle(), t->get_key());
+        ::shirakami::delete_record(tx2->native_handle(), t->get_key());
     }
     tx2->commit(false);
     tx->abort();
@@ -93,7 +93,7 @@ StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<
     auto storage = std::make_unique<Storage>(this, key);
     std::string k{}, v{};
     qualify_meta(storage->prefix(), k);
-    auto rc = resolve(::shirakami::cc_silo_variant::upsert(tx.native_handle(), k, v));
+    auto rc = resolve(::shirakami::upsert(tx.native_handle(), k, v));
     if (rc != StatusCode::OK) {
         ABORT();
     }
@@ -152,7 +152,7 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
     std::unique_lock lock{mutex_for_storage_metadata_};
     std::string k{};
     qualify_meta(storage.prefix(), k);
-    auto rc1 = resolve(::shirakami::cc_silo_variant::delete_record(tx.native_handle(),  k));
+    auto rc1 = resolve(::shirakami::delete_record(tx.native_handle(),  k));
     storage_cache_.remove(storage.key());
     if (rc1 == StatusCode::NOT_FOUND) {
         return StatusCode::NOT_FOUND;
@@ -178,7 +178,7 @@ StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
         ABORT();
     }
     for(auto t : records) {
-        auto rc2 = resolve(::shirakami::cc_silo_variant::delete_record(tx.native_handle(), t->get_key()));
+        auto rc2 = resolve(::shirakami::delete_record(tx.native_handle(), t->get_key()));
         if (rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
             ABORT();
         }

@@ -57,16 +57,16 @@ public:
      * @brief constructs a new object.
      */
     Database() {
-        ::shirakami::cc_silo_variant::init();
+        ::shirakami::init();
     };
     /**
      * @brief constructs a new object.
      */
     Database(DatabaseOptions const& options) {
         if (auto loc = options.attribute(KEY_LOCATION); loc) {
-            ::shirakami::cc_silo_variant::init(*loc);
+            ::shirakami::init(*loc);
         } else {
-            ::shirakami::cc_silo_variant::init();
+            ::shirakami::init();
         }
     };
 

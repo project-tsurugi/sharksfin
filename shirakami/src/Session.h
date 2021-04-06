@@ -31,7 +31,7 @@ namespace sharksfin::shirakami {
 class Session {
 public:
     Session() {
-        if (auto res = ::shirakami::cc_silo_variant::enter(id_); res != ::shirakami::Status::OK) {
+        if (auto res = ::shirakami::enter(id_); res != ::shirakami::Status::OK) {
             ABORT_MSG("enter should always be successful");
         }
     };
@@ -41,7 +41,7 @@ public:
     Session& operator=(Session&& other) = default;
     explicit Session(::shirakami::Token id) noexcept : id_(id) {}
     ~Session() noexcept {
-        if (auto res = ::shirakami::cc_silo_variant::leave(id_); res != ::shirakami::Status::OK) {
+        if (auto res = ::shirakami::leave(id_); res != ::shirakami::Status::OK) {
             ABORT_MSG("leave should always be successful");
         }
     };

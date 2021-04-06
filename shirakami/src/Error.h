@@ -39,7 +39,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             return StatusCode::NOT_FOUND;
         case ::shirakami::Status::WARN_ALREADY_EXISTS:
             return StatusCode::ALREADY_EXISTS;
-        case ::shirakami::Status::ERR_INVALID_ARGS:
+        case ::shirakami::Status::WARN_INVALID_ARGS:
             return StatusCode::ERR_INVALID_ARGUMENT;
         case ::shirakami::Status::ERR_VALIDATION:
             return StatusCode::ERR_ABORTED_RETRYABLE;
@@ -53,6 +53,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             return StatusCode::NOT_FOUND;
         case ::shirakami::Status::WARN_WRITE_TO_LOCAL_WRITE:
             return StatusCode::OK;
+        case ::shirakami::Status::WARN_INVARIANT:
+            return StatusCode::ERR_INVALID_ARGUMENT;
         case ::shirakami::Status::ERR_WRITE_TO_DELETED_RECORD:
             return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::shirakami::Status::WARN_CONCURRENT_DELETE:

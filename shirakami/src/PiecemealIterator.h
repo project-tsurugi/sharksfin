@@ -65,7 +65,7 @@ public:
      */
     ~PiecemealIterator() {
         if(handle_open_) {
-            auto rc = ::shirakami::cc_silo_variant::close_scan(tx_->native_handle(), handle_);
+            auto rc = ::shirakami::close_scan(tx_->native_handle(), handle_);
             if(rc == ::shirakami::Status::WARN_INVALID_HANDLE) {
                 // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on shirakami
                 // we can safely ignore this error since the handle is already released on shirakami side
@@ -216,7 +216,7 @@ private:
                 end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;
                 break;
         }
-        if (auto res = ::shirakami::cc_silo_variant::open_scan(tx_->native_handle(),
+        if (auto res = ::shirakami::open_scan(tx_->native_handle(),
                                                                begin_key_, begin_endpoint,
                                                                end_key_, end_endpoint, handle_);
                 res == ::shirakami::Status::WARN_NOT_FOUND) {

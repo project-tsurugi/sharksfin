@@ -23,7 +23,7 @@ inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::T
     ::shirakami::Status res{::shirakami::Status::OK};
     int retry = 3;
     do {
-        res = ::shirakami::cc_silo_variant::search_key(token, key, tuple);
+        res = ::shirakami::search_key(token, key, tuple);
         --retry;
     } while (
         (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
@@ -45,7 +45,7 @@ inline ::shirakami::Status scan_key_with_retry(Transaction& tx, ::shirakami::Tok
     int retry = 3;
     ::shirakami::Status res{::shirakami::Status::OK};
     do {
-        res = ::shirakami::cc_silo_variant::scan_key(token, lkey, l_end, rkey, r_end, result);
+        res = ::shirakami::scan_key(token, lkey, l_end, rkey, r_end, result);
         --retry;
     } while (
         (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
@@ -65,7 +65,7 @@ inline ::shirakami::Status read_from_scan_with_retry(Transaction& tx, ::shirakam
     int retry = 3;
     ::shirakami::Status res{::shirakami::Status::OK};
     do {
-        res = ::shirakami::cc_silo_variant::read_from_scan(token, handle, result);
+        res = ::shirakami::read_from_scan(token, handle, result);
         --retry;
     } while (
         (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
