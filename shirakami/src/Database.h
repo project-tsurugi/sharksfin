@@ -22,8 +22,8 @@
 #include <mutex>
 
 #include "glog/logging.h"
-#include "kvs/scheme.h"
-#include "kvs/interface.h"
+#include "shirakami/scheme.h"
+#include "shirakami/interface.h"
 #include "sharksfin/api.h"
 #include "sharksfin/Slice.h"
 #include "Error.h"

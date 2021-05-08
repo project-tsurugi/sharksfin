@@ -18,7 +18,7 @@
 
 #include "glog/logging.h"
 #include "sharksfin/StatusCode.h"
-#include "kvs/scheme.h"
+#include "shirakami/scheme.h"
 
 namespace sharksfin::shirakami {
 

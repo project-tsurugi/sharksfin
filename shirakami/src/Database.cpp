@@ -17,7 +17,7 @@
 
 #include <memory>
 
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 #include "sharksfin/api.h"
 #include "Iterator.h"
 #include "Transaction.h"
