@@ -27,11 +27,6 @@ target_link_libraries(shirakami
 
 set_compile_options(shirakami)
 
-option(USE_PIECEMEAL_ITERATOR "use newer piecemeal iterator" ON)
-if(USE_PIECEMEAL_ITERATOR)
-    target_compile_definitions(shirakami PUBLIC -DUSE_PIECEMEAL_ITERATOR)
-endif()
-
 # To enable pre-processor macro
 target_compile_definitions(shirakami PUBLIC -DCC_SILO_VARIANT)
 

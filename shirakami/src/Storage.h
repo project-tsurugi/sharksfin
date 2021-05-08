@@ -26,14 +26,7 @@ namespace sharksfin::shirakami {
 
 class Transaction;
 class Database;
-
-#ifdef USE_PIECEMEAL_ITERATOR
-class PiecemealIterator;
-using Iterator = PiecemealIterator;
-#else
-class OneshotIterator;
-using Iterator = OneshotIterator;
-#endif
+class Iterator;
 
 /**
  * @brief storage class to interact with shirakami
