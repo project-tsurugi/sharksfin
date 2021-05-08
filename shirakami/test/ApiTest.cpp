@@ -1497,9 +1497,9 @@ TEST_F(ShirakamiApiTest, sequence) {
     ASSERT_EQ(StatusCode::OK, transaction_begin(db, {}, &tch.get()));
     TransactionHandle tx{};
     ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch.get(), &tx));
-    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 1UL, 10));
-    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id1, 1UL, 100));
-    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 2UL, 20));
+    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 2UL, 10));
+    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id1, 2UL, 100));
+    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 3UL, 20));
     ASSERT_EQ(StatusCode::OK, transaction_commit(tch.get()));
 
     // wait for the transaction become durable
@@ -1508,7 +1508,7 @@ TEST_F(ShirakamiApiTest, sequence) {
     SequenceVersion ver{};
     SequenceValue val{};
     ASSERT_EQ(StatusCode::OK, sequence_get(db, id0, &ver, &val));
-    EXPECT_EQ(2, ver);
+    EXPECT_EQ(3, ver);
     EXPECT_EQ(20, val);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
