@@ -157,13 +157,12 @@ private:
         return rc;
     }
     inline StatusCode open_cursor_() {
-        ::shirakami::scan_endpoint begin_endpoint{::shirakami::scan_endpoint::INCLUSIVE};
-        ::shirakami::scan_endpoint end_endpoint{::shirakami::scan_endpoint::INCLUSIVE};
+        ::shirakami::scan_endpoint begin_endpoint{::shirakami::scan_endpoint::INF};
+        ::shirakami::scan_endpoint end_endpoint{::shirakami::scan_endpoint::INF};
         is_valid_ = false;
         switch (begin_kind_) {
             case EndPointKind::UNBOUND:
-                // begin_key_ can contain storage prefix
-                // if begin_key_ is not empty, handle this case same as EndPointKind::INCLUSIVE
+                assert(begin_key_.empty());  //NOLINT
                 break;
             case EndPointKind::PREFIXED_INCLUSIVE:
             case EndPointKind::INCLUSIVE:
@@ -186,10 +185,8 @@ private:
         }
         switch (end_kind_) {
             case EndPointKind::UNBOUND:
-                // end_key_ can contain storage prefix
-                // if end_key_ is not empty, handle this case same as EndPointKind::PREFIXED_INCLUSIVE
-
-                // fall-through
+                assert(end_key_.empty());  //NOLINT
+                break;
             case EndPointKind::PREFIXED_INCLUSIVE: {
                 end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
                 if (end_key_.empty()) {
