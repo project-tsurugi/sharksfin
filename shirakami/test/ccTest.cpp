@@ -28,7 +28,7 @@ using namespace std::string_literals;
 
 static constexpr std::string_view TESTING { "test" }; // around 8 chars cause delete_record crash
 
-class ShirakamiCCTest : public testing::TestRoot {
+class ShirakamiCCTest : public TestRoot {
 public:
     std::string buf;
 };

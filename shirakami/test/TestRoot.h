@@ -22,10 +22,53 @@
 
 #include <gtest/gtest.h>
 
+#include "Database.h"
+#include "Transaction.h"
 #include "TemporaryFolder.h"
 
-namespace sharksfin::testing {
+namespace sharksfin::shirakami {
 
+class DatabaseHolder {
+public:
+    DatabaseHolder(std::string path) {
+        DatabaseOptions options{};
+        options.attribute(KEY_LOCATION, path);
+        Database::open(options, &db_);
+    }
+    ~DatabaseHolder() {
+        db_->shutdown();
+    }
+    Database* operator->() {
+        return db_.get();
+    }
+    operator Database*() {
+        return db_.get();
+    }
+
+    std::unique_ptr<Database> db_{};
+};
+class TransactionHolder {
+public:
+    TransactionHolder(Database* db) {
+        tx_ = db->create_transaction();
+    }
+    ~TransactionHolder() {
+        if (tx_->active()) {
+            tx_->commit(false);
+        }
+    }
+    Transaction* operator->() {
+        return tx_.get();
+    }
+    Transaction& operator*() {
+        return *tx_;
+    }
+    operator Transaction*() {
+        return tx_.get();
+    }
+
+    std::unique_ptr<Transaction> tx_{};
+};
 class TestRoot : public ::testing::Test {
 public:
     void SetUp() override {
@@ -41,9 +84,9 @@ public:
     }
 
 private:
-    TemporaryFolder temporary_;
+    testing::TemporaryFolder temporary_;
 };
 
-}  // namespace sharksfin::testing
+}  // namespace sharksfin::shirakami
 
 #endif  // SHARKSFIN_TESTING_TESTROOT_H_

@@ -55,33 +55,18 @@ public:
     /**
      * @brief constructs a new object.
      */
-    Database() {
-        ::shirakami::init();
-        init_default_storage();
-    };
+    Database();
+
     /**
      * @brief constructs a new object.
      */
-    Database(DatabaseOptions const& options) {
-        if (auto loc = options.attribute(KEY_LOCATION); loc) {
-            ::shirakami::init(*loc);
-        } else {
-            ::shirakami::init();
-        }
-        init_default_storage();
-    };
+    Database(DatabaseOptions const& options);;
 
     /**
-     * @brief
+     * @brief destruct the object
      */
-    ~Database() {
-        if (active_) {
-            // shutdown should have been called, but ensure it here for safety
-            // this avoids stopping test after a failure
-            LOG(WARNING) << "Database shutdown implicitly";
-            shutdown();
-        }
-    };
+    ~Database();
+
     /**
      * @brief shutdown this database.
      */
@@ -193,10 +178,23 @@ public:
      */
     StatusCode clean();
 
+    /**
+     * @brief accessor to the default storage where system
+     * information (e.g. tables list) is stored
+     * @return the default storage
+     */
+    Storage& default_storage() const noexcept;
+
+    /**
+     * @brief list storage name to native handle mapping
+     * @return the map from name to handle
+     */
+    std::unordered_map<std::string, ::shirakami::Storage> list_storages() noexcept;
+
 private:
     std::mutex mutex_for_storage_metadata_{};
     StorageCache storage_cache_{};
-    std::unique_ptr<Storage> default_storage_{};
+    std::unique_ptr<Storage> default_storage_;
 
     bool enable_tracking_ { false };
     std::atomic_size_t transaction_count_ {};

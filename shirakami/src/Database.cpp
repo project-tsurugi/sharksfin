@@ -61,6 +61,11 @@ static void qualify_meta(Slice key, std::string& buffer) {
     key.append_to(buffer);
 }
 
+static Slice subkey(Slice key) {
+    auto len = TABLE_ENTRY_PREFIX.size();
+    return Slice(key.data()+len, key.size()-len);  //NOLINT
+}
+
 void Database::init_default_storage() {
     std::vector<::shirakami::Storage> storages{};
     if(auto rc = ::shirakami::list_storage(storages);
@@ -81,14 +86,12 @@ void Database::init_default_storage() {
 StatusCode Database::clean() {
     auto tx = create_transaction();
     std::vector<Tuple const*> tuples{};
-    ::shirakami::scan_key(tx->native_handle(), default_storage_->handle(),
-        "", scan_endpoint::INF, "", scan_endpoint::INF, tuples);
-    auto tx2 = create_transaction();
-    for(auto t : tuples) {
-        ::shirakami::delete_record(tx2->native_handle(), default_storage_->handle(), t->get_key());
+    for(auto [n, s] : list_storages()) {
+        Storage stg{this, n, s};
+        delete_storage(stg, *tx);
+        tx->reset();
     }
-    tx2->commit(false);
-    tx->abort();
+    tx->commit(false);
     return StatusCode::OK;
 }
 
@@ -197,6 +200,53 @@ StatusCode Database::delete_storage(Storage &storage, Transaction& tx) {
 
 std::unique_ptr<Transaction> Database::create_transaction(bool readonly) {
     return std::make_unique<Transaction>(this, readonly);
+}
+
+std::unordered_map<std::string, ::shirakami::Storage> Database::list_storages() noexcept {
+    std::unordered_map<std::string, ::shirakami::Storage> ret{};
+    auto tx = create_transaction();
+    auto iter = default_storage_->scan(tx.get(),
+        "", EndPointKind::UNBOUND,
+        "", EndPointKind::UNBOUND);
+    ::shirakami::Storage handle{};
+    while(iter->next() == StatusCode::OK) {
+        std::string_view v{iter->value().to_string_view()};
+        assert(v.size() == sizeof(handle)); //NOLINT
+        std::memcpy(&handle, v.data(), v.size());
+        ret.emplace(
+            subkey(iter->key()).to_string_view(),
+            handle
+        );
+    }
+    tx->commit(false);
+    return ret;
+}
+
+Database::~Database() {
+    if (active_) {
+        // shutdown should have been called, but ensure it here for safety
+        // this avoids stopping test after a failure
+        LOG(WARNING) << "Database shutdown implicitly";
+        shutdown();
+    }
+}
+
+Storage& Database::default_storage() const noexcept {
+    return *default_storage_;
+}
+
+Database::Database() {
+    ::shirakami::init();
+    init_default_storage();
+}
+
+Database::Database(DatabaseOptions const& options) {
+    if (auto loc = options.attribute(KEY_LOCATION); loc) {
+        ::shirakami::init(*loc);
+    } else {
+        ::shirakami::init();
+    }
+    init_default_storage();
 }
 
 }  // namespace sharksfin::shirakami

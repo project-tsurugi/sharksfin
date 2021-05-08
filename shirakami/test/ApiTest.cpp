@@ -34,7 +34,7 @@ static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };
 
 static constexpr std::string_view TESTING { "test" }; // around 8 chars cause delete_record crash
 
-class ShirakamiApiTest : public testing::TestRoot {
+class ShirakamiApiTest : public shirakami::TestRoot {
 public:
 };
 

@@ -25,48 +25,7 @@ namespace sharksfin::shirakami {
 
 static constexpr std::string_view TESTING { "testing" };
 
-class DatabaseHolder {
-public:
-    DatabaseHolder(std::string path) {
-        DatabaseOptions options{};
-        options.attribute(KEY_LOCATION, path);
-        Database::open(options, &db_);
-    }
-    ~DatabaseHolder() {
-        db_->shutdown();
-    }
-    Database* operator->() {
-        return db_.get();
-    }
-    operator Database*() {
-        return db_.get();
-    }
-
-    std::unique_ptr<Database> db_{};
-};
-class TransactionHolder {
-public:
-    TransactionHolder(Database* db) {
-        tx_ = db->create_transaction();
-    }
-    ~TransactionHolder() {
-        if (tx_->active()) {
-            tx_->commit(false);
-        }
-    }
-    Transaction* operator->() {
-        return tx_.get();
-    }
-    Transaction& operator*() {
-        return *tx_;
-    }
-    operator Transaction*() {
-        return tx_.get();
-    }
-
-    std::unique_ptr<Transaction> tx_{};
-};
-class ShirakamiStorageTest : public testing::TestRoot {
+class ShirakamiStorageTest : public TestRoot {
 public:
     std::string buf;
 };
@@ -440,36 +399,4 @@ TEST_F(ShirakamiStorageTest, scan_range_exclusive) {
     }
 }
 
-TEST_F(ShirakamiStorageTest, create_storage) {
-    DatabaseHolder db{path()};
-    {
-        TransactionHolder tx{db};
-        std::unique_ptr<Storage> st{};
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
-        EXPECT_TRUE(st);
-        st.reset();
-        EXPECT_FALSE(st);
-        tx->reset();
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::ALREADY_EXISTS);
-        EXPECT_FALSE(st);
-        tx->reset();
-    }
-}
-
-TEST_F(ShirakamiStorageTest, get_storage) {
-    DatabaseHolder db{path()};
-    {
-        TransactionHolder tx{db};
-        std::unique_ptr<Storage> st{};
-        ASSERT_EQ(db->get_storage("S", st), StatusCode::NOT_FOUND);
-        EXPECT_FALSE(st);
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
-        EXPECT_TRUE(st);
-        st.reset();
-        EXPECT_FALSE(st);
-        tx->reset();
-        ASSERT_EQ(db->get_storage("S", st), StatusCode::OK);
-        EXPECT_TRUE(st);
-    }
-}
 }  // namespace

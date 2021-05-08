@@ -23,10 +23,10 @@
 
 namespace sharksfin::shirakami {
 
-class ShirakamiIteratorTest : public testing::TestRoot {
+class ShirakamiIteratorTest : public TestRoot {
 public:
     void SetUp() override {
-        testing::TestRoot::SetUp();
+        TestRoot::SetUp();
         DatabaseOptions options{};
         options.attribute(KEY_LOCATION, path());
         Database::open(options, &database_);
@@ -36,7 +36,7 @@ public:
     }
 
     void TearDown() override {
-        testing::TestRoot::TearDown();
+        TestRoot::TearDown();
         tx_->abort();
         database_->shutdown();
     }
