@@ -195,8 +195,8 @@ StatusCode Database::delete_storage(Storage &storage, Transaction& tx) {
     return rc;
 }
 
-std::unique_ptr<Transaction> Database::create_transaction() {
-    return std::make_unique<Transaction>(this);
+std::unique_ptr<Transaction> Database::create_transaction(bool readonly) {
+    return std::make_unique<Transaction>(this, readonly);
 }
 
 }  // namespace sharksfin::shirakami

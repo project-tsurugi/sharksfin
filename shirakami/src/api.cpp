@@ -225,7 +225,9 @@ StatusCode transaction_begin(
         [[maybe_unused]] TransactionOptions const& options,
         TransactionControlHandle *result) {
     auto database = unwrap(handle);
-    auto tx = database->create_transaction();
+    bool readonly =
+        options.operation_kind() == TransactionOptions::OperationKind::READ_ONLY;
+    auto tx = database->create_transaction(readonly);
     *result = wrap_as_control_handle(tx.release());
     return StatusCode::OK;
 }
@@ -299,6 +301,9 @@ StatusCode content_put(
         Slice value,
         PutOperation operation) {
     auto tx = unwrap(transaction);
+    if (tx->readonly()) {
+        return StatusCode::ERR_UNSUPPORTED;
+    }
     auto stg = unwrap(storage);
     auto db = tx->owner();
     if (!db) {
@@ -312,6 +317,9 @@ StatusCode content_delete(
         StorageHandle storage,
         Slice key) {
     auto tx = unwrap(transaction);
+    if (tx->readonly()) {
+        return StatusCode::ERR_UNSUPPORTED;
+    }
     auto stg = unwrap(storage);
     auto db = tx->owner();
     if (!db) {

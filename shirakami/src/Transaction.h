@@ -32,11 +32,14 @@ public:
     /**
      * @brief create a new instance.
      * @param owner the owner of the transaction
+     * @param readonly specify whether the transaction is readonly or not
      */
     inline Transaction(
-            Database* owner
-    ) : owner_(owner), session_(std::make_unique<Session>()) {
+            Database* owner,
+            bool readonly = false
+    ) : owner_(owner), session_(std::make_unique<Session>()), readonly_(readonly) {
         buffer_.reserve(1024); // TODO auto expand - currently assuming values are shorter than this
+        declare_begin();
     }
 
     /**
@@ -122,6 +125,7 @@ public:
             ABORT();
         }
         is_active_ = true;
+        declare_begin();
     }
 
     bool active() const noexcept {
@@ -131,11 +135,25 @@ public:
     void deactivate() noexcept {
         is_active_ = false;
     }
+
+    /**
+     * @brief return whether the transaction is read-only
+     * @return true if the transaction is readonly
+     * @return false otherwise
+     */
+    inline bool readonly() const noexcept {
+        return readonly_;
+    }
 private:
     Database* owner_{};
     std::unique_ptr<Session> session_{};
     std::string buffer_{};
     bool is_active_{true};
+    bool readonly_{false};
+
+    void declare_begin() {
+        ::shirakami::tx_begin(session_->id(), readonly_);
+    }
 };
 
 }  // namespace sharksfin::shirakami

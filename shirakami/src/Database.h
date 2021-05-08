@@ -183,9 +183,10 @@ public:
 
     /**
      * @brief creates a new transaction
+     * @param readonly specify whether the transaction is readonly or not
      * @return the created transaction
      */
-    std::unique_ptr<Transaction> create_transaction();
+    std::unique_ptr<Transaction> create_transaction(bool readonly = false);
 
     /**
      * @brief clean up all storage in this database
