@@ -18,12 +18,13 @@
 
 namespace sharksfin::shirakami {
 
-inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
-        const std::string_view key, ::shirakami::Tuple** const tuple) {
+inline ::shirakami::Status search_key_with_retry(Transaction& tx,
+    ::shirakami::Token token, ::shirakami::Storage storage, // NOLINT
+    const std::string_view key, ::shirakami::Tuple** const tuple) {
     ::shirakami::Status res{::shirakami::Status::OK};
     int retry = 3;
     do {
-        res = ::shirakami::search_key(token, key, tuple);
+        res = ::shirakami::search_key(token, storage, key, tuple);
         --retry;
     } while (
         (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
@@ -38,14 +39,15 @@ inline ::shirakami::Status search_key_with_retry(Transaction& tx, ::shirakami::T
     return res;
 }
 
-inline ::shirakami::Status scan_key_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
-        const std::string_view lkey, const ::shirakami::scan_endpoint l_end,
-        const std::string_view rkey, const ::shirakami::scan_endpoint r_end,
-        std::vector<::shirakami::Tuple const*>& result) {
+inline ::shirakami::Status scan_key_with_retry(Transaction& tx,
+    ::shirakami::Token token, ::shirakami::Storage storage, // NOLINT
+    const std::string_view lkey, const ::shirakami::scan_endpoint l_end,
+    const std::string_view rkey, const ::shirakami::scan_endpoint r_end,
+    std::vector<::shirakami::Tuple const*>& result) {
     int retry = 3;
     ::shirakami::Status res{::shirakami::Status::OK};
     do {
-        res = ::shirakami::scan_key(token, lkey, l_end, rkey, r_end, result);
+        res = ::shirakami::scan_key(token, storage, lkey, l_end, rkey, r_end, result);
         --retry;
     } while (
         (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
@@ -60,8 +62,9 @@ inline ::shirakami::Status scan_key_with_retry(Transaction& tx, ::shirakami::Tok
     return res;
 }
 
-inline ::shirakami::Status read_from_scan_with_retry(Transaction& tx, ::shirakami::Token token, // NOLINT
-        const ::shirakami::ScanHandle handle, ::shirakami::Tuple** const result) {
+inline ::shirakami::Status read_from_scan_with_retry(Transaction& tx,
+    ::shirakami::Token token,  // NOLINT
+    const ::shirakami::ScanHandle handle, ::shirakami::Tuple** const result) {
     int retry = 3;
     ::shirakami::Status res{::shirakami::Status::OK};
     do {

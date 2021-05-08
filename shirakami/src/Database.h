@@ -21,7 +21,6 @@
 #include <memory>
 #include <mutex>
 
-#include "glog/logging.h"
 #include "shirakami/scheme.h"
 #include "shirakami/interface.h"
 #include "sharksfin/api.h"
@@ -58,6 +57,7 @@ public:
      */
     Database() {
         ::shirakami::init();
+        init_default_storage();
     };
     /**
      * @brief constructs a new object.
@@ -68,6 +68,7 @@ public:
         } else {
             ::shirakami::init();
         }
+        init_default_storage();
     };
 
     /**
@@ -194,6 +195,7 @@ public:
 private:
     std::mutex mutex_for_storage_metadata_{};
     StorageCache storage_cache_{};
+    std::unique_ptr<Storage> default_storage_{};
 
     bool enable_tracking_ { false };
     std::atomic_size_t transaction_count_ {};
@@ -202,8 +204,9 @@ private:
     std::atomic<tracking_time_period> transaction_wait_time_ {};
 
     bool waits_for_commit_ { true };
-    StatusCode erase_storage_(Storage& storage, Transaction& tx);
     bool active_{ true };
+
+    void init_default_storage();
 };
 
 }  // namespace sharksfin::shirakami

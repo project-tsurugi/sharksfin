@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "sharksfin/api.h"
+#include "Database.h"
 
 namespace sharksfin::shirakami {
 
@@ -37,38 +38,25 @@ public:
     /**
      * @brief constructs a new object.
      * @param owner the owner of this storage.
-     * @param key the storage key
+     * @param name the storage name
      */
     inline Storage(
-            Database* owner,
-            Slice key
-    )  // NOLINT(performance-unnecessary-value-param)
-            : owner_(owner) , key_prefix_(key.to_string_view()) {
-        key_prefix_.append(1, '\0');
-    }
+        Database* owner,
+        Slice name,
+        ::shirakami::Storage handle
+    ) : // NOLINT(performance-unnecessary-value-param)
+        owner_(owner) ,
+        name_(name.to_string_view()),
+        handle_(handle)
+    {}
 
     /**
-     * @brief returns key prefix.
-     * @return the key prefix
+     * @brief returns the storage name
+     * @return the name of the storage
      */
-    inline Slice prefix() const {
-        return key_prefix_;
+    inline Slice name() const {
+        return name_;
     }
-
-    /**
-     * @brief returns the storage key
-     * @return the key of the storage
-     */
-    inline Slice key() const {
-        return Slice(key_prefix_.data(), key_prefix_.size()-1);
-    }
-
-    /**
-     * @brief returns subkey of the given key.
-     * @param key the key which includes storage ID
-     * @return the subkey
-     */
-    Slice subkey(Slice key) const;
 
     /**
      * @brief obtains an entry and write its value into the given buffer.
@@ -115,14 +103,18 @@ public:
     Database* owner() const {
         return owner_;
     }
-private:
-    Database* owner_;
-    std::string key_prefix_;
 
     /**
-     * @brief add storage prefix to the key
+     * @brief returns the native storage handle object.
+     * @return the shirakami native handle
      */
-    Slice qualify(Slice key);
+    inline ::shirakami::Storage handle() {
+        return handle_;
+    }
+private:
+    Database* owner_;
+    std::string name_;
+    ::shirakami::Storage handle_{};
 };
 
 }  // namespace sharksfin::shirakami

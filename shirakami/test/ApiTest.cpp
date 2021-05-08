@@ -1447,4 +1447,69 @@ TEST_F(ShirakamiApiTest, transaction_begin_and_abort) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ShirakamiApiTest, readonly_transaction) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static bool run(DatabaseHandle db, S& s) {
+            HandleHolder<TransactionControlHandle> tch{};
+            TransactionOptions options{};
+            options.operation_kind(TransactionOptions::OperationKind::READ_ONLY);
+            if (auto c = transaction_begin(db, options, &tch.get()); c != StatusCode::OK) {
+                return false;
+            }
+            TransactionHandle tx{};
+            if (auto c = transaction_borrow_handle(tch.get(), &tx); c != StatusCode::OK) {
+                return false;
+            }
+            if (content_put(tx, s.st, "a", "A") == StatusCode::OK) {
+                return false;
+            }
+            if (content_delete(tx, s.st, "a") == StatusCode::OK) {
+                return false;
+            }
+            return transaction_abort(tch.get(), true) == StatusCode::OK;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+    EXPECT_EQ(S::run(db, s), true);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ShirakamiApiTest, sequence) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    SequenceId id0;
+    SequenceId id1;
+    ASSERT_EQ(StatusCode::OK, sequence_create(db, &id0));
+    ASSERT_EQ(StatusCode::OK, sequence_create(db, &id1));
+
+    HandleHolder<TransactionControlHandle> tch{};
+    ASSERT_EQ(StatusCode::OK, transaction_begin(db, {}, &tch.get()));
+    TransactionHandle tx{};
+    ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch.get(), &tx));
+    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 1UL, 10));
+    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id1, 1UL, 100));
+    ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 2UL, 20));
+    ASSERT_EQ(StatusCode::OK, transaction_commit(tch.get()));
+
+    // wait for the transaction become durable
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    SequenceVersion ver{};
+    SequenceValue val{};
+    ASSERT_EQ(StatusCode::OK, sequence_get(db, id0, &ver, &val));
+    EXPECT_EQ(2, ver);
+    EXPECT_EQ(20, val);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
 }  // namespace sharksfin

@@ -402,6 +402,7 @@ StatusCode iterator_dispose(
 extern "C" StatusCode sequence_create(
     DatabaseHandle handle,
     SequenceId* id) {  //NOLINT
+
     (void)handle;
     (void)id;
     return StatusCode::ERR_UNSUPPORTED;

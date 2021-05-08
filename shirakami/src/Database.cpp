@@ -17,8 +17,6 @@
 
 #include <memory>
 
-#include "shirakami/interface.h"
-#include "sharksfin/api.h"
 #include "Iterator.h"
 #include "Transaction.h"
 #include "Storage.h"
@@ -26,6 +24,10 @@
 #include "shirakami_api_helper.h"
 
 namespace sharksfin::shirakami {
+
+using ::shirakami::Status;
+using ::shirakami::Tuple;
+using ::shirakami::scan_endpoint;
 
 StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
     // shirakami default behavior is create or restore
@@ -51,20 +53,39 @@ StatusCode Database::shutdown() {
 }
 
 // prefix for storage name entries
-static constexpr Slice META_PREFIX = { "\0" };
+static constexpr Slice TABLE_ENTRY_PREFIX = { "\0" };
+static constexpr std::size_t system_table_index = 0;
 
 static void qualify_meta(Slice key, std::string& buffer) {
-    META_PREFIX.assign_to(buffer);
+    TABLE_ENTRY_PREFIX.assign_to(buffer);
     key.append_to(buffer);
+}
+
+void Database::init_default_storage() {
+    std::vector<::shirakami::Storage> storages{};
+    if(auto rc = ::shirakami::list_storage(storages);
+        rc != Status::WARN_NOT_FOUND && rc != Status::OK) {
+        ABORT();
+    }
+    ::shirakami::Storage handle{};
+    if (! storages.empty()) {
+        handle = storages[system_table_index];
+    } else {
+        if(auto rc = ::shirakami::register_storage(handle); rc != Status::OK) {
+            ABORT();
+        }
+    }
+    default_storage_ = std::make_unique<Storage>(this, "", handle);
 }
 
 StatusCode Database::clean() {
     auto tx = create_transaction();
-    std::vector<::shirakami::Tuple const*> tuples{};
-    ::shirakami::scan_key(tx->native_handle(), "", ::shirakami::scan_endpoint::INF, "", ::shirakami::scan_endpoint::INF, tuples);
+    std::vector<Tuple const*> tuples{};
+    ::shirakami::scan_key(tx->native_handle(), default_storage_->handle(),
+        "", scan_endpoint::INF, "", scan_endpoint::INF, tuples);
     auto tx2 = create_transaction();
     for(auto t : tuples) {
-        ::shirakami::delete_record(tx2->native_handle(), t->get_key());
+        ::shirakami::delete_record(tx2->native_handle(), default_storage_->handle(), t->get_key());
     }
     tx2->commit(false);
     tx->abort();
@@ -90,20 +111,26 @@ StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<
         ensure_end_of_transaction(tx, true);
         return StatusCode::ALREADY_EXISTS;
     }
-    auto storage = std::make_unique<Storage>(this, key);
     std::string k{}, v{};
-    qualify_meta(storage->prefix(), k);
-    auto rc = resolve(::shirakami::upsert(tx.native_handle(), k, v));
-    if (rc != StatusCode::OK) {
+    qualify_meta(key, k);
+    ::shirakami::Storage handle{};
+    if (auto rc = resolve(::shirakami::register_storage(handle)); rc != StatusCode::OK) {
         ABORT();
     }
+    v.resize(sizeof(handle));
+    std::memcpy(v.data(), &handle, sizeof(handle));
+    if (auto rc = resolve(::shirakami::upsert(tx.native_handle(), default_storage_->handle(), k, v));
+        rc != StatusCode::OK) {
+        ABORT();
+    }
+    auto storage = std::make_unique<Storage>(this, key, handle);
     ensure_end_of_transaction(tx);
     return get_storage(key, result);
 }
 
 StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
-    if(storage_cache_.exists(key)) {
-        result = std::make_unique<Storage>(this, key);
+    if(auto handle = storage_cache_.get(key)) {
+        result = std::make_unique<Storage>(this, key, *handle);
         return StatusCode::OK;
     }
     // RAII class to hold transaction
@@ -116,23 +143,20 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
         ~Holder() {
             tx_->abort();
         }
-        Transaction* tx() {
-            return tx_;
-        }
-        std::unique_ptr<Transaction> owner_{};
-        bool tx_passed_{};
-        Transaction* tx_{};
-        Database* db_{};
+        std::unique_ptr<Transaction> owner_{};  //NOLINT
+        bool tx_passed_{};  //NOLINT
+        Transaction* tx_{};  //NOLINT
+        Database* db_{};  //NOLINT
     };
-    auto storage = std::make_unique<Storage>(this, key);
     std::string k{};
-    qualify_meta(storage->prefix(), k);
-    ::shirakami::Tuple* tuple{};
+    qualify_meta(key, k);
+    Tuple* tuple{};
 
     Holder holder{this};
-    auto res = search_key_with_retry(*holder.tx(), holder.tx()->native_handle(), k, &tuple);
+    auto res = search_key_with_retry(*holder.tx_,
+        holder.tx_->native_handle(), default_storage_->handle(), k, &tuple);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
-        holder.tx()->deactivate();
+        holder.tx_->deactivate();
     }
     StatusCode rc = resolve(res);
     if (rc != StatusCode::OK) {
@@ -142,56 +166,33 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
         ABORT();
     }
     assert(tuple != nullptr);  //NOLINT
-    storage_cache_.add(key);
-    result = std::move(storage);
-    return StatusCode::OK;
-}
-
-StatusCode Database::erase_storage_(Storage &storage, Transaction& tx) {
-    assert(tx.active());  //NOLINT
-    std::unique_lock lock{mutex_for_storage_metadata_};
-    std::string k{};
-    qualify_meta(storage.prefix(), k);
-    auto rc1 = resolve(::shirakami::delete_record(tx.native_handle(),  k));
-    storage_cache_.remove(storage.key());
-    if (rc1 == StatusCode::NOT_FOUND) {
-        return StatusCode::NOT_FOUND;
-    }
-    if (rc1 != StatusCode::OK) {
-        ABORT();
-    }
-    std::string prefix{ storage.prefix().data<char>(), storage.prefix().size() };
-    std::string end{prefix};
-    end[end.size()-1] += 1;
-    auto b = Slice(prefix);
-    auto e = Slice(end);
-    std::vector<::shirakami::Tuple const*> records{};
-    ::shirakami::Status res = scan_key_with_retry(tx, tx.native_handle(), b.to_string_view(), ::shirakami::scan_endpoint::INCLUSIVE,
-        e.to_string_view(), ::shirakami::scan_endpoint::EXCLUSIVE, records);
-    if (res == ::shirakami::Status::ERR_PHANTOM) {
-        tx.deactivate();
-    }
-    if(auto rc = resolve(res); rc != StatusCode::OK) {
-        if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
-            return rc;
-        }
-        ABORT();
-    }
-    for(auto t : records) {
-        auto rc2 = resolve(::shirakami::delete_record(tx.native_handle(), t->get_key()));
-        if (rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
-            ABORT();
-        }
-    }
+    ::shirakami::Storage handle{};
+    auto v = tuple->get_value();
+    assert(sizeof(handle) == v.size());  //NOLINT
+    std::memcpy(&handle, v.data(), v.size());
+    storage_cache_.add(key, handle);
+    result = std::make_unique<Storage>(this, key, handle);
     return StatusCode::OK;
 }
 
 StatusCode Database::delete_storage(Storage &storage, Transaction& tx) {
-    if (auto rc = erase_storage_(storage, tx); rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
+    auto rc = resolve(::shirakami::delete_storage(storage.handle()));
+    if (rc == StatusCode::ERR_INVALID_ARGUMENT) {
+        // when not found, shirakami returns ERR_INVALID_ARGUMENT
+        rc = StatusCode::NOT_FOUND;
+    }
+    if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
+        ABORT();
+    }
+    storage_cache_.remove(storage.name());
+    std::string k{};
+    qualify_meta(storage.name(), k);
+    if (auto rc2 = resolve(::shirakami::delete_record(tx.native_handle(), default_storage_->handle(), k));
+        rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
         ABORT();
     }
     ensure_end_of_transaction(tx);
-    return StatusCode::OK;
+    return rc;
 }
 
 std::unique_ptr<Transaction> Database::create_transaction() {

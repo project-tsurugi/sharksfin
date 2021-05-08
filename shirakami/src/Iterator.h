@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_SHIRAKAMI_PIECEMEAL_ITERATOR_H_
-#define SHARKSFIN_SHIRAKAMI_PIECEMEAL_ITERATOR_H_
+#ifndef SHARKSFIN_SHIRAKAMI_ITERATOR_H_
+#define SHARKSFIN_SHIRAKAMI_ITERATOR_H_
 
 #include "glog/logging.h"
 #include "sharksfin/api.h"
@@ -50,14 +50,14 @@ public:
      * If end_key is not empty and end kind UNBOUND, the end_kind is reduced to PREFIXED_INCLUSIVE
      */
     inline Iterator( // NOLINT(performance-unnecessary-value-param)
-            Storage* owner,
-            Transaction* tx,
-            Slice begin_key, EndPointKind begin_kind,
-            Slice end_key, EndPointKind end_kind
+        Storage* owner,
+        Transaction* tx,
+        Slice begin_key, EndPointKind begin_kind,
+        Slice end_key, EndPointKind end_kind
     ) : owner_(owner), state_(State::INIT), tx_(tx),
-        begin_key_(begin_kind == EndPointKind::UNBOUND ? qualified_(owner_, {}) : qualified_(owner_, begin_key)),
+        begin_key_(begin_kind == EndPointKind::UNBOUND ? std::string_view{} : begin_key.to_string_view()),
         begin_kind_(begin_kind),
-        end_key_(end_kind == EndPointKind::UNBOUND ? qualified_(owner_, {}) : qualified_(owner_, end_key)),
+        end_key_(end_kind == EndPointKind::UNBOUND ? std::string_view{} : end_key.to_string_view()),
         end_kind_(end_kind) {}
 
     /**
@@ -111,17 +111,14 @@ public:
      * @return key on the current position
      */
     inline Slice key() {
-        auto s = owner_->subkey(Slice{ tuple_->get_key()});
-        buffer_key_.assign(s.to_string_view());
-        return Slice(buffer_key_);
+        return Slice(tuple_->get_key());
     }
 
     /**
      * @return value on the current position
      */
     inline Slice value() {
-        buffer_value_.assign(tuple_->get_value());
-        return Slice(buffer_value_);
+        return Slice(tuple_->get_value());
     }
 
 private:
@@ -183,9 +180,8 @@ private:
                     begin_key_.clear();
                     state_ = State::END;
                     return StatusCode::NOT_FOUND;
-                } else {
-                    begin_key_ = n;
                 }
+                begin_key_ = n;
                 break;
         }
         switch (end_kind_) {
@@ -217,12 +213,13 @@ private:
                 break;
         }
         if (auto res = ::shirakami::open_scan(tx_->native_handle(),
-                                                               begin_key_, begin_endpoint,
-                                                               end_key_, end_endpoint, handle_);
-                res == ::shirakami::Status::WARN_NOT_FOUND) {
+                owner_->handle(),
+                begin_key_, begin_endpoint,
+                end_key_, end_endpoint, handle_);
+            res == ::shirakami::Status::WARN_NOT_FOUND) {
             state_ = State::SAW_EOF;
             return StatusCode::NOT_FOUND;
-        } else if(res == ::shirakami::Status::WARN_SCAN_LIMIT) {
+        } else if(res == ::shirakami::Status::WARN_SCAN_LIMIT) {  //NOLINT
             LOG(ERROR) << "too many open scan";
             return StatusCode::ERR_UNKNOWN;
         } else {
@@ -251,14 +248,6 @@ private:
             return buffer;
         }
         return {};
-    }
-
-    static inline std::string qualified_(Storage* owner, Slice key) {
-        std::string result;
-        result.reserve(owner->prefix().size() + key.size());
-        owner->prefix().append_to(result);
-        key.append_to(result);
-        return result;
     }
 };
 

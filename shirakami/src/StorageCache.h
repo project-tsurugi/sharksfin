@@ -16,7 +16,7 @@
 #ifndef SHARKSFIN_SHIRAKAMI_STORAGE_CACHE_H_
 #define SHARKSFIN_SHIRAKAMI_STORAGE_CACHE_H_
 
-#include <set>
+#include <unordered_map>
 #include <string>
 #include <shared_mutex>
 #include "sharksfin/Slice.h"
@@ -29,9 +29,16 @@ public:
         std::shared_lock lock{mutex_};
         return existence_.find(key.to_string_view()) != existence_.end();
     }
-    void add(Slice key) {
+    ::shirakami::Storage const* get(Slice key) const {
+        std::shared_lock lock{mutex_};
+        if (auto it = existence_.find(key.to_string_view()); it != existence_.end()) {
+            return std::addressof(it->second);
+        }
+        return nullptr;
+    }
+    void add(Slice key, ::shirakami::Storage handle) {
         std::unique_lock lock{mutex_};
-        existence_.emplace(key.to_string_view());
+        existence_.emplace(key.to_string_view(), handle);
     }
     void remove(Slice key) {
         std::unique_lock lock{mutex_};
@@ -41,7 +48,7 @@ public:
     }
 private:
     mutable std::shared_mutex mutex_{};
-    std::set<std::string, std::less<void>> existence_{};
+    std::map<std::string, ::shirakami::Storage, std::less<void>> existence_{};
 };
 
 }

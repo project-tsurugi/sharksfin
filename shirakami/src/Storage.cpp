@@ -24,25 +24,10 @@
 
 namespace sharksfin::shirakami {
 
-// thread local storage to return temporary Slice
-// only qualify() should write to this buffer
-thread_local std::string bless_buffer{};
-
-Slice Storage::subkey(Slice key) const {
-    return { &key[key_prefix_.size()], key.size() - key_prefix_.size() };
-}
-
-Slice Storage::qualify(Slice key) {
-    bless_buffer.assign(key_prefix_);
-    bless_buffer.append(key.data<std::string::value_type>(), key.size());
-    return Slice(bless_buffer);
-}
-
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
     assert(tx->active());  //NOLINT
-    Slice k = qualify(key);
     ::shirakami::Tuple* tuple{};
-    auto res = search_key_with_retry(*tx, tx->native_handle(), k.to_string_view(), &tuple);
+    auto res = search_key_with_retry(*tx, tx->native_handle(), handle_, key.to_string_view(), &tuple);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         tx->deactivate();
     }
@@ -55,11 +40,10 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
 
 StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {
     assert(tx->active());  //NOLINT
-    Slice k = qualify(key);
     StatusCode rc{};
     switch(operation) {
         case PutOperation::CREATE: {
-            auto res = ::shirakami::insert(tx->native_handle(), k.to_string_view(),
+            auto res = ::shirakami::insert(tx->native_handle(), handle_, key.to_string_view(),
                 value.to_string_view());
             if (res == ::shirakami::Status::ERR_PHANTOM) {
                 tx->deactivate();
@@ -71,16 +55,16 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
             break;
         }
         case PutOperation::UPDATE: {
-            rc = resolve(::shirakami::update(tx->native_handle(), k.to_string_view(),
-                                                              value.to_string_view()));
+            rc = resolve(::shirakami::update(tx->native_handle(), handle_,
+                key.to_string_view(), value.to_string_view()));
             if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
                 ABORT();
             }
             break;
         }
         case PutOperation::CREATE_OR_UPDATE:
-            auto res = ::shirakami::upsert(tx->native_handle(), k.to_string_view(),
-                value.to_string_view());
+            auto res = ::shirakami::upsert(tx->native_handle(), handle_,
+                key.to_string_view(), value.to_string_view());
             rc = resolve(res);
             if (res == ::shirakami::Status::ERR_PHANTOM) {
                 tx->deactivate();
@@ -96,8 +80,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
 
 StatusCode Storage::remove(Transaction* tx, Slice key) {
     assert(tx->active());  //NOLINT
-    Slice k = qualify(key);
-    auto rc = resolve(::shirakami::delete_record(tx->native_handle(), k.to_string_view()));
+    auto rc = resolve(::shirakami::delete_record(tx->native_handle(), handle_, key.to_string_view()));
     if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
         ABORT();
     }
