@@ -410,10 +410,8 @@ StatusCode iterator_dispose(
 extern "C" StatusCode sequence_create(
     DatabaseHandle handle,
     SequenceId* id) {  //NOLINT
-
     (void)handle;
-    (void)id;
-    return StatusCode::ERR_UNSUPPORTED;
+    return shirakami::resolve(::shirakami::create_sequence(id));
 }
 
 extern "C" StatusCode sequence_put(
@@ -421,11 +419,9 @@ extern "C" StatusCode sequence_put(
     SequenceId id,
     SequenceVersion version,
     SequenceValue value) {
-    (void)transaction;
-    (void)id;
-    (void)version;
-    (void)value;
-    return StatusCode::ERR_UNSUPPORTED;
+    auto tx = unwrap(transaction);
+    return shirakami::resolve(
+        ::shirakami::update_sequence(tx->native_handle(), id, version, value));
 }
 
 extern "C" StatusCode sequence_get(
@@ -434,18 +430,23 @@ extern "C" StatusCode sequence_get(
     SequenceVersion* version,  //NOLINT
     SequenceValue* value) {  //NOLINT
     (void)handle;
-    (void)id;
-    (void)version;
-    (void)value;
-    return StatusCode::ERR_UNSUPPORTED;
+    return shirakami::resolve(
+        ::shirakami::read_sequence(id, version, value));
 }
 
 extern "C" StatusCode sequence_delete(
     DatabaseHandle handle,
     SequenceId id) {
-    (void)handle;
-    (void)id;
-    return StatusCode::ERR_UNSUPPORTED;
+    auto db = unwrap(handle);
+    auto tx = db->create_transaction();
+    if (auto res = shirakami::resolve(
+        ::shirakami::delete_sequence(tx->native_handle(), id)); res != StatusCode::OK) {
+        ABORT();
+    }
+    if (auto res = tx->commit(false); res != StatusCode::OK) {
+        ABORT();
+    }
+    return StatusCode::OK;
 }
 
 }  // namespace sharksfin
