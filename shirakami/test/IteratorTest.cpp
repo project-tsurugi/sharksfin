@@ -263,6 +263,44 @@ TEST_F(ShirakamiIteratorTest, endpoint_prefixed_exclusive) {
     ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
 }
 
+TEST_F(ShirakamiIteratorTest, empty_begin_endpoint_prefixed_exclusive) {
+    // meaning excluding all
+    put("a", "NG");
+    put("b", "NG");
+
+    using Kind = EndPointKind;
+    Iterator it { storage(),
+        transaction(),
+        "", Kind::PREFIXED_EXCLUSIVE,
+        "", Kind::UNBOUND};
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
+TEST_F(ShirakamiIteratorTest, empty_end_endpoint_prefixed_inclusive) {
+    // meaning upper bound unlimited
+    put("a", "NG");
+    put("b", "NG");
+    put("c", "C");
+    put("d1", "D1");
+
+    using Kind = EndPointKind;
+    Iterator it { storage(),
+        transaction(),
+        "b", Kind::EXCLUSIVE,
+        "", Kind::PREFIXED_INCLUSIVE};
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "c");
+    EXPECT_EQ(it.value(), "C");
+
+    ASSERT_EQ(it.next(), StatusCode::OK);
+    EXPECT_EQ(it.key(), "d1");
+    EXPECT_EQ(it.value(), "D1");
+
+    ASSERT_EQ(it.next(), StatusCode::NOT_FOUND);
+}
+
 TEST_F(ShirakamiIteratorTest, join) {
     putv("a/1", 1);
     putv("a/2", 2);

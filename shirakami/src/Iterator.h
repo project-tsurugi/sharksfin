@@ -189,13 +189,11 @@ private:
                 break;
             case EndPointKind::PREFIXED_INCLUSIVE: {
                 end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
-                if (end_key_.empty()) {
-                    break;
-                }
                 auto n = next_neighbor_(end_key_).to_string_view();
                 if (n.empty()) {
                     // there is no neighbor - upper bound is unlimited
                     end_key_.clear();
+                    end_endpoint = ::shirakami::scan_endpoint::INF;
                 } else {
                     end_key_ = n;
                 }
