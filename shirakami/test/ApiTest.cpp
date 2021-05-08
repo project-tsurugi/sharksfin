@@ -312,7 +312,7 @@ TEST_F(ShirakamiApiTest, storage_get_missing) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(ShirakamiApiTest, storage_delete) {
+TEST_F(ShirakamiApiTest, DISABLED_storage_delete) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
