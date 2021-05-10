@@ -27,7 +27,6 @@ namespace sharksfin::shirakami {
 
 using ::shirakami::Status;
 using ::shirakami::Tuple;
-using ::shirakami::scan_endpoint;
 
 StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
     // shirakami default behavior is create or restore
@@ -86,7 +85,7 @@ void Database::init_default_storage() {
 StatusCode Database::clean() {
     auto tx = create_transaction();
     std::vector<Tuple const*> tuples{};
-    for(auto [n, s] : list_storages()) {
+    for(auto const& [n, s] : list_storages()) {
         Storage stg{this, n, s};
         delete_storage(stg, *tx);
         tx->reset();
