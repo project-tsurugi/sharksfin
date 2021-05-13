@@ -437,13 +437,9 @@ extern "C" StatusCode sequence_get(
 extern "C" StatusCode sequence_delete(
     DatabaseHandle handle,
     SequenceId id) {
-    auto db = unwrap(handle);
-    auto tx = db->create_transaction();
+    (void)handle;
     if (auto res = shirakami::resolve(
-        ::shirakami::delete_sequence(tx->native_handle(), id)); res != StatusCode::OK) {
-        ABORT();
-    }
-    if (auto res = tx->commit(false); res != StatusCode::OK) {
+            ::shirakami::delete_sequence(id)); res != StatusCode::OK) {
         ABORT();
     }
     return StatusCode::OK;
