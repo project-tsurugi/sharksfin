@@ -240,10 +240,14 @@ Database::Database() {
 }
 
 Database::Database(DatabaseOptions const& options) {
+    bool recovery = false;
+    if (options.open_mode() == DatabaseOptions::OpenMode::RESTORE) {
+        recovery = true;
+    }
     if (auto loc = options.attribute(KEY_LOCATION); loc) {
-        ::shirakami::init(*loc);
+        ::shirakami::init(recovery, *loc);
     } else {
-        ::shirakami::init();
+        ::shirakami::init(recovery);
     }
     init_default_storage();
 }
