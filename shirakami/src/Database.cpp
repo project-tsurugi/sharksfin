@@ -85,12 +85,18 @@ void Database::init_default_storage() {
 StatusCode Database::clean() {
     auto tx = create_transaction();
     std::vector<Tuple const*> tuples{};
-    for(auto const& [n, s] : list_storages()) {
+    std::unordered_map<std::string, ::shirakami::Storage> map{};
+    if (auto res = list_storages(map); res != StatusCode::OK) {
+        ABORT();
+    }
+    for(auto const& [n, s] : map) {
         Storage stg{this, n, s};
         delete_storage(stg, *tx);
         tx->reset();
     }
-    tx->commit(false);
+    if (auto res = tx->commit(false); res != StatusCode::OK) {
+        ABORT();
+    }
     return StatusCode::OK;
 }
 
@@ -201,24 +207,36 @@ std::unique_ptr<Transaction> Database::create_transaction(bool readonly) {
     return std::make_unique<Transaction>(this, readonly);
 }
 
-std::unordered_map<std::string, ::shirakami::Storage> Database::list_storages() noexcept {
-    std::unordered_map<std::string, ::shirakami::Storage> ret{};
+StatusCode Database::list_storages(std::unordered_map<std::string, ::shirakami::Storage>& out) noexcept {
+    out.clear();
     auto tx = create_transaction();
     auto iter = default_storage_->scan(tx.get(),
         "", EndPointKind::UNBOUND,
         "", EndPointKind::UNBOUND);
     ::shirakami::Storage handle{};
-    while(iter->next() == StatusCode::OK) {
+    StatusCode res{};
+    while((res = iter->next()) == StatusCode::OK) {
         std::string_view v{iter->value().to_string_view()};
         assert(v.size() == sizeof(handle)); //NOLINT
         std::memcpy(&handle, v.data(), v.size());
-        ret.emplace(
+        out.emplace(
             subkey(iter->key()).to_string_view(),
             handle
         );
     }
-    tx->commit(false);
-    return ret;
+    if (res != StatusCode::NOT_FOUND) {
+        if (res == StatusCode::ERR_ABORTED_RETRYABLE) {
+            tx->deactivate();
+            return StatusCode::ERR_ABORTED_RETRYABLE;
+        }
+        ABORT();
+    }
+    auto res2 = tx->commit(false);
+    if (res2 != StatusCode::OK) {
+        LOG(ERROR) << "commit failed";
+        return res2;
+    }
+    return StatusCode::OK;
 }
 
 Database::~Database() {

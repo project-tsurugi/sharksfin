@@ -187,9 +187,11 @@ public:
 
     /**
      * @brief list storage name to native handle mapping
-     * @return the map from name to handle
+     * @param the map to receive the output. The result is valid only when StatusCode::OK is returned.
+     * @returns StatusCode::OK if successful
+     * @returns any errors happened while listing/scanning storages
      */
-    std::unordered_map<std::string, ::shirakami::Storage> list_storages() noexcept;
+    StatusCode list_storages(std::unordered_map<std::string, ::shirakami::Storage>& out) noexcept;
 
 private:
     std::mutex mutex_for_storage_metadata_{};

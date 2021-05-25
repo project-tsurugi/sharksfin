@@ -40,13 +40,16 @@ TEST_F(ShirakamiDatabaseTest, create_storage) {
         st.reset();
         EXPECT_FALSE(st);
         tx->reset();
-        ASSERT_EQ(1, db->list_storages().size());
+        std::unordered_map<std::string, ::shirakami::Storage> map{};
+        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
+        ASSERT_EQ(1, map.size());
         ASSERT_EQ(db->create_storage("S0", *tx, st), StatusCode::ALREADY_EXISTS);
         EXPECT_FALSE(st);
         tx->reset();
         ASSERT_EQ(db->create_storage("S1", *tx, st), StatusCode::OK);
         EXPECT_TRUE(st);
-        ASSERT_EQ(2, db->list_storages().size());
+        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
+        ASSERT_EQ(2, map.size());
         tx->reset();
     }
 }
@@ -80,15 +83,19 @@ TEST_F(ShirakamiDatabaseTest, delete_storage) {
         ASSERT_EQ(db->create_storage("S1", *tx, st1), StatusCode::OK);
         EXPECT_TRUE(st1);
         tx->reset();
-        ASSERT_EQ(2, db->list_storages().size());
+        std::unordered_map<std::string, ::shirakami::Storage> map{};
+        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
+        ASSERT_EQ(2, map.size());
         ASSERT_EQ(db->delete_storage(*st0, *tx), StatusCode::OK);
-        ASSERT_EQ(1, db->list_storages().size());
+        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
+        ASSERT_EQ(1, map.size());
         tx->reset();
         st0.reset();
         ASSERT_EQ(db->get_storage("S0", st0), StatusCode::NOT_FOUND);
         EXPECT_FALSE(st0);
         ASSERT_EQ(db->delete_storage(*st1, *tx), StatusCode::OK);
-        ASSERT_EQ(0, db->list_storages().size());
+        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
+        ASSERT_EQ(0, map.size());
         tx->reset();
     }
 }
@@ -105,9 +112,12 @@ TEST_F(ShirakamiDatabaseTest, clean_storages) {
         ASSERT_EQ(db->create_storage("S1", *tx, st1), StatusCode::OK);
         EXPECT_TRUE(st1);
         tx->reset();
-        ASSERT_EQ(2, db->list_storages().size());
+        std::unordered_map<std::string, ::shirakami::Storage> map{};
+        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
+        ASSERT_EQ(2, map.size());
         ASSERT_EQ(db->clean(), StatusCode::OK);
-        ASSERT_EQ(0, db->list_storages().size());
+        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
+        ASSERT_EQ(0, map.size());
     }
 }
 }  // namespace
