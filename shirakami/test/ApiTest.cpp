@@ -1504,7 +1504,7 @@ TEST_F(ShirakamiApiTest, sequence) {
     ASSERT_EQ(StatusCode::OK, transaction_commit(tch.get()));
 
     // wait for the transaction become durable
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     SequenceVersion ver{};
     SequenceValue val{};
