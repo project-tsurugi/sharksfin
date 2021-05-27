@@ -586,6 +586,7 @@ TEST_F(ShirakamiApiTest, contents) {
     EXPECT_EQ(transaction_exec(db, {}, &S::put_update, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::get_exists, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::delete_exists, &s), StatusCode::OK);
+    wait_epochs();
     EXPECT_EQ(transaction_exec(db, {}, &S::get_miss, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }

@@ -19,6 +19,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 
 #include <gtest/gtest.h>
 
@@ -83,6 +84,11 @@ public:
         return temporary_.path();
     }
 
+    // wait a few epochs for visibility of recent updates
+    void wait_epochs() {
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(200ms);
+    }
 private:
     testing::TemporaryFolder temporary_;
 };

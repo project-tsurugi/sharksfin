@@ -99,6 +99,7 @@ TEST_F(ShirakamiCCTest, simple) {
         ASSERT_EQ(st->remove(tx2.get(), "a1"), StatusCode::NOT_FOUND);
         ASSERT_EQ(tx2->commit(false), StatusCode::OK);
     }
+    wait_epochs();
     {
         tx->reset();
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
