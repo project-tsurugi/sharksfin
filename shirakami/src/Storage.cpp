@@ -24,7 +24,7 @@
 
 namespace sharksfin::shirakami {
 
-StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
+StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
     ::shirakami::Tuple* tuple{};
     auto res = search_key_with_retry(*tx, tx->native_handle(), handle_, key.to_string_view(), &tuple);
@@ -38,7 +38,7 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {
     return rc;
 }
 
-StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {
+StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {//NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
     StatusCode rc{};
     switch(operation) {
@@ -78,7 +78,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
     return rc;
 }
 
-StatusCode Storage::remove(Transaction* tx, Slice key) {
+StatusCode Storage::remove(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
     auto rc = resolve(::shirakami::delete_record(tx->native_handle(), handle_, key.to_string_view()));
     if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {

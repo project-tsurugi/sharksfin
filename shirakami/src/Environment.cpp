@@ -24,13 +24,13 @@ namespace sharksfin {
 class Environment::Impl {
 public:
     Impl() = default;
-    ~Impl();
+    ~Impl();  //NOLINT(performance-trivially-destructible)
     Impl(Impl const& other) = delete;
     Impl(Impl&& other) = default;
     Impl& operator=(Impl const& other) = delete;
     Impl& operator=(Impl&& other) = default;
 
-    void initialize();
+    static void initialize();
 private:
 };
 

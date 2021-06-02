@@ -54,7 +54,7 @@ public:
      * @brief returns the storage name
      * @return the name of the storage
      */
-    inline Slice name() const {
+    [[nodiscard]] inline Slice name() const {
         return name_;
     }
 
@@ -100,7 +100,7 @@ public:
             Slice begin_key, EndPointKind begin_kind,
             Slice end_key, EndPointKind end_kind);
 
-    Database* owner() const {
+    [[nodiscard]] Database* owner() const {
         return owner_;
     }
 
@@ -108,7 +108,7 @@ public:
      * @brief returns the native storage handle object.
      * @return the shirakami native handle
      */
-    inline ::shirakami::Storage handle() {
+    inline ::shirakami::Storage handle() const {
         return handle_;
     }
 private:

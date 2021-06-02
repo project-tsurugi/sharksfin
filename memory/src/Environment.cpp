@@ -32,7 +32,7 @@ public:
     Impl& operator=(Impl const& other) = delete;
     Impl& operator=(Impl&& other) = default;
 
-    void initialize() {
+    static void initialize() {
         // ignore log level
         if (FLAGS_log_dir.empty()) {
             FLAGS_logtostderr = true;

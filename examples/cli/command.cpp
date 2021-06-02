@@ -79,14 +79,15 @@ void scan(TransactionHandle transaction, StorageHandle storage, std::vector<std:
     auto& begin = arguments[0];
     auto& end = arguments[1];
     std::cout << "scan: " << begin << " ... " << end << std::endl;
-    IteratorHandle iter;
+    IteratorHandle iter{};
     check(content_scan_range(transaction, storage, begin, false, end, false, &iter));
     HandleHolder closer { iter };
     for (;;) {
         if (!check_exists(iterator_next(iter))) {
             break;
         }
-        Slice key, value;
+        Slice key{};
+        Slice value{};
         check(iterator_get_key(iter, &key));
         check(iterator_get_value(iter, &value));
         std::cout << "-> " << key.to_string_view() << " = " << value.to_string_view() << std::endl;

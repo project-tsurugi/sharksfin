@@ -119,7 +119,8 @@ StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<
         ensure_end_of_transaction(tx, true);
         return StatusCode::ALREADY_EXISTS;
     }
-    std::string k{}, v{};
+    std::string k{};
+    std::string v{};
     qualify_meta(key, k);
     ::shirakami::Storage handle{};
     if (auto rc = resolve(::shirakami::register_storage(handle)); rc != StatusCode::OK) {
@@ -143,18 +144,20 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     }
     // RAII class to hold transaction
     struct Holder {  //NOLINT
-        explicit Holder(Database* db) : db_(db) {
-            owner_ = db_->create_transaction();
-            tx_ = owner_.get();
+        explicit Holder(Database* db) :
+            db_(db),
+            owner_(db_->create_transaction()),
+            tx_(owner_.get())
+        {
             assert(tx_->active());  //NOLINT
         }
         ~Holder() {
             tx_->abort();
         }
+        Database* db_{};  //NOLINT
         std::unique_ptr<Transaction> owner_{};  //NOLINT
         bool tx_passed_{};  //NOLINT
         Transaction* tx_{};  //NOLINT
-        Database* db_{};  //NOLINT
     };
     std::string k{};
     qualify_meta(key, k);

@@ -32,7 +32,7 @@ static int run(std::vector<char*> const& args) {
         return EXIT_FAILURE;
     }
 
-    DatabaseHandle db;
+    DatabaseHandle db{};
     if (auto s = database_open(options.database, &db); s != StatusCode::OK) {
         std::cerr << "cannot open database: " << s << std::endl;
         return EXIT_FAILURE;
@@ -46,8 +46,8 @@ static int run(std::vector<char*> const& args) {
             : command_(command)
             , storage_(storage)
         {}
-        Options::Command* command_;
-        StorageHandle storage_;
+        Options::Command* command_{};  //NOLINT
+        StorageHandle storage_{};  //NOLINT
     };
 
     struct Callback {
@@ -63,7 +63,7 @@ static int run(std::vector<char*> const& args) {
         }
     };
     {
-        StorageHandle storage;
+        StorageHandle storage{};
         if (auto s = storage_get(db, "main", &storage); s != StatusCode::OK) {
             if (s == StatusCode::NOT_FOUND) {
                 if (s = storage_create(db, "main", &storage); s != StatusCode::OK) {
