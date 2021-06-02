@@ -8,7 +8,10 @@ cppcoreguidelines-*,\
 -cppcoreguidelines-pro-type-const-cast,\
 fuchsia-*,\
 -fuchsia-default-arguments,\
+-fuchsia-default-arguments-calls,\
+-fuchsia-default-arguments-declarations,\
 -fuchsia-overloaded-operator,\
+-fuchsia-trailing-return,\
 google-*,\
 -google-build-using-namespace,\
 -google-readability-namespace-comments,\
@@ -21,13 +24,16 @@ llvm-*,\
 -llvm-include-order,\
 -llvm-header-guard,\
 -llvm-namespace-comment,\
+-llvm-qualified-auto,\
 misc-*,\
 -misc-unused-parameters,\
 modernize-*,\
+-modernize-use-trailing-return-type,\
 performance-*,\
 readability-*,\
 -readability-braces-around-statements,\
 -readability-named-parameter,\
+-readability-qualified-auto,\
 "
 CheckOptions:
   - key: readability-implicit-bool-conversion.AllowPointerConditions
