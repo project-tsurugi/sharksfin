@@ -435,4 +435,14 @@ extern "C" StatusCode sequence_delete(
     return StatusCode::NOT_FOUND;
 }
 
+extern "C" StatusCode implementation_id(
+    Slice* name) {
+    static constexpr char identifier[] = "memory";
+    if (name == nullptr) {
+        return StatusCode::ERR_INVALID_ARGUMENT;
+    }
+    *name = Slice(identifier);
+    return StatusCode::OK;
+}
+
 }  // namespace sharksfin

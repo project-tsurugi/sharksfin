@@ -445,4 +445,14 @@ extern "C" StatusCode sequence_delete(
     return StatusCode::OK;
 }
 
+extern "C" StatusCode implementation_id(
+    Slice* name) {
+    static constexpr char identifier[] = "shirakami";
+    if (name == nullptr) {
+        return StatusCode::ERR_INVALID_ARGUMENT;
+    }
+    *name = Slice(identifier);
+    return StatusCode::OK;
+}
+
 }  // namespace sharksfin

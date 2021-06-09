@@ -1513,4 +1513,11 @@ TEST_F(ShirakamiApiTest, sequence) {
     EXPECT_EQ(20, val);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
+TEST_F(ShirakamiApiTest, implementation_id) {
+    Slice s{};
+    ASSERT_EQ(StatusCode::OK, implementation_id(&s));
+    EXPECT_EQ("shirakami", s.to_string_view());
+}
+
 }  // namespace sharksfin

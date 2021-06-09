@@ -600,6 +600,16 @@ extern "C" StatusCode sequence_delete(
     DatabaseHandle handle,
     SequenceId id);
 
+/**
+ * @brief accessor for the sharksfin implementation identifier
+ * @details the identifier gives information on the implementation currently running sharksfin
+ * @param name [OUT] the slice to hold the implementation name (e.g. "memory", "shirakami", etc.)
+ * @return Status::OK if the call is successful
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode implementation_id(
+    Slice* name);
+
 }  // namespace sharksfin
 
 #endif  // SHARKSFIN_API_H_

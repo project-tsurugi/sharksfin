@@ -1342,4 +1342,10 @@ TEST_F(ApiTest, sequence) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ApiTest, implementation_id) {
+    Slice s{};
+    ASSERT_EQ(StatusCode::OK, implementation_id(&s));
+    EXPECT_EQ("memory", s.to_string_view());
+}
+
 }  // namespace sharksfin
