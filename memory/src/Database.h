@@ -116,7 +116,7 @@ private:
     std::map<Buffer, std::shared_ptr<Storage>> storages_ {};
     transaction_mutex_type transaction_mutex_ = {};
     std::atomic<transaction_id_type> transaction_id_sequence_ = { 1U };
-    std::mutex storages_mutex_ {};
+    std::shared_mutex storages_mutex_ {};
 
     bool enable_transaction_lock_ { true };
     SequenceMap sequences_{};

@@ -52,7 +52,7 @@ std::shared_ptr<Storage> Database::create_storage(Slice key) {
 
 std::shared_ptr<Storage> Database::get_storage(Slice key) {
     check_alive();
-    std::unique_lock lock { storages_mutex_ };
+    std::shared_lock lock { storages_mutex_ };
     if (auto it = storages_.find(key); it != storages_.end()) {
         return it->second;
     }
