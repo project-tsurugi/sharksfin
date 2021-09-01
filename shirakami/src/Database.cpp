@@ -101,8 +101,11 @@ StatusCode Database::clean() {
 }
 
 static void ensure_end_of_transaction(Transaction& tx, bool to_abort = false) {
-    if (auto rc = to_abort ? tx.abort() : tx.commit(false); rc != StatusCode::OK) {
+    if (auto rc = to_abort ? tx.abort() : tx.commit(true); rc != StatusCode::OK) {
         ABORT();
+    }
+    if (!to_abort && StatusCode::OK != tx.wait_for_commit(1000*1000*1000)) {  // wait 1sec at longest  //NOLINT
+        LOG(WARNING) << "wait commit timedout";
     }
 }
 

@@ -16,7 +16,11 @@
 #ifndef SHARKSFIN_SHIRAKAMI_TRANSACTION_H_
 #define SHARKSFIN_SHIRAKAMI_TRANSACTION_H_
 
+#include <thread>
+#include <chrono>
 #include "glog/logging.h"
+#include "shirakami/interface.h"
+
 #include "sharksfin/api.h"
 #include "Database.h"
 #include "Session.h"
@@ -56,23 +60,48 @@ public:
     /**
      * @brief commit the transaction.
      * @pre transaction is active (i.e. not committed or aborted yet)
+     * @param async whether the commit is in asynchronous mode or not. Use wait_for_commit() if it's asynchronous
      * @return StatusCode::ERR_ABORTED_RETRYABLE when OCC validation fails
      * @return StatusCode::OK when success
      * @return other status
      */
-    inline StatusCode commit(bool wait_group_commit) {
-        if (wait_group_commit) {
-            // wait_group_commit not yet supported
-            return StatusCode::ERR_UNSUPPORTED;
-        }
+    inline StatusCode commit(bool async) {
         if(!is_active_) {
             ABORT();
         }
-        auto rc = resolve(::shirakami::commit(session_->id()));
+        commit_params_.reset();
+        if (async) {
+            commit_params_ = std::make_unique<::shirakami::commit_param>();
+            commit_params_->set_cp(::shirakami::commit_property::WAIT_FOR_COMMIT);
+        }
+        auto rc = resolve(::shirakami::commit(session_->id(), commit_params_.get()));
         if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
             is_active_ = false;
         }
+        if (rc != StatusCode::OK) {
+            commit_params_.reset();
+        }
         return rc;
+    }
+
+    inline StatusCode wait_for_commit(std::size_t timeout_ns) {
+        constexpr static std::size_t check_interval_ns = 2*1000*1000;
+        if (! commit_params_) {
+            return StatusCode::ERR_INVALID_STATE;
+        }
+        std::size_t left = timeout_ns;
+        while(true) {
+            if(::shirakami::check_commit(session_->id(), commit_params_->get_ctid())) {
+                return StatusCode::OK;
+            }
+            if (left == 0) {
+                return StatusCode::ERR_TIME_OUT;
+            }
+            using namespace std::chrono_literals;
+            auto dur = left < check_interval_ns ? left : check_interval_ns;
+            std::this_thread::sleep_for(dur * 1ns);
+            left -= dur;
+        }
     }
 
     /**
@@ -125,6 +154,7 @@ public:
             ABORT();
         }
         is_active_ = true;
+        commit_params_.reset();
         declare_begin();
     }
 
@@ -150,6 +180,7 @@ private:
     std::string buffer_{};
     bool is_active_{true};
     bool readonly_{false};
+    std::unique_ptr<::shirakami::commit_param> commit_params_{};
 
     void declare_begin() {
         ::shirakami::tx_begin(session_->id(), readonly_);

@@ -1367,12 +1367,10 @@ TEST_F(ShirakamiApiTest, transaction_begin_and_commit) {
             if (content_put(tx, s.st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
                 return false;
             }
-            // shirakami doesn't support async commit
-            // if (transaction_commit(tch.get(), true) != StatusCode::OK) {
-            //     return false;
-            // }
-            // return transaction_wait_commit(tch.get()) == StatusCode::OK;
-            return transaction_commit(tch.get(), false) == StatusCode::OK;
+            if (transaction_commit(tch.get(), true) != StatusCode::OK) {
+                return false;
+            }
+            return transaction_wait_commit(tch.get(), 100*1000*1000) == StatusCode::OK;
         }
         static TransactionOperation validate(TransactionHandle tx, void* args) {
             auto st = extract<S>(args);
@@ -1501,10 +1499,8 @@ TEST_F(ShirakamiApiTest, sequence) {
     ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 1UL, 10));
     ASSERT_EQ(StatusCode::OK, sequence_put(tx, id1, 1UL, 100));
     ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 2UL, 20));
-    ASSERT_EQ(StatusCode::OK, transaction_commit(tch.get()));
-
-    // wait for the transaction become durable
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    ASSERT_EQ(StatusCode::OK, transaction_commit(tch.get(), true));
+    ASSERT_EQ(StatusCode::OK, transaction_wait_commit(tch.get(), 500*1000*1000));
 
     SequenceVersion ver{};
     SequenceValue val{};

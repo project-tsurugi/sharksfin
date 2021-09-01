@@ -242,12 +242,8 @@ StatusCode transaction_borrow_handle(
 StatusCode transaction_commit(
         TransactionControlHandle handle,
         bool async) {
-    if (async) {
-        // shirakami doesn't support async commit yet
-        return StatusCode::ERR_UNSUPPORTED;
-    }
     auto tx = unwrap(handle);
-    return tx->commit(false);
+    return tx->commit(async);
 }
 
 StatusCode transaction_abort(
@@ -264,8 +260,8 @@ StatusCode transaction_abort(
 StatusCode transaction_wait_commit(
         [[maybe_unused]] TransactionControlHandle handle,
         [[maybe_unused]] std::size_t timeout_ns) {
-    // no-op - async commit is not supported
-    return StatusCode::ERR_UNSUPPORTED;
+    auto tx = unwrap(handle);
+    return tx->wait_for_commit(timeout_ns);
 }
 
 StatusCode transaction_dispose(
