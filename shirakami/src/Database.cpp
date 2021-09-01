@@ -29,13 +29,7 @@ using ::shirakami::Status;
 using ::shirakami::Tuple;
 
 StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
-    // shirakami default behavior is create or restore
     *result = std::make_unique<Database>(options);
-    if (options.open_mode() != DatabaseOptions::OpenMode::RESTORE) {
-        // Not opened with restore option. Ensure db to be clean in case previous test has left over.
-        // Remove this when shirakami ensures clean at db open.
-        (*result)->clean();
-    }
     return StatusCode::OK;
 }
 
@@ -46,7 +40,7 @@ StatusCode Database::shutdown() {
         std::cout << "transaction process time: " << transaction_process_time().load().count() << std::endl;
         std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
-    ::shirakami::fin();
+    ::shirakami::fin(false);
     active_ = false;
     return StatusCode::OK;
 }
@@ -261,14 +255,10 @@ Database::Database() {
 }
 
 Database::Database(DatabaseOptions const& options) {
-    bool recovery = false;
-    if (options.open_mode() == DatabaseOptions::OpenMode::RESTORE) {
-        recovery = true;
-    }
     if (auto loc = options.attribute(KEY_LOCATION); loc) {
-        ::shirakami::init(recovery, *loc);
+        ::shirakami::init(true, *loc);
     } else {
-        ::shirakami::init(recovery);
+        ::shirakami::init(true);
     }
     init_default_storage();
 }
