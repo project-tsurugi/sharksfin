@@ -1370,7 +1370,7 @@ TEST_F(ShirakamiApiTest, transaction_begin_and_commit) {
             if (transaction_commit(tch.get(), true) != StatusCode::OK) {
                 return false;
             }
-            return transaction_wait_commit(tch.get(), 1000*1000*1000) == StatusCode::OK;
+            return transaction_wait_commit(tch.get(), 2000*1000*1000) == StatusCode::OK;
         }
         static TransactionOperation validate(TransactionHandle tx, void* args) {
             auto st = extract<S>(args);
@@ -1500,7 +1500,7 @@ TEST_F(ShirakamiApiTest, sequence) {
     ASSERT_EQ(StatusCode::OK, sequence_put(tx, id1, 1UL, 100));
     ASSERT_EQ(StatusCode::OK, sequence_put(tx, id0, 2UL, 20));
     ASSERT_EQ(StatusCode::OK, transaction_commit(tch.get(), true));
-    ASSERT_EQ(StatusCode::OK, transaction_wait_commit(tch.get(), 500*1000*1000));
+    ASSERT_EQ(StatusCode::OK, transaction_wait_commit(tch.get(), 2000*1000*1000));
 
     SequenceVersion ver{};
     SequenceValue val{};

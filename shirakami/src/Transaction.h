@@ -90,8 +90,9 @@ public:
             return StatusCode::ERR_INVALID_STATE;
         }
         std::size_t left = timeout_ns;
+        auto commit_id = commit_params_->get_ctid();
         while(true) {
-            if(::shirakami::check_commit(session_->id(), commit_params_->get_ctid())) {
+            if(::shirakami::check_commit(session_->id(), commit_id)) {
                 return StatusCode::OK;
             }
             if (left == 0) {
