@@ -1370,7 +1370,7 @@ TEST_F(ShirakamiApiTest, transaction_begin_and_commit) {
             if (transaction_commit(tch.get(), true) != StatusCode::OK) {
                 return false;
             }
-            return transaction_wait_commit(tch.get(), 100*1000*1000) == StatusCode::OK;
+            return transaction_wait_commit(tch.get(), 1000*1000*1000) == StatusCode::OK;
         }
         static TransactionOperation validate(TransactionHandle tx, void* args) {
             auto st = extract<S>(args);
