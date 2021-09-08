@@ -32,11 +32,7 @@ public:
             auto candidate = boost::filesystem::unique_path(pattern);
             if (boost::filesystem::create_directories(candidate)) {
                 path_ = candidate;
-                auto log_path = candidate;
-				
-				// shirakami requires "log" directory in the specified path 
-                log_path /= "log";
-                boost::filesystem::create_directories(log_path);
+                boost::filesystem::create_directories(path_);
                 break;
             }
         }
