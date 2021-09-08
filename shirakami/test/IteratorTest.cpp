@@ -36,9 +36,9 @@ public:
     }
 
     void TearDown() override {
-        TestRoot::TearDown();
         tx_->abort();
         database_->shutdown();
+        TestRoot::TearDown();
     }
 
     void put(Slice key, Slice value) {
