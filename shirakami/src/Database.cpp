@@ -77,6 +77,7 @@ void Database::init_default_storage() {
 }
 
 StatusCode Database::clean() {
+    if (! active_) ABORT();
     auto tx = create_transaction();
     std::vector<Tuple const*> tuples{};
     std::unordered_map<std::string, ::shirakami::Storage> map{};
@@ -101,6 +102,7 @@ static void ensure_end_of_transaction(Transaction& tx, bool to_abort = false) {
 }
 
 StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<Storage>& result) {
+    if (! active_) ABORT();
     assert(tx.active());  //NOLINT
     std::unique_ptr<Storage> stg{};
     if (get_storage(key, stg) == StatusCode::OK) {
@@ -132,6 +134,7 @@ StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<
 }
 
 StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
+    if (! active_) ABORT();
     if(auto handle = storage_cache_.get(key)) {
         result = std::make_unique<Storage>(this, key, *handle);
         return StatusCode::OK;
@@ -181,6 +184,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
 }
 
 StatusCode Database::delete_storage(Storage &storage, Transaction& tx) {
+    if (! active_) ABORT();
     auto rc = resolve(::shirakami::delete_storage(storage.handle()));
     if (rc == StatusCode::ERR_INVALID_ARGUMENT) {
         // when not found, shirakami returns ERR_INVALID_ARGUMENT
@@ -201,10 +205,12 @@ StatusCode Database::delete_storage(Storage &storage, Transaction& tx) {
 }
 
 std::unique_ptr<Transaction> Database::create_transaction(bool readonly) {
+    if (! active_) ABORT();
     return std::make_unique<Transaction>(this, readonly);
 }
 
 StatusCode Database::list_storages(std::unordered_map<std::string, ::shirakami::Storage>& out) noexcept {
+    if (! active_) ABORT();
     out.clear();
     auto tx = create_transaction();
     auto iter = default_storage_->scan(tx.get(),
