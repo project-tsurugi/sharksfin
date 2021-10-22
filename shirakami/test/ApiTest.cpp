@@ -1448,6 +1448,7 @@ TEST_F(ShirakamiApiTest, transaction_begin_and_abort) {
 
 TEST_F(ShirakamiApiTest, readonly_transaction) {
     DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };
@@ -1483,6 +1484,7 @@ TEST_F(ShirakamiApiTest, readonly_transaction) {
 
 TEST_F(ShirakamiApiTest, sequence) {
     DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
     ASSERT_EQ(database_open(options, &db), StatusCode::OK);
     HandleHolder dbh { db };

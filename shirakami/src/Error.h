@@ -39,8 +39,20 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             return StatusCode::NOT_FOUND;
         case ::shirakami::Status::WARN_ALREADY_EXISTS:
             return StatusCode::ALREADY_EXISTS;
+        case ::shirakami::Status::WARN_ALREADY_BEGIN:
+            return StatusCode::ERR_INVALID_STATE;
+        case ::shirakami::Status::WARN_ALREADY_INIT:
+            return StatusCode::ERR_INVALID_STATE;
         case ::shirakami::Status::WARN_INVALID_ARGS:
             return StatusCode::ERR_INVALID_ARGUMENT;
+        case ::shirakami::Status::WARN_NOT_INIT:
+            return StatusCode::ERR_INVALID_STATE;
+        case ::shirakami::Status::WARN_PREMATURE:
+            return StatusCode::ERR_INVALID_STATE;
+        case ::shirakami::Status::ERR_FAIL_WP:
+            return StatusCode::ERR_IO_ERROR;
+        case ::shirakami::Status::ERR_STORAGE:
+            return StatusCode::ERR_IO_ERROR;
         case ::shirakami::Status::ERR_VALIDATION:
             return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::shirakami::Status::ERR_PHANTOM:
