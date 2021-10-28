@@ -162,7 +162,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
 
     Holder holder{this};
     auto res = search_key_with_retry(*holder.tx_,
-        holder.tx_->native_handle(), default_storage_->handle(), k, &tuple);
+        holder.tx_->native_handle(), default_storage_->handle(), k, tuple);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         holder.tx_->deactivate();
     }

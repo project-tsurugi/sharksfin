@@ -20,7 +20,7 @@ namespace sharksfin::shirakami {
 
 inline ::shirakami::Status search_key_with_retry(Transaction& tx,
     ::shirakami::Token token, ::shirakami::Storage storage, // NOLINT
-    const std::string_view key, ::shirakami::Tuple** const tuple) {
+    const std::string_view key, ::shirakami::Tuple*& tuple) {
     ::shirakami::Status res{::shirakami::Status::OK};
     int retry = 3;
     do {
@@ -64,7 +64,7 @@ inline ::shirakami::Status scan_key_with_retry(Transaction& tx,
 
 inline ::shirakami::Status read_from_scan_with_retry(Transaction& tx,
     ::shirakami::Token token,  // NOLINT
-    const ::shirakami::ScanHandle handle, ::shirakami::Tuple** const result) {
+    const ::shirakami::ScanHandle handle, ::shirakami::Tuple*& result) {
     int retry = 3;
     ::shirakami::Status res{::shirakami::Status::OK};
     do {

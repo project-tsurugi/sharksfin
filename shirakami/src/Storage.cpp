@@ -27,7 +27,7 @@ namespace sharksfin::shirakami {
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
     ::shirakami::Tuple* tuple{};
-    auto res = search_key_with_retry(*tx, tx->native_handle(), handle_, key.to_string_view(), &tuple);
+    auto res = search_key_with_retry(*tx, tx->native_handle(), handle_, key.to_string_view(), tuple);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         tx->deactivate();
     }

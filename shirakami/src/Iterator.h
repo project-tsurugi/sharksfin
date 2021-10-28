@@ -137,7 +137,7 @@ private:
     bool handle_open_{false};
 
     inline StatusCode next_cursor_() {
-        auto res = read_from_scan_with_retry(*tx_, tx_->native_handle(), handle_, &tuple_);
+        auto res = read_from_scan_with_retry(*tx_, tx_->native_handle(), handle_, tuple_);
         if (res == ::shirakami::Status::ERR_PHANTOM) {
             tx_->deactivate();
             is_valid_ = false;
