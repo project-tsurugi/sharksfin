@@ -31,6 +31,7 @@ jobs:
         name: Install_shirakami
         run: |
           cd third_party/shirakami
+          rm -rf build
           mkdir -p build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
@@ -39,6 +40,7 @@ jobs:
       - id: CMake_Build
         name: CMake_Build
         run: |
+          rm -rf build
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
