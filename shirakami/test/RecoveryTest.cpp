@@ -23,8 +23,6 @@
 
 namespace sharksfin::shirakami {
 
-static constexpr std::string_view TESTING { "testing" };
-
 class ShirakamiRecoveryTest : public TestRoot {
 public:
     std::string buf;
@@ -91,6 +89,71 @@ TEST_F(ShirakamiRecoveryTest, basic) {
                 tx->reset();
             }
         }
+    }
+}
+
+void do_recover(std::string location) {
+    DatabaseHolder db{location};
+    {
+        TransactionHolder tx{db};
+        std::unordered_map<std::string, ::shirakami::Storage> map{};
+        {
+            auto st = db->default_storage();
+            std::string buf{};
+            EXPECT_EQ(st.get(tx, "a", buf), StatusCode::OK);
+            EXPECT_EQ("A", buf);
+            EXPECT_EQ(st.get(tx, "b", buf), StatusCode::OK);
+            EXPECT_EQ("B", buf);
+            ASSERT_EQ(tx->commit(false), StatusCode::OK);
+            tx->reset();
+        }
+    }
+}
+
+TEST_F(ShirakamiRecoveryTest, recovery_default_storage) {
+    auto location = path();
+    {
+        DatabaseHolder db{location};
+        {
+            TransactionHolder tx{db};
+            auto st = db->default_storage();
+            ASSERT_EQ(st.put(tx, "a", "A"), StatusCode::OK);
+            ASSERT_EQ(st.put(tx, "b", "B"), StatusCode::OK);
+            ASSERT_EQ(st.put(tx, "Z",  "z"), StatusCode::OK);
+            ASSERT_EQ(tx->commit(false), StatusCode::OK);
+            tx->reset();
+        }
+    }
+
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(100ms);
+    do_recover(location);
+}
+
+TEST_F(ShirakamiRecoveryTest, DISABLED_recovery_default_storage_twice) {
+    auto location = path();
+    {
+        DatabaseHolder db{location};
+        {
+            TransactionHolder tx{db};
+            auto st = db->default_storage();
+            ASSERT_EQ(st.put(tx, "a", "A"), StatusCode::OK);
+            ASSERT_EQ(st.put(tx, "b", "B"), StatusCode::OK);
+            ASSERT_EQ(st.put(tx, "Z",  "z"), StatusCode::OK);
+            ASSERT_EQ(tx->commit(false), StatusCode::OK);
+            tx->reset();
+        }
+    }
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(100ms);
+    {
+        SCOPED_TRACE("1st");
+        do_recover(location);
+    }
+    std::this_thread::sleep_for(100ms);
+    {
+        SCOPED_TRACE("2nd");
+        do_recover(location);
     }
 }
 
