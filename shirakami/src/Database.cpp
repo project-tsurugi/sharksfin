@@ -106,13 +106,13 @@ StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<
     assert(tx.active());  //NOLINT
     std::unique_ptr<Storage> stg{};
     if (get_storage(key, stg) == StatusCode::OK) {
-        ensure_end_of_transaction(tx, true);
+        ensure_end_of_transaction(tx);
         return StatusCode::ALREADY_EXISTS;
     }
     // Not found, let's create new one acquiring lock
     std::unique_lock lock{mutex_for_storage_metadata_};
     if (get_storage(key, stg) == StatusCode::OK) {
-        ensure_end_of_transaction(tx, true);
+        ensure_end_of_transaction(tx);
         return StatusCode::ALREADY_EXISTS;
     }
     std::string k{};
