@@ -33,8 +33,6 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             return StatusCode::OK;
         case ::shirakami::Status::ERR_CPR_ORDER_VIOLATION:
             return StatusCode::ERR_ABORTED_RETRYABLE;
-        case ::shirakami::Status::ERR_NOT_FOUND:
-            return StatusCode::NOT_FOUND;
         case ::shirakami::Status::WARN_NOT_FOUND:
             return StatusCode::NOT_FOUND;
         case ::shirakami::Status::WARN_ALREADY_EXISTS:
@@ -52,8 +50,6 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case ::shirakami::Status::ERR_FATAL:
             return StatusCode::ERR_UNKNOWN;
         case ::shirakami::Status::ERR_FAIL_WP:
-            return StatusCode::ERR_IO_ERROR;
-        case ::shirakami::Status::ERR_STORAGE:
             return StatusCode::ERR_IO_ERROR;
         case ::shirakami::Status::ERR_VALIDATION:
             return StatusCode::ERR_ABORTED_RETRYABLE;
@@ -92,7 +88,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
     return StatusCode::ERR_UNKNOWN;
 }
 
-[[noreturn]] inline void abort_with_lineno_(const char *msg, const char *file, int line) {
+[[noreturn]] inline void abort_with_lineno(const char *msg, const char *file, int line) {
     std::stringstream buf{};
     buf << msg;
     buf << " file:";
@@ -103,8 +99,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
     std::abort();
 }
 
-#define ABORT_MSG(msg) sharksfin::shirakami::abort_with_lineno_(msg, __FILE__, __LINE__)
-#define ABORT() sharksfin::shirakami::abort_with_lineno_("", __FILE__, __LINE__)
+#define ABORT_MSG(msg) sharksfin::shirakami::abort_with_lineno(msg, __FILE__, __LINE__)  //NOLINT
+#define ABORT() sharksfin::shirakami::abort_with_lineno("", __FILE__, __LINE__)  //NOLINT
 
 }  // namespace sharksfin::shirakami
 
