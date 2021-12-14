@@ -25,7 +25,6 @@ namespace sharksfin::shirakami {
 
 class ShirakamiRecoveryTest : public TestRoot {
 public:
-    std::string buf;
 };
 
 TEST_F(ShirakamiRecoveryTest, basic) {
@@ -96,7 +95,6 @@ void do_recover(std::string location) {
     DatabaseHolder db{location};
     {
         TransactionHolder tx{db};
-        std::unordered_map<std::string, ::shirakami::Storage> map{};
         {
             auto st = db->default_storage();
             std::string buf{};
@@ -105,7 +103,6 @@ void do_recover(std::string location) {
             EXPECT_EQ(st.get(tx, "b", buf), StatusCode::OK);
             EXPECT_EQ("B", buf);
             ASSERT_EQ(tx->commit(false), StatusCode::OK);
-            tx->reset();
         }
     }
 }
@@ -121,7 +118,6 @@ TEST_F(ShirakamiRecoveryTest, recovery_default_storage) {
             ASSERT_EQ(st.put(tx, "b", "B"), StatusCode::OK);
             ASSERT_EQ(st.put(tx, "Z",  "z"), StatusCode::OK);
             ASSERT_EQ(tx->commit(false), StatusCode::OK);
-            tx->reset();
         }
     }
 
@@ -130,7 +126,7 @@ TEST_F(ShirakamiRecoveryTest, recovery_default_storage) {
     do_recover(location);
 }
 
-TEST_F(ShirakamiRecoveryTest, DISABLED_recovery_default_storage_twice) {
+TEST_F(ShirakamiRecoveryTest, recovery_default_storage_twice) {
     auto location = path();
     {
         DatabaseHolder db{location};
@@ -141,7 +137,6 @@ TEST_F(ShirakamiRecoveryTest, DISABLED_recovery_default_storage_twice) {
             ASSERT_EQ(st.put(tx, "b", "B"), StatusCode::OK);
             ASSERT_EQ(st.put(tx, "Z",  "z"), StatusCode::OK);
             ASSERT_EQ(tx->commit(false), StatusCode::OK);
-            tx->reset();
         }
     }
     using namespace std::chrono_literals;
