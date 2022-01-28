@@ -25,7 +25,17 @@
 #include "StatusCode.h"
 #include "TransactionOperation.h"
 #include "TransactionOptions.h"
+#include "TransactionState.h"
+#include "WritePreserve.h"
 
+/**
+ * @brief sharksfin interface definition
+ *
+ * @note On C-style API: extern "C" is specified for the functions that are possibly invoked fairly frequently
+ * so that generated code can make calls. Functions with no extern "C" specifier are not intended
+ * to be called from codegen, but we keep the C-language signature/API styles to keep them look uniformly
+ * in the same API.
+ */
 namespace sharksfin {
 
 /**
@@ -96,9 +106,9 @@ using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionH
  * @return Status::OK if the target database is successfully opened
  * @return otherwise if error was occurred
  */
-extern "C" StatusCode database_open(
-        DatabaseOptions const& options,
-        DatabaseHandle* result);
+StatusCode database_open(
+    DatabaseOptions const& options,
+    DatabaseHandle* result);
 
 /**
  * @brief closes the target database.
@@ -107,8 +117,8 @@ extern "C" StatusCode database_open(
  * @return the operation status
  * @see database_dispose()
  */
-extern "C" StatusCode database_close(
-        DatabaseHandle handle);
+StatusCode database_close(
+    DatabaseHandle handle);
 
 /**
  * @brief disposes the database handle.
@@ -116,8 +126,8 @@ extern "C" StatusCode database_close(
  * @return the operation status
  * @see database_close()
  */
-extern "C" StatusCode database_dispose(
-        DatabaseHandle handle);
+StatusCode database_dispose(
+    DatabaseHandle handle);
 
 /**
  * @brief creates a new storage space onto the target database.
@@ -176,7 +186,7 @@ extern "C" StatusCode storage_dispose(
  * @param arguments extra arguments for the callback function
  * @return the operation status
  */
-extern "C" StatusCode transaction_exec(
+StatusCode transaction_exec(
         DatabaseHandle handle,
         TransactionOptions const& options,
         TransactionCallback callback,
@@ -190,7 +200,7 @@ extern "C" StatusCode transaction_exec(
  * @return StatusCode::OK if the database handle was successfully borrowed
  * @return otherwise if error was occurred
  */
-extern "C" StatusCode transaction_borrow_owner(
+StatusCode transaction_borrow_owner(
         TransactionHandle handle,
         DatabaseHandle* result);
 
@@ -201,12 +211,16 @@ extern "C" StatusCode transaction_borrow_owner(
  * @param result [OUT] the output transaction control handle, which is available only if StatusCode::OK was returned
  * Any thread is allowed to pass the returned handle to call sharksfin APIs, but at most one call per transaction control handle
  * should be made at a time. API calls with same handle should not be made simultaneously from different threads.
+ * @param wp Write preserve object to declare the storage for the batch transaction to preserve.
+ * This is effective only when TransactionType::LONG is specified in `options`. Otherwise, the parameter is ignored.
  * @return the operation status
  */
-extern "C" StatusCode transaction_begin(
+StatusCode transaction_begin(
         DatabaseHandle handle,
         TransactionOptions const& options,
-        TransactionControlHandle *result);
+        TransactionControlHandle *result,
+        WritePreserve const& wp = {}
+);
 
 /**
  * @brief borrows the transaction handle associated with the control handle
@@ -225,7 +239,7 @@ extern "C" StatusCode transaction_begin(
  * @return StatusCode::OK if the transaction handle was successfully borrowed
  * @return otherwise if error was occurred
  */
-extern "C" StatusCode transaction_borrow_handle(
+StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result);
 
@@ -243,7 +257,7 @@ extern "C" StatusCode transaction_borrow_handle(
  * gets invalidated and it should not be used to call APIs any more.
  * @return otherwise, status code reporting the commit failure such as StatusCode::ERR_ABORTED.
  */
-extern "C" StatusCode transaction_commit(
+StatusCode transaction_commit(
         TransactionControlHandle handle,
         bool async = false);
 
@@ -260,7 +274,7 @@ extern "C" StatusCode transaction_commit(
  * gets invalidated and it should not be used to call APIs any more.
  * @return otherwise, status code reporting the failure
  */
-extern "C" StatusCode transaction_abort(
+StatusCode transaction_abort(
         TransactionControlHandle handle,
         bool rollback = true);
 
@@ -280,9 +294,23 @@ extern "C" StatusCode transaction_abort(
  * E.g. StatusCode::OK for successfully committed transaction, or status code reporting the commit failure
  * such as StatusCode::ERR_ABORTED.
  */
-extern "C" StatusCode transaction_wait_commit(
+StatusCode transaction_wait_commit(
         TransactionControlHandle handle,
         std::size_t timeout_ns = 0UL);
+
+/**
+ * @brief check the current state of the transaction
+ * @details the caller typically calls this function to periodically check the transaction state in order to
+ * verify the permission to issue the transactional operations.
+ * @param handle the target transaction control handle retrieved with transaction_begin().
+ * @param result [OUT] the state of the transaction
+ * @return StatusCode::OK if the status is successfully retrieved
+ * @return otherwise if error was occurred
+ */
+StatusCode transaction_check(
+    TransactionControlHandle handle,
+    TransactionState *result
+);
 
 /**
  * @brief dispose the transaction control handle
@@ -293,8 +321,8 @@ extern "C" StatusCode transaction_wait_commit(
  * @return StatusCode::OK if the handles are successfully disposed
  * @return otherwise if error was occurred
  */
-extern "C" StatusCode transaction_dispose(
-        TransactionControlHandle handle);
+StatusCode transaction_dispose(
+    TransactionControlHandle handle);
 
 /**
  * @brief obtains a content on the target key.

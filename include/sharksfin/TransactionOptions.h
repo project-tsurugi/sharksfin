@@ -62,6 +62,22 @@ public:
     // - LONG_OPERATION
 
     /**
+     * @brief transaction type
+     */
+    enum class TransactionType : std::int32_t {
+
+        /**
+         * @brief transaction is short period and governed by optimistic concurrency control
+         */
+        SHORT = 0x01,
+
+        /**
+         * @brief transaction is long transaction governed by batch concurrent control
+         */
+        LONG = 0x02,
+    };
+
+    /**
      * @brief returns the maximum number of transaction retry attempts.
      * This is only enable if the following situations:
      * - user requested COMMIT operation in a transaction process, but transaction engine was failed, or
@@ -82,6 +98,14 @@ public:
      */
     constexpr OperationKind operation_kind() const noexcept {
         return operation_kind_;
+    }
+
+    /**
+     * @brief returns the transaction type.
+     * @return the transaction type
+     */
+    constexpr TransactionType transaction_type() const noexcept {
+        return transaction_type_;
     }
 
     /**
@@ -106,9 +130,21 @@ public:
         return *this;
     }
 
+    /**
+     * @brief sets the transaction type.
+     * The default value is TransactionType::SHORT.
+     * @param type the transaction type to set
+     * @return this
+     */
+    inline TransactionOptions& transaction_type(TransactionType type) noexcept {
+        transaction_type_ = type;
+        return *this;
+    }
+
 private:
     std::size_t retry_count_ { 0L };
     OperationKind operation_kind_ { OperationKind::READ_WRITE };
+    TransactionType transaction_type_ { TransactionType::SHORT };
 };
 
 /**
