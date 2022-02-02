@@ -22,6 +22,7 @@
 #include <iostream>
 #include <limits>
 #include <string_view>
+#include "WritePreserve.h"
 
 namespace sharksfin {
 
@@ -109,6 +110,15 @@ public:
     }
 
     /**
+     * @brief returns the write preserve object.
+     * @return the write preserve object if it's set for the transaction
+     * @return nullptr otherwise
+     */
+    constexpr WritePreserve const& write_preserve() const noexcept {
+        return write_preserve_;
+    }
+
+    /**
      * @brief sets the maximum number of transaction retry attempts.
      * The default value is 0.
      * @param count the retry count; 0 - never, TransactionOptions::INF - infinity
@@ -141,10 +151,21 @@ public:
         return *this;
     }
 
+    /**
+     * @brief sets the write preserve object.
+     * @param wp the write preserve to set
+     * @return this
+     */
+    inline TransactionOptions& write_preserve(WritePreserve wp) noexcept {
+        write_preserve_ = std::move(wp);
+        return *this;
+    }
+
 private:
     std::size_t retry_count_ { 0L };
     OperationKind operation_kind_ { OperationKind::READ_WRITE };
     TransactionType transaction_type_ { TransactionType::SHORT };
+    WritePreserve write_preserve_{};
 };
 
 /**

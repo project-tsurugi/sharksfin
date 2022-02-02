@@ -53,4 +53,19 @@ TEST_F(WritePreserveTest, create_write_preserve_from_storages) {
     EXPECT_EQ(handle0, storages[0].handle());
     EXPECT_EQ(handle1, storages[1].handle());
 }
+
+TEST_F(WritePreserveTest, size) {
+    StorageHandle handle0{},handle1{};
+    WritePreserve empty{};
+    EXPECT_EQ(empty.size(), 0);
+    EXPECT_TRUE(empty.empty());
+    WritePreserve wp{
+        {
+            PreservedStorage{handle0},
+            PreservedStorage{handle1},
+        }
+    };
+    EXPECT_EQ(wp.size(), 2);
+    EXPECT_FALSE(wp.empty());
+}
 }  // namespace sharksfin

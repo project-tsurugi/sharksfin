@@ -16,6 +16,8 @@
 #include "sharksfin/TransactionOptions.h"
 #include <gtest/gtest.h>
 
+#include "sharksfin/WritePreserve.h"
+
 namespace sharksfin {
 
 class TransactionOptionsTest : public ::testing::Test {
@@ -40,6 +42,17 @@ TEST_F(TransactionOptionsTest, set_kind_type) {
 TEST_F(TransactionOptionsTest, set_retry_count) {
     options.retry_count(100);
     EXPECT_EQ(options.retry_count(), 100);
+}
+
+TEST_F(TransactionOptionsTest, set_write_preserve) {
+    WritePreserve wp{
+        {
+            PreservedStorage{StorageHandle{}},
+            PreservedStorage{StorageHandle{}},
+        }
+    };
+    options.write_preserve(std::move(wp));
+    EXPECT_EQ(options.write_preserve().size(), 2);
 }
 
 }  // namespace sharksfin
