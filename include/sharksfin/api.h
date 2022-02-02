@@ -26,7 +26,6 @@
 #include "TransactionOperation.h"
 #include "TransactionOptions.h"
 #include "TransactionState.h"
-#include "WritePreserve.h"
 
 /**
  * @brief sharksfin interface definition
@@ -211,16 +210,12 @@ StatusCode transaction_borrow_owner(
  * @param result [OUT] the output transaction control handle, which is available only if StatusCode::OK was returned
  * Any thread is allowed to pass the returned handle to call sharksfin APIs, but at most one call per transaction control handle
  * should be made at a time. API calls with same handle should not be made simultaneously from different threads.
- * @param wp Write preserve object to declare the storage for the batch transaction to preserve.
- * This is effective only when TransactionType::LONG is specified in `options`. Otherwise, the parameter is ignored.
  * @return the operation status
  */
 StatusCode transaction_begin(
         DatabaseHandle handle,
         TransactionOptions const& options,
-        TransactionControlHandle *result,
-        WritePreserve const& wp = {}
-);
+        TransactionControlHandle *result);
 
 /**
  * @brief borrows the transaction handle associated with the control handle
@@ -309,8 +304,7 @@ StatusCode transaction_wait_commit(
  */
 StatusCode transaction_check(
     TransactionControlHandle handle,
-    TransactionState *result
-);
+    TransactionState *result);
 
 /**
  * @brief dispose the transaction control handle
