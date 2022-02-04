@@ -31,6 +31,12 @@ namespace sharksfin {
  */
 class TransactionOptions final {
 public:
+
+    /**
+     * @brief entity type for write preserves for the long transaction
+     */
+    using WritePreserves = std::vector<WritePreserve>;
+
     /**
      * @brief retries infinite times.
      */
@@ -79,6 +85,22 @@ public:
     };
 
     /**
+     * @brief construct object with default options
+     */
+    TransactionOptions() = default;
+
+    /**
+     * @brief construct new object
+     */
+    TransactionOptions(
+        TransactionType type,
+        WritePreserves wps = {}
+    ) noexcept :
+        transaction_type_(type),
+        write_preserves_(std::move(wps))
+    {}
+
+    /**
      * @brief returns the maximum number of transaction retry attempts.
      * This is only enable if the following situations:
      * - user requested COMMIT operation in a transaction process, but transaction engine was failed, or
@@ -110,12 +132,12 @@ public:
     }
 
     /**
-     * @brief returns the write preserve object.
-     * @return the write preserve object if it's set for the transaction
-     * @return nullptr otherwise
+     * @brief returns the write preserve objects.
+     * @return the write preserve objects if set for the transaction
+     * @return empty vector otherwise
      */
-    constexpr WritePreserve const& write_preserve() const noexcept {
-        return write_preserve_;
+    constexpr WritePreserves const& write_preserves() const noexcept {
+        return write_preserves_;
     }
 
     /**
@@ -152,12 +174,12 @@ public:
     }
 
     /**
-     * @brief sets the write preserve object.
-     * @param wp the write preserve to set
+     * @brief sets the write preserve objects.
+     * @param wp the write preserves to set
      * @return this
      */
-    inline TransactionOptions& write_preserve(WritePreserve wp) noexcept {
-        write_preserve_ = std::move(wp);
+    inline TransactionOptions& write_preserves(WritePreserves wp) noexcept {
+        write_preserves_ = std::move(wp);
         return *this;
     }
 
@@ -165,7 +187,7 @@ private:
     std::size_t retry_count_ { 0L };
     OperationKind operation_kind_ { OperationKind::READ_WRITE };
     TransactionType transaction_type_ { TransactionType::SHORT };
-    WritePreserve write_preserve_{};
+    WritePreserves write_preserves_ {};
 };
 
 /**
@@ -189,6 +211,29 @@ inline constexpr std::string_view to_string_view(TransactionOptions::OperationKi
  * @return the target stream
  */
 inline std::ostream& operator<<(std::ostream& out, TransactionOptions::OperationKind value) {
+    return out << to_string_view(value).data();
+}
+
+/**
+ * @brief returns the label of the given enum value.
+ * @param value the enum value
+ * @return the corresponded label
+ */
+inline constexpr std::string_view to_string_view(TransactionOptions::TransactionType value) {
+    switch (value) {
+        case TransactionOptions::TransactionType::SHORT: return "SHORT";
+        case TransactionOptions::TransactionType::LONG: return "LONG";
+        default: abort();
+    }
+}
+
+/**
+ * @brief appends enum label into the given stream.
+ * @param out the target stream
+ * @param value the source enum value
+ * @return the target stream
+ */
+inline std::ostream& operator<<(std::ostream& out, TransactionOptions::TransactionType value) {
     return out << to_string_view(value).data();
 }
 

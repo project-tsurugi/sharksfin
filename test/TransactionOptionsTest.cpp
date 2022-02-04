@@ -45,14 +45,35 @@ TEST_F(TransactionOptionsTest, set_retry_count) {
 }
 
 TEST_F(TransactionOptionsTest, set_write_preserve) {
-    WritePreserve wp{
+    std::vector<WritePreserve> wps{
+        {StorageHandle{}},
+        {StorageHandle{}},
+    };
+    options.write_preserves(std::move(wps));
+    EXPECT_EQ(options.write_preserves().size(), 2);
+}
+
+TEST_F(TransactionOptionsTest, constructor) {
+    StorageHandle st0{}, st1{};
+
+    TransactionOptions opts{
+        Type::LONG,
         {
-            PreservedStorage{StorageHandle{}},
-            PreservedStorage{StorageHandle{}},
+            st0,
+            st1,
         }
     };
-    options.write_preserve(std::move(wp));
-    EXPECT_EQ(options.write_preserve().size(), 2);
+    EXPECT_EQ(opts.transaction_type(), TransactionOptions::TransactionType::LONG);
+    EXPECT_EQ(opts.write_preserves().size(), 2);
+
+    std::vector<WritePreserve> wps{};
+    for(auto&& ps : opts.write_preserves()) {
+        wps.emplace_back(ps);
+    }
+
+    EXPECT_EQ(2, wps.size());
+    EXPECT_EQ(st0, wps[0].handle());
+    EXPECT_EQ(st1, wps[1].handle());
 }
 
 }  // namespace sharksfin
