@@ -76,4 +76,12 @@ TEST_F(TransactionOptionsTest, constructor) {
     EXPECT_EQ(st1, wps[1].handle());
 }
 
+TEST_F(TransactionOptionsTest, constructor_read_only_batch) {
+    TransactionOptions opts{ Type::LONG, {} };
+    opts.operation_kind(TransactionOptions::OperationKind::READ_ONLY);
+    EXPECT_EQ(opts.transaction_type(), TransactionOptions::TransactionType::LONG);
+    EXPECT_EQ(opts.operation_kind(), TransactionOptions::OperationKind::READ_ONLY);
+    EXPECT_EQ(opts.write_preserves().size(), 0);
+}
+
 }  // namespace sharksfin
