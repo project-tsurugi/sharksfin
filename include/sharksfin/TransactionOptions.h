@@ -87,14 +87,14 @@ public:
     /**
      * @brief construct object with default options
      */
-    TransactionOptions() = default;
+    constexpr TransactionOptions() = default;
 
     /**
      * @brief construct new object
      */
     TransactionOptions(
         TransactionType type,
-        WritePreserves wps = {}
+        WritePreserves wps
     ) noexcept :
         transaction_type_(type),
         write_preserves_(std::move(wps))
