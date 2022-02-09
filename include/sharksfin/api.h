@@ -304,7 +304,7 @@ StatusCode transaction_wait_commit(
  */
 StatusCode transaction_check(
     TransactionControlHandle handle,
-    TransactionState *result);
+    TransactionState &result);
 
 /**
  * @brief dispose the transaction control handle
