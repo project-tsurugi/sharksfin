@@ -71,7 +71,7 @@ inline constexpr std::string_view to_string_view(TransactionOperation value) {
  * @return the target stream
  */
 inline std::ostream& operator<<(std::ostream& out, TransactionOperation value) {
-    return out << to_string_view(value).data();
+    return out << to_string_view(value);
 }
 
 }  // namespace sharksfin

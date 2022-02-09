@@ -40,16 +40,6 @@ TEST_F(TransactionStateTest, copy) {
     TransactionState state{Kind::STARTED};
     auto state2 = state;
     EXPECT_EQ(state2.state_kind(), Kind::STARTED);
-    EXPECT_EQ(state2, state);
-}
-
-TEST_F(TransactionStateTest, equality) {
-    TransactionState state1{Kind::STARTED};
-    TransactionState state2{Kind::STARTED};
-    TransactionState state3{Kind::WAITING_FINISH};
-    EXPECT_EQ(state1, state2);
-    EXPECT_NE(state2, state3);
-    EXPECT_NE(state3, state1);
 }
 
 TEST_F(TransactionStateTest, print) {

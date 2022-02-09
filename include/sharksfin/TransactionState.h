@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <string_view>
 
 namespace sharksfin {
 
@@ -119,7 +120,7 @@ inline constexpr std::string_view to_string_view(TransactionState::StateKind val
  * @return the target stream
  */
 inline std::ostream& operator<<(std::ostream& out, TransactionState::StateKind value) {
-    return out << to_string_view(value).data();
+    return out << to_string_view(value);
 }
 
 /**
@@ -129,21 +130,7 @@ inline std::ostream& operator<<(std::ostream& out, TransactionState::StateKind v
  * @return the target stream
  */
 inline std::ostream& operator<<(std::ostream& out, TransactionState value) {
-    return out << to_string_view(value.state_kind()).data();
-}
-
-/**
- * @brief equality comparison operator
- */
-inline bool operator==(TransactionState const& a, TransactionState const& b) noexcept {
-    return a.state_kind() == b.state_kind();
-}
-
-/**
- * @brief inequality comparison operator
- */
-inline bool operator!=(TransactionState const& a, TransactionState const& b) noexcept {
-    return !(a == b);
+    return out << to_string_view(value.state_kind());
 }
 
 }  // namespace sharksfin
