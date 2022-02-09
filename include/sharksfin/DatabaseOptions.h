@@ -124,7 +124,7 @@ inline constexpr std::string_view to_string_view(DatabaseOptions::OpenMode value
  * @return the target stream
  */
 inline std::ostream& operator<<(std::ostream& out, DatabaseOptions::OpenMode value) {
-    return out << to_string_view(value).data();
+    return out << to_string_view(value);
 }
 
 }  // namespace sharksfin

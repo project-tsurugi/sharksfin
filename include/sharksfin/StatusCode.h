@@ -17,6 +17,7 @@
 #define SHARKSFIN_STATUSCODE_H_
 
 #include <cstdint>
+#include <string_view>
 #include <iostream>
 
 namespace sharksfin {
@@ -130,7 +131,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
  * @return the target stream
  */
 inline std::ostream& operator<<(std::ostream& out, StatusCode value) {
-    return out << to_string_view(value).data();
+    return out << to_string_view(value);
 }
 
 }  // namespace sharksfin

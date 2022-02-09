@@ -17,8 +17,7 @@
 #define SHARKSFIN_TRANSACTIONOPTIONS_H_
 
 #include <cstddef>
-#include <cstdint>
-#include <cstdlib>
+#include <vector>
 #include <iostream>
 #include <limits>
 #include <string_view>
@@ -211,7 +210,7 @@ inline constexpr std::string_view to_string_view(TransactionOptions::OperationKi
  * @return the target stream
  */
 inline std::ostream& operator<<(std::ostream& out, TransactionOptions::OperationKind value) {
-    return out << to_string_view(value).data();
+    return out << to_string_view(value);
 }
 
 /**
@@ -234,7 +233,7 @@ inline constexpr std::string_view to_string_view(TransactionOptions::Transaction
  * @return the target stream
  */
 inline std::ostream& operator<<(std::ostream& out, TransactionOptions::TransactionType value) {
-    return out << to_string_view(value).data();
+    return out << to_string_view(value);
 }
 
 }  // namespace sharksfin
