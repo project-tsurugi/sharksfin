@@ -85,9 +85,9 @@ public:
     }
 
     // wait a few epochs for visibility of recent updates
-    void wait_epochs() {
+    void wait_epochs(std::size_t count = 1) {
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(200ms);
+        std::this_thread::sleep_for(200ms*count);
     }
 private:
     testing::TemporaryFolder temporary_;

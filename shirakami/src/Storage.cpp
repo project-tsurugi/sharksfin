@@ -49,7 +49,11 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
                 tx->deactivate();
             }
             rc = resolve(res);
-            if (rc != StatusCode::OK && rc != StatusCode::ALREADY_EXISTS && rc != StatusCode::ERR_ABORTED_RETRYABLE) {
+            if (rc != StatusCode::OK &&
+                rc != StatusCode::ALREADY_EXISTS &&
+                rc != StatusCode::ERR_ABORTED_RETRYABLE &&
+                rc != StatusCode::ERR_INVALID_ARGUMENT // write operation on readonly tx TODO better status code
+            ) {
                 ABORT();
             }
             break;
@@ -57,7 +61,10 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
         case PutOperation::UPDATE: {
             rc = resolve(::shirakami::update(tx->native_handle(), handle_,
                 key.to_string_view(), value.to_string_view()));
-            if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
+            if (rc != StatusCode::OK &&
+                rc != StatusCode::NOT_FOUND &&
+                rc != StatusCode::ERR_INVALID_ARGUMENT // write operation on readonly tx TODO better status code
+                ) {
                 ABORT();
             }
             break;
@@ -70,7 +77,9 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
                 tx->deactivate();
                 break;
             }
-            if (rc != StatusCode::OK) {
+            if (rc != StatusCode::OK &&
+                rc != StatusCode::ERR_INVALID_ARGUMENT // write operation on readonly tx TODO better status code
+                ) {
                 ABORT();
             }
             break;
