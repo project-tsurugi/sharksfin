@@ -271,6 +271,14 @@ StatusCode transaction_dispose(
     return StatusCode::OK;
 }
 
+StatusCode transaction_check(
+    TransactionControlHandle handle,
+    TransactionState &result) {
+    auto tx = unwrap(handle);
+    result = tx->check_state();
+    return StatusCode::OK;
+}
+
 StatusCode content_get(
         TransactionHandle transaction,
         StorageHandle storage,

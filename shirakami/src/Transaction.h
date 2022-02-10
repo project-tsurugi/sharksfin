@@ -42,7 +42,7 @@ public:
             Database* owner,
             bool readonly = false
     ) : owner_(owner), session_(std::make_unique<Session>()), readonly_(readonly) {
-        buffer_.reserve(1024); // TODO auto expand - currently assuming values are shorter than this
+        buffer_.reserve(1024); // default buffer size. This automatically expands.
         declare_begin();
     }
 
@@ -175,6 +175,19 @@ public:
     inline bool readonly() const noexcept {
         return readonly_;
     }
+
+    /**
+     * @brief return the state of the transaction
+     * @return object holding transaction's state
+     */
+    inline TransactionState check_state() const noexcept {
+        // TODO implement
+        if (is_active_) {
+            return TransactionState{TransactionState::StateKind::STARTED};
+        }
+        return TransactionState{TransactionState::StateKind::FINISHED};
+    }
+
 private:
     Database* owner_{};
     std::unique_ptr<Session> session_{};

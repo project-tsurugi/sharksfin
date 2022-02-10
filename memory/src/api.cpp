@@ -224,6 +224,14 @@ StatusCode transaction_dispose(
     return StatusCode::OK;
 }
 
+StatusCode transaction_check(
+    TransactionControlHandle handle,
+    TransactionState &result) {
+    (void)handle;
+    result = TransactionState{TransactionState::StateKind::STARTED};
+    return StatusCode::OK;
+}
+
 StatusCode content_get(
         TransactionHandle transaction,
         StorageHandle storage,
