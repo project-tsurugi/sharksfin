@@ -225,9 +225,7 @@ StatusCode transaction_begin(
         [[maybe_unused]] TransactionOptions const& options,
         TransactionControlHandle *result) {
     auto database = unwrap(handle);
-    bool readonly =
-        options.operation_kind() == TransactionOptions::OperationKind::READ_ONLY;
-    auto tx = database->create_transaction(readonly);
+    auto tx = database->create_transaction(options);
     *result = wrap_as_control_handle(tx.release());
     return StatusCode::OK;
 }

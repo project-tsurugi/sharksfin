@@ -171,7 +171,7 @@ public:
      * @param readonly specify whether the transaction is readonly or not
      * @return the created transaction
      */
-    std::unique_ptr<Transaction> create_transaction(bool readonly = false);
+    std::unique_ptr<Transaction> create_transaction(TransactionOptions const& options = {});
 
     /**
      * @brief clean up all storage in this database

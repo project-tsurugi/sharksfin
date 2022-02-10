@@ -204,9 +204,9 @@ StatusCode Database::delete_storage(Storage &storage, Transaction& tx) {
     return rc;
 }
 
-std::unique_ptr<Transaction> Database::create_transaction(bool readonly) {
+std::unique_ptr<Transaction> Database::create_transaction(TransactionOptions const& options) {
     if (! active_) ABORT();
-    return std::make_unique<Transaction>(this, readonly);
+    return std::make_unique<Transaction>(this, options);
 }
 
 StatusCode Database::list_storages(std::unordered_map<std::string, ::shirakami::Storage>& out) noexcept {

@@ -24,6 +24,7 @@
 #include "sharksfin/api.h"
 #include "Database.h"
 #include "Session.h"
+#include "Storage.h"
 #include "Error.h"
 
 namespace sharksfin::shirakami {
@@ -40,11 +41,50 @@ public:
      */
     inline Transaction(
             Database* owner,
-            bool readonly = false
-    ) : owner_(owner), session_(std::make_unique<Session>()), readonly_(readonly) {
+            bool readonly = false,
+            bool is_long = false,
+            std::vector<::shirakami::Storage> write_preserves = {}
+    ) :
+        owner_(owner),
+        session_(std::make_unique<Session>()),
+        readonly_(readonly),
+        is_long_(is_long),
+        write_preserves_(std::move(write_preserves))
+    {
         buffer_.reserve(1024); // default buffer size. This automatically expands.
         declare_begin();
     }
+
+    static inline shirakami::Storage* unwrap(StorageHandle handle) {
+        return reinterpret_cast<shirakami::Storage*>(handle);  // NOLINT
+    }
+
+    std::vector<::shirakami::Storage> create_storages(TransactionOptions::WritePreserves const& wps) {
+        std::vector<::shirakami::Storage> storages{};
+        storages.reserve(wps.size());
+        for(auto&& e : wps) {
+            auto s = unwrap(e.handle());
+            storages.emplace_back(s->handle());
+        }
+        return storages;
+    }
+
+    /**
+     * @brief create a new instance.
+     * @param owner the owner of the transaction
+     * @param readonly specify whether the transaction is readonly or not
+     */
+    inline Transaction(
+        Database* owner,
+        TransactionOptions const& opts
+    ) :
+        Transaction(
+            owner,
+            opts.operation_kind() == TransactionOptions::OperationKind::READ_ONLY,
+            opts.transaction_type() == TransactionOptions::TransactionType::LONG,
+            create_storages(opts.write_preserves())
+        )
+    {}
 
     /**
      * @brief destructor - abort active transaction in case
@@ -195,9 +235,11 @@ private:
     bool is_active_{true};
     bool readonly_{false};
     std::unique_ptr<::shirakami::commit_param> commit_params_{};
+    bool is_long_{false};
+    std::vector<::shirakami::Storage> write_preserves_{};
 
     void declare_begin() {
-        ::shirakami::tx_begin(session_->id(), readonly_);
+        ::shirakami::tx_begin(session_->id(), readonly_, is_long_, write_preserves_);
     }
 };
 
