@@ -39,63 +39,33 @@ public:
      * @param owner the owner of the transaction
      * @param readonly specify whether the transaction is readonly or not
      */
-    inline Transaction(
+    Transaction(
             Database* owner,
             bool readonly = false,
             bool is_long = false,
             std::vector<::shirakami::Storage> write_preserves = {}
-    ) :
-        owner_(owner),
-        session_(std::make_unique<Session>()),
-        readonly_(readonly),
-        is_long_(is_long),
-        write_preserves_(std::move(write_preserves))
-    {
-        buffer_.reserve(1024); // default buffer size. This automatically expands.
-        declare_begin();
-    }
+    );
 
-    static inline shirakami::Storage* unwrap(StorageHandle handle) {
+    static shirakami::Storage* unwrap(StorageHandle handle) {
         return reinterpret_cast<shirakami::Storage*>(handle);  // NOLINT
     }
 
-    std::vector<::shirakami::Storage> create_storages(TransactionOptions::WritePreserves const& wps) {
-        std::vector<::shirakami::Storage> storages{};
-        storages.reserve(wps.size());
-        for(auto&& e : wps) {
-            auto s = unwrap(e.handle());
-            storages.emplace_back(s->handle());
-        }
-        return storages;
-    }
+    std::vector<::shirakami::Storage> create_storages(TransactionOptions::WritePreserves const& wps);
 
     /**
      * @brief create a new instance.
      * @param owner the owner of the transaction
      * @param readonly specify whether the transaction is readonly or not
      */
-    inline Transaction(
+    Transaction(
         Database* owner,
         TransactionOptions const& opts
-    ) :
-        Transaction(
-            owner,
-            opts.operation_kind() == TransactionOptions::OperationKind::READ_ONLY,
-            opts.transaction_type() == TransactionOptions::TransactionType::LONG,
-            create_storages(opts.write_preserves())
-        )
-    {}
+    );
 
     /**
      * @brief destructor - abort active transaction in case
      */
-    ~Transaction() noexcept {
-        if (is_active_) {
-            // usually this implies usage error
-            LOG(WARNING) << "aborting a transaction implicitly";
-            abort();
-        }
-    }
+    ~Transaction() noexcept;
 
     /**
      * @brief commit the transaction.
@@ -105,128 +75,68 @@ public:
      * @return StatusCode::OK when success
      * @return other status
      */
-    inline StatusCode commit(bool async) {
-        if(!is_active_) {
-            ABORT();
-        }
-        commit_params_.reset();
-        if (async) {
-            commit_params_ = std::make_unique<::shirakami::commit_param>();
-            commit_params_->set_cp(::shirakami::commit_property::WAIT_FOR_COMMIT);
-        }
-        auto rc = resolve(::shirakami::commit(session_->id(), commit_params_.get()));
-        if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
-            is_active_ = false;
-        }
-        if (rc != StatusCode::OK) {
-            commit_params_.reset();
-        }
-        return rc;
-    }
+    StatusCode commit(bool async);
 
-    inline StatusCode wait_for_commit(std::size_t timeout_ns) {
-        constexpr static std::size_t check_interval_ns = 2*1000*1000;
-        if (! commit_params_) {
-            return StatusCode::ERR_INVALID_STATE;
-        }
-        std::size_t left = timeout_ns;
-        auto commit_id = commit_params_->get_ctid();
-        while(true) {
-            if(::shirakami::check_commit(session_->id(), commit_id)) {
-                return StatusCode::OK;
-            }
-            if (left == 0) {
-                return StatusCode::ERR_TIME_OUT;
-            }
-            using namespace std::chrono_literals;
-            auto dur = left < check_interval_ns ? left : check_interval_ns;
-            std::this_thread::sleep_for(dur * 1ns);
-            left -= dur;
-        }
-    }
+    /**
+     * @brief wait the commit of this transaction.
+     * @return StatusCode::OK when success
+     * @return other status
+     */
+    StatusCode wait_for_commit(std::size_t timeout_ns);
 
     /**
      * @brief abort the transaction.
      * This function can be called regardless whether the transaction is active or not.
      * @return StatusCode::OK - we expect this function to be successful always
      */
-    inline StatusCode abort() {
-        if(!is_active_) {
-            return StatusCode::OK;
-        }
-        auto rc = resolve(::shirakami::abort(session_->id()));
-        if (rc != StatusCode::OK) {
-            ABORT_MSG("abort should always be successful");
-        }
-        is_active_ = false;
-        return rc;
-    }
+    StatusCode abort();
 
     /**
      * @brief returns the owner of this transaction.
      * @return the owner
      */
-    inline Database* owner() {
-        return owner_;
-    }
+    Database* owner();
 
     /**
      * @brief returns the transaction local buffer.
      * @return the transaction local buffer
      */
-    inline std::string& buffer() {
-        return buffer_;
-    }
+    std::string& buffer();
 
     /**
      * @brief returns the native transaction handle object.
      * @return the shirakami native handle
      */
-    inline ::shirakami::Token native_handle() {
-        return session_.get()->id();
-    }
+    ::shirakami::Token native_handle();
 
     /**
      * @brief reset and recycle this object for the new transaction
      * @pre transaction is NOT active (i.e. already committed or aborted )
      */
-    inline void reset() {
-        if(is_active_) {
-            ABORT();
-        }
-        is_active_ = true;
-        commit_params_.reset();
-        declare_begin();
-    }
+    void reset();
 
-    bool active() const noexcept {
-        return is_active_;
-    }
+    /**
+     * @brief accessor to the flag whether the transaction is already began and running
+     */
+    bool active() const noexcept;
 
-    void deactivate() noexcept {
-        is_active_ = false;
-    }
+    /**
+     * @brief declare the transaction is finished and deactivated
+     */
+    void deactivate() noexcept;
 
     /**
      * @brief return whether the transaction is read-only
      * @return true if the transaction is readonly
      * @return false otherwise
      */
-    inline bool readonly() const noexcept {
-        return readonly_;
-    }
+    bool readonly() const noexcept;
 
     /**
      * @brief return the state of the transaction
      * @return object holding transaction's state
      */
-    inline TransactionState check_state() const noexcept {
-        // TODO implement
-        if (is_active_) {
-            return TransactionState{TransactionState::StateKind::STARTED};
-        }
-        return TransactionState{TransactionState::StateKind::FINISHED};
-    }
+    TransactionState check_state() const noexcept;
 
 private:
     Database* owner_{};
@@ -238,9 +148,7 @@ private:
     bool is_long_{false};
     std::vector<::shirakami::Storage> write_preserves_{};
 
-    void declare_begin() {
-        ::shirakami::tx_begin(session_->id(), readonly_, is_long_, write_preserves_);
-    }
+    void declare_begin();
 };
 
 }  // namespace sharksfin::shirakami
