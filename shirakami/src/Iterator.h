@@ -101,16 +101,8 @@ private:
     bool is_valid_{false};
     bool handle_open_{false};
 
-    StatusCode next_cursor_();
-    StatusCode open_cursor_();
-
-    /**
-     * @brief finds for the next sibling of the given key.
-     * @param key the search key
-     * @return the next sibling entry key slice
-     * @return empty slice if there is no next neighbor (i.e. input key is '0xFFFF....', or empty slice)
-     */
-    Slice next_neighbor_(Slice key);
+    StatusCode next_cursor();
+    StatusCode open_cursor();
 };
 
 }  // namespace sharksfin::shirakami

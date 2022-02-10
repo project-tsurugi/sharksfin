@@ -22,10 +22,13 @@
 
 namespace sharksfin {
 
+/**
+ * @brief represents state of transaction
+ */
 class TransactionState final {
 public:
     /**
-     * @brief represents state of transaction
+     * @brief state kind enum
      */
     enum class StateKind : std::int64_t {
 
@@ -76,9 +79,24 @@ public:
      */
     ~TransactionState() = default;
 
+    /**
+     * @brief copy constructor
+     */
     TransactionState(TransactionState const& other) = default;
+
+    /**
+     * @brief copy assignment
+     */
     TransactionState& operator=(TransactionState const& other) = default;
+
+    /**
+     * @brief move constructor
+     */
     TransactionState(TransactionState&& other) noexcept = default;
+
+    /**
+     * @brief move assignment
+     */
     TransactionState& operator=(TransactionState&& other) noexcept = default;
 
     /**

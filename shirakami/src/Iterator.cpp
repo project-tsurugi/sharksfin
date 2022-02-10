@@ -50,11 +50,11 @@ StatusCode Iterator::next() {
         return StatusCode::NOT_FOUND;
     }
     if (state_ == State::INIT) {
-        if(auto rc = open_cursor_();rc != StatusCode::OK) {
+        if(auto rc = open_cursor();rc != StatusCode::OK) {
             return rc;
         }
     }
-    auto rc = next_cursor_();
+    auto rc = next_cursor();
     if (rc == StatusCode::OK) {
         state_ = State::BODY;
     }
@@ -73,7 +73,7 @@ Slice Iterator::value() {
     return Slice(tuple_->get_value());
 }
 
-StatusCode Iterator::next_cursor_() {
+StatusCode Iterator::next_cursor() {
     auto res = read_from_scan_with_retry(*tx_, tx_->native_handle(), handle_, tuple_);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         tx_->deactivate();
@@ -94,7 +94,30 @@ StatusCode Iterator::next_cursor_() {
     return rc;
 }
 
-StatusCode Iterator::open_cursor_() {
+/**
+ * @brief finds for the next sibling of the given key.
+ * @param key the search key
+ * @return the next sibling entry key slice
+ * @return empty slice if there is no next neighbor (i.e. input key is '0xFFFF....', or empty slice)
+ */
+Slice next_neighbor(Slice key) {
+    thread_local std::string buffer {};
+    buffer = key.to_string_view();
+    bool found = false;
+    for (char *iter = (buffer.data() + buffer.size() - 1), *end = buffer.data(); iter >= end; --iter) { // NOLINT
+        if (++*iter != '\0') {
+            found = true;
+            break;
+        }
+        // carry up
+    }
+    if (found) {
+        return buffer;
+    }
+    return {};
+}
+
+StatusCode Iterator::open_cursor() {
     ::shirakami::scan_endpoint begin_endpoint{::shirakami::scan_endpoint::INF};
     ::shirakami::scan_endpoint end_endpoint{::shirakami::scan_endpoint::INF};
     is_valid_ = false;
@@ -111,7 +134,7 @@ StatusCode Iterator::open_cursor_() {
             break;
         case EndPointKind::PREFIXED_EXCLUSIVE:
             begin_endpoint = ::shirakami::scan_endpoint::INCLUSIVE; // equal or larger than next neighbor
-            auto n = next_neighbor_(begin_key_).to_string_view();
+            auto n = next_neighbor(begin_key_).to_string_view();
             if (n.empty()) {
                 // there is no neighbor - exclude everything
                 begin_key_.clear();
@@ -127,7 +150,7 @@ StatusCode Iterator::open_cursor_() {
             break;
         case EndPointKind::PREFIXED_INCLUSIVE: {
             end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
-            auto n = next_neighbor_(end_key_).to_string_view();
+            auto n = next_neighbor(end_key_).to_string_view();
             if (n.empty()) {
                 // there is no neighbor - upper bound is unlimited
                 end_key_.clear();
@@ -161,20 +184,4 @@ StatusCode Iterator::open_cursor_() {
     }
 }
 
-Slice Iterator::next_neighbor_(Slice key) {
-    thread_local std::string buffer {};
-    buffer = key.to_string_view();
-    bool found = false;
-    for (char *iter = (buffer.data() + buffer.size() - 1), *end = buffer.data(); iter >= end; --iter) { // NOLINT
-        if (++*iter != '\0') {
-            found = true;
-            break;
-        }
-        // carry up
-    }
-    if (found) {
-        return buffer;
-    }
-    return {};
-}
 }  // namespace sharksfin::shirakami

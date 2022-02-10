@@ -38,9 +38,24 @@ public:
      */
     ~WritePreserve() = default;
 
+    /**
+     * @brief copy construct
+     */
     WritePreserve(WritePreserve const& other) = default;
+
+    /**
+     * @brief copy assignment
+     */
     WritePreserve& operator=(WritePreserve const& other) = default;
+
+    /**
+     * @brief move construct
+     */
     WritePreserve(WritePreserve&& other) noexcept = default;
+
+    /**
+     * @brief move assignment
+     */
     WritePreserve& operator=(WritePreserve&& other) noexcept = default;
 
     /**

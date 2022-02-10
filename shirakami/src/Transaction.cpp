@@ -28,6 +28,8 @@
 
 namespace sharksfin::shirakami {
 
+constexpr static std::size_t default_buffer_size = 1024;
+
 Transaction::Transaction(Database* owner, bool readonly, bool is_long, std::vector<Storage*> write_preserves) :
     owner_(owner),
     session_(std::make_unique<Session>()),
@@ -35,7 +37,7 @@ Transaction::Transaction(Database* owner, bool readonly, bool is_long, std::vect
     is_long_(is_long),
     write_preserves_(std::move(write_preserves))
 {
-    buffer_.reserve(1024); // default buffer size. This automatically expands.
+    buffer_.reserve(default_buffer_size); // This automatically expands.
     declare_begin();
 }
 
