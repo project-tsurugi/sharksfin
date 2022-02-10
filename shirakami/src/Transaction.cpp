@@ -28,8 +28,7 @@
 
 namespace sharksfin::shirakami {
 
-Transaction::Transaction(Database* owner, bool readonly, bool is_long,
-    std::vector<::shirakami::Storage> write_preserves) :
+Transaction::Transaction(Database* owner, bool readonly, bool is_long, std::vector<Storage*> write_preserves) :
     owner_(owner),
     session_(std::make_unique<Session>()),
     readonly_(readonly),
@@ -40,14 +39,14 @@ Transaction::Transaction(Database* owner, bool readonly, bool is_long,
     declare_begin();
 }
 
-std::vector<::shirakami::Storage> Transaction::create_storages(TransactionOptions::WritePreserves const& wps) {
-    std::vector<::shirakami::Storage> storages{};
-    storages.reserve(wps.size());
+std::vector<Storage*> create_storages(TransactionOptions::WritePreserves const& wps) {
+    std::vector<Storage*> ret{};
+    ret.reserve(wps.size());
     for(auto&& e : wps) {
         auto s = unwrap(e.handle());
-        storages.emplace_back(s->handle());
+        ret.emplace_back(s);
     }
-    return storages;
+    return ret;
 }
 
 Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
@@ -128,7 +127,7 @@ std::string& Transaction::buffer() {
 }
 
 ::shirakami::Token Transaction::native_handle() {
-    return session_.get()->id();
+    return session_->id();
 }
 
 void Transaction::reset() {
@@ -161,6 +160,12 @@ TransactionState Transaction::check_state() const noexcept {
 }
 
 void Transaction::declare_begin() {
-    ::shirakami::tx_begin(session_->id(), readonly_, is_long_, write_preserves_);
+    std::vector<::shirakami::Storage> storages{};
+    storages.reserve(write_preserves_.size());
+    for(auto&& e : write_preserves_) {
+        storages.emplace_back(e->handle());
+    }
+    ::shirakami::tx_begin(session_->id(), readonly_, is_long_, storages);
 }
+
 }  // namespace sharksfin::shirakami

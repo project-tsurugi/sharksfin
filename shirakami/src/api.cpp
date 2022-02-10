@@ -22,6 +22,7 @@
 #include "Iterator.h"
 #include "Storage.h"
 #include "Error.h"
+#include "handle_utils.h"
 
 namespace sharksfin {
 
@@ -29,47 +30,6 @@ namespace sharksfin {
  * @brief the attribute key of whether or not performance tracking feature is enabled.
  */
 static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLINT
-
-static inline DatabaseHandle wrap(shirakami::Database* object) {
-    return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
-}
-
-[[maybe_unused]] static inline StorageHandle wrap(shirakami::Storage* object) {
-    return reinterpret_cast<StorageHandle>(object);  // NOLINT
-}
-
-[[maybe_unused]] static inline TransactionHandle wrap(shirakami::Transaction* object) {
-    return reinterpret_cast<TransactionHandle>(object);  // NOLINT
-}
-
-// TransactionContext* can be interpreted as TransactionControlHandle and TransactionHandle
-static inline TransactionControlHandle wrap_as_control_handle(shirakami::Transaction* object) {
-    return reinterpret_cast<TransactionControlHandle>(object);  // NOLINT
-}
-
-static inline IteratorHandle wrap(shirakami::Iterator* object) {
-    return reinterpret_cast<IteratorHandle>(object);  // NOLINT
-}
-
-static inline shirakami::Database* unwrap(DatabaseHandle handle) {
-    return reinterpret_cast<shirakami::Database*>(handle);  // NOLINT
-}
-
-static inline shirakami::Storage* unwrap(StorageHandle handle) {
-    return reinterpret_cast<shirakami::Storage*>(handle);  // NOLINT
-}
-
-static inline shirakami::Transaction* unwrap(TransactionHandle handle) {
-    return reinterpret_cast<shirakami::Transaction*>(handle);  // NOLINT
-}
-
-static inline shirakami::Transaction* unwrap(TransactionControlHandle handle) {
-    return reinterpret_cast<shirakami::Transaction*>(handle);  // NOLINT
-}
-
-static inline shirakami::Iterator* unwrap(IteratorHandle handle) {
-    return reinterpret_cast<shirakami::Iterator*>(handle);  // NOLINT
-}
 
 StatusCode database_open(
         DatabaseOptions const& options,

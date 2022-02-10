@@ -24,10 +24,12 @@
 #include "sharksfin/api.h"
 #include "Database.h"
 #include "Session.h"
-#include "Storage.h"
 #include "Error.h"
+#include "handle_utils.h"
 
 namespace sharksfin::shirakami {
+
+class Storage;
 
 /**
  * @brief a transaction
@@ -40,17 +42,11 @@ public:
      * @param readonly specify whether the transaction is readonly or not
      */
     Transaction(
-            Database* owner,
-            bool readonly = false,
-            bool is_long = false,
-            std::vector<::shirakami::Storage> write_preserves = {}
+        Database* owner,
+        bool readonly = false,
+        bool is_long = false,
+        std::vector<Storage*> write_preserves = {}
     );
-
-    static shirakami::Storage* unwrap(StorageHandle handle) {
-        return reinterpret_cast<shirakami::Storage*>(handle);  // NOLINT
-    }
-
-    std::vector<::shirakami::Storage> create_storages(TransactionOptions::WritePreserves const& wps);
 
     /**
      * @brief create a new instance.
@@ -146,7 +142,7 @@ private:
     bool readonly_{false};
     std::unique_ptr<::shirakami::commit_param> commit_params_{};
     bool is_long_{false};
-    std::vector<::shirakami::Storage> write_preserves_{};
+    std::vector<Storage*> write_preserves_{};
 
     void declare_begin();
 };

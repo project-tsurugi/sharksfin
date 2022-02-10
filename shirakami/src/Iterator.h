@@ -17,9 +17,9 @@
 #define SHARKSFIN_SHIRAKAMI_ITERATOR_H_
 
 #include "glog/logging.h"
-#include "sharksfin/api.h"
 #include "shirakami/tuple.h"
-#include "Error.h"
+#include "shirakami/scheme.h"
+#include "sharksfin/api.h"
 
 namespace sharksfin::shirakami {
 
