@@ -20,7 +20,7 @@
 #include "TestRoot.h"
 
 #include "Database.h"
-#include "Iterator.h"
+#include "TestIterator.h"
 
 namespace sharksfin::shirakami {
 
@@ -53,9 +53,9 @@ TEST_F(ShirakamiCCTest, simple) {
     {
         // read committed, remove and abort
         tx->reset();
-        auto iter = st->scan(tx.get(),
+        auto iter = test_iterator(st->scan(tx.get(),
                 "", EndPointKind::PREFIXED_INCLUSIVE,
-                "", EndPointKind::PREFIXED_INCLUSIVE);
+                "", EndPointKind::PREFIXED_INCLUSIVE));
 
         ASSERT_EQ(iter->next(), StatusCode::OK);
         EXPECT_EQ(iter->key().to_string_view(), "a");
@@ -76,9 +76,9 @@ TEST_F(ShirakamiCCTest, simple) {
     {
         // read committed, remove and commit
         tx->reset();
-        auto iter = st->scan(tx.get(),
+        auto iter = test_iterator(st->scan(tx.get(),
                 "a", EndPointKind::PREFIXED_INCLUSIVE,
-                "a", EndPointKind::PREFIXED_INCLUSIVE);
+                "a", EndPointKind::PREFIXED_INCLUSIVE));
 
         ASSERT_EQ(iter->next(), StatusCode::OK);
         EXPECT_EQ(iter->key().to_string_view(), "a");
@@ -109,9 +109,9 @@ TEST_F(ShirakamiCCTest, simple) {
     }
     {
         tx->reset();
-        auto iter = st->scan(tx.get(),
+        auto iter = test_iterator(st->scan(tx.get(),
                 "", EndPointKind::PREFIXED_INCLUSIVE,
-                "", EndPointKind::PREFIXED_INCLUSIVE);
+                "", EndPointKind::PREFIXED_INCLUSIVE));
 
         ASSERT_EQ(iter->next(), StatusCode::OK);
         EXPECT_EQ(iter->key().to_string_view(), "a");
@@ -149,9 +149,9 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
         EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         std::size_t row_count = 0;
         for (std::size_t i = 0U; i < COUNT; ++i) {
-            auto iter = st->scan(tx2.get(),
+            auto iter = test_iterator(st->scan(tx2.get(),
                     "a", EndPointKind::PREFIXED_INCLUSIVE,
-                    "a", EndPointKind::PREFIXED_INCLUSIVE);
+                    "a", EndPointKind::PREFIXED_INCLUSIVE));
             StatusCode rc{};
             while((rc = iter->next()) == StatusCode::OK) {
                 EXPECT_EQ(iter->key().to_string_view().substr(0,1), "a");
@@ -217,9 +217,9 @@ TEST_F(ShirakamiCCTest, scan_and_delete) {
         std::size_t row_count = 0;
         std::size_t retry_error_count = 0;
         for (std::size_t i = 0U; i < COUNT; ++i) {
-            auto iter = st->scan(tx2.get(),
+            auto iter = test_iterator(st->scan(tx2.get(),
                     "a", EndPointKind::PREFIXED_INCLUSIVE,
-                    "a", EndPointKind::PREFIXED_INCLUSIVE);
+                    "a", EndPointKind::PREFIXED_INCLUSIVE));
             StatusCode rc{};
             while((rc = iter->next()) == StatusCode::OK) {
                 EXPECT_EQ(iter->key().to_string_view().substr(0,1), "a");

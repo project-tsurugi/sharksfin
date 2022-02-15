@@ -19,7 +19,7 @@
 #include "TestRoot.h"
 
 #include "Database.h"
-#include "Iterator.h"
+#include "TestIterator.h"
 
 namespace sharksfin::shirakami {
 
@@ -253,9 +253,9 @@ TEST_F(ShirakamiStorageTest, prefix_conflict) {
         s1->put(tx, "a", "B");
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();
-        auto it = s0->scan(tx,
+        auto it = test_iterator(s0->scan(tx,
                 "", EndPointKind::PREFIXED_INCLUSIVE,
-                "", EndPointKind::PREFIXED_INCLUSIVE);
+                "", EndPointKind::PREFIXED_INCLUSIVE));
 
         EXPECT_EQ(it->next(), StatusCode::NOT_FOUND);
     }
@@ -278,9 +278,9 @@ TEST_F(ShirakamiStorageTest, scan_prefix) {
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();
 
-        auto iter = st->scan(tx,
+        auto iter = test_iterator(st->scan(tx,
                 "a/", EndPointKind::PREFIXED_INCLUSIVE,
-                "a/", EndPointKind::PREFIXED_INCLUSIVE);
+                "a/", EndPointKind::PREFIXED_INCLUSIVE));
 
         ASSERT_EQ(iter->next(), StatusCode::OK);
         EXPECT_EQ(iter->key().to_string_view(), "a/");
@@ -317,9 +317,9 @@ TEST_F(ShirakamiStorageTest, scan_prefix_uncommitted) {
         ASSERT_EQ(st->put(tx, "a/b", "a-b"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "b", "b"), StatusCode::OK);
 
-        auto iter = st->scan(tx,
+        auto iter = test_iterator(st->scan(tx,
                 "a/", EndPointKind::PREFIXED_INCLUSIVE,
-                "a/", EndPointKind::PREFIXED_INCLUSIVE);
+                "a/", EndPointKind::PREFIXED_INCLUSIVE));
 
         ASSERT_EQ(iter->next(), StatusCode::OK);
         EXPECT_EQ(iter->key().to_string_view(), "a/");
@@ -355,9 +355,9 @@ TEST_F(ShirakamiStorageTest, scan_range) {
         ASSERT_EQ(st->put(tx, "d", "D"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "e", "E"), StatusCode::OK);
 
-        auto iter = st->scan(tx,
+        auto iter = test_iterator(st->scan(tx,
                 "b", EndPointKind::INCLUSIVE,
-                "d", EndPointKind::INCLUSIVE);
+                "d", EndPointKind::INCLUSIVE));
 
         ASSERT_EQ(iter->next(), StatusCode::OK);
         EXPECT_EQ(iter->key().to_string_view(), "b");
@@ -389,9 +389,9 @@ TEST_F(ShirakamiStorageTest, scan_range_exclusive) {
         ASSERT_EQ(st->put(tx, "d", "D"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "e", "E"), StatusCode::OK);
 
-        auto iter = st->scan(tx,
+        auto iter = test_iterator(st->scan(tx,
                 "b", EndPointKind::EXCLUSIVE,
-                "d", EndPointKind::EXCLUSIVE);
+                "d", EndPointKind::EXCLUSIVE));
 
         ASSERT_EQ(iter->next(), StatusCode::OK);
         EXPECT_EQ(iter->key().to_string_view(), "c");

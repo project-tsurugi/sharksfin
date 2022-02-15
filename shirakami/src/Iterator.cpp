@@ -22,7 +22,6 @@
 #include "Storage.h"
 #include "Transaction.h"
 #include "Error.h"
-#include "shirakami_api_helper.h"
 
 namespace sharksfin::shirakami {
 
@@ -50,9 +49,11 @@ StatusCode Iterator::next() {
         return StatusCode::NOT_FOUND;
     }
     if (state_ == State::INIT) {
-        if(auto rc = open_cursor();rc != StatusCode::OK) {
-            return rc;
+        auto rc = open_cursor();
+        if(rc == StatusCode::OK) {
+            state_ = State::BODY;
         }
+        return rc;
     }
     auto rc = next_cursor();
     if (rc == StatusCode::OK) {
@@ -65,16 +66,7 @@ bool Iterator::is_valid() const {
     return is_valid_;
 }
 
-Slice Iterator::key() {
-    return Slice(tuple_->get_key());
-}
-
-Slice Iterator::value() {
-    return Slice(tuple_->get_value());
-}
-
-StatusCode Iterator::next_cursor() {
-    auto res = read_from_scan_with_retry(*tx_, tx_->native_handle(), handle_, tuple_);
+StatusCode Iterator::resolve_errors(::shirakami::Status res) {
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         tx_->deactivate();
         is_valid_ = false;
@@ -92,6 +84,23 @@ StatusCode Iterator::next_cursor() {
     auto rc = resolve(res);
     is_valid_ = rc == StatusCode::OK;
     return rc;
+}
+
+StatusCode Iterator::key(Slice& s) {
+    auto res = ::shirakami::read_key_from_scan(tx_->native_handle(), handle_, buffer_key_);
+    s = buffer_key_;
+    return resolve_errors(res);
+}
+
+StatusCode Iterator::value(Slice& s) {
+    auto res = ::shirakami::read_value_from_scan(tx_->native_handle(), handle_, buffer_value_);
+    s = buffer_value_;
+    return resolve_errors(res);
+}
+
+StatusCode Iterator::next_cursor() {
+    auto res = ::shirakami::next(tx_->native_handle(), handle_);
+    return resolve_errors(res);
 }
 
 /**

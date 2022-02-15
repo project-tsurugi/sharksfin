@@ -17,25 +17,21 @@
 
 #include <memory>
 
+#include "shirakami/interface.h"
 #include "Iterator.h"
 #include "Transaction.h"
 #include "Error.h"
-#include "shirakami_api_helper.h"
 
 namespace sharksfin::shirakami {
 
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
-    ::shirakami::Tuple* tuple{};
-    auto res = search_key_with_retry(*tx, tx->native_handle(), handle_, key.to_string_view(), tuple);
+    std::string value{};
+    auto res = ::shirakami::search_key(tx->native_handle(), handle_, key.to_string_view(), buffer);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         tx->deactivate();
     }
-    auto rc = resolve(res);
-    if (rc == StatusCode::OK && tuple != nullptr) {
-        buffer.assign(tuple->get_value());
-    }
-    return rc;
+    return resolve(res);
 }
 
 StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {//NOLINT(readability-make-member-function-const)

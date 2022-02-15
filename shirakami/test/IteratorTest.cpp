@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include "TestRoot.h"
 #include "Storage.h"
+#include "TestIterator.h"
 
 namespace sharksfin::shirakami {
 
@@ -74,7 +75,7 @@ TEST_F(ShirakamiIteratorTest, prefix) {
     put("b", "NG");
     commit_reset();
 
-    Iterator it {
+    TestIterator it {
             storage(),
             transaction(),
             "a/", EndPointKind::PREFIXED_INCLUSIVE,
@@ -93,7 +94,7 @@ TEST_F(ShirakamiIteratorTest, prefix) {
 }
 
 TEST_F(ShirakamiIteratorTest, prefix_empty) {
-    Iterator it {
+    TestIterator it {
             storage(),
             transaction(),
             "a/", EndPointKind::PREFIXED_INCLUSIVE,
@@ -104,7 +105,7 @@ TEST_F(ShirakamiIteratorTest, prefix_empty) {
 }
 
 TEST_F(ShirakamiIteratorTest, range_empty) {
-    Iterator it {
+    TestIterator it {
             storage(),
             transaction(),
             "b", EndPointKind::INCLUSIVE,
@@ -114,7 +115,7 @@ TEST_F(ShirakamiIteratorTest, range_empty) {
 }
 
 TEST_F(ShirakamiIteratorTest, range_ex_empty) {
-    Iterator it {
+    TestIterator it {
             storage(),
             transaction(),
             "b", EndPointKind::EXCLUSIVE,
@@ -131,7 +132,7 @@ TEST_F(ShirakamiIteratorTest, endpoint_unbound) {
     put("e", "E");
 
     using Kind = EndPointKind;
-    Iterator it { storage(),
+    TestIterator it { storage(),
                   transaction(),
             "b", Kind::UNBOUND,
             "d", Kind::UNBOUND };
@@ -168,7 +169,7 @@ TEST_F(ShirakamiIteratorTest, endpoint_inclusive) {
     put("e", "NG");
 
     using Kind = EndPointKind;
-    Iterator it { storage(),
+    TestIterator it { storage(),
                   transaction(),
                   "b", Kind::INCLUSIVE,
                   "d", Kind::INCLUSIVE };
@@ -196,7 +197,7 @@ TEST_F(ShirakamiIteratorTest, endpoint_exclusive) {
     put("e", "NG");
 
     using Kind = EndPointKind;
-    Iterator it { storage(),
+    TestIterator it { storage(),
                   transaction(),
                   "b", Kind::EXCLUSIVE,
                   "d", Kind::EXCLUSIVE };
@@ -217,7 +218,7 @@ TEST_F(ShirakamiIteratorTest, endpoint_prefixed_inclusive) {
     put("e", "NG");
 
     using Kind = EndPointKind;
-    Iterator it { storage(),
+    TestIterator it { storage(),
                   transaction(),
                   "b", Kind::PREFIXED_INCLUSIVE,
                   "d", Kind::PREFIXED_INCLUSIVE };
@@ -251,7 +252,7 @@ TEST_F(ShirakamiIteratorTest, endpoint_prefixed_exclusive) {
     put("e", "NG");
 
     using Kind = EndPointKind;
-    Iterator it { storage(),
+    TestIterator it { storage(),
                   transaction(),
                   "b", Kind::PREFIXED_EXCLUSIVE,
                   "d", Kind::PREFIXED_EXCLUSIVE };
@@ -269,7 +270,7 @@ TEST_F(ShirakamiIteratorTest, empty_begin_endpoint_prefixed_exclusive) {
     put("b", "NG");
 
     using Kind = EndPointKind;
-    Iterator it { storage(),
+    TestIterator it { storage(),
         transaction(),
         "", Kind::PREFIXED_EXCLUSIVE,
         "", Kind::UNBOUND};
@@ -285,7 +286,7 @@ TEST_F(ShirakamiIteratorTest, empty_end_endpoint_prefixed_inclusive) {
     put("d1", "D1");
 
     using Kind = EndPointKind;
-    Iterator it { storage(),
+    TestIterator it { storage(),
         transaction(),
         "b", Kind::EXCLUSIVE,
         "", Kind::PREFIXED_INCLUSIVE};
@@ -311,7 +312,7 @@ TEST_F(ShirakamiIteratorTest, join) {
     putv("b/3", 6);
 
     std::vector<std::pair<int, int>> results {};
-    Iterator left {
+    TestIterator left {
             storage(),
             transaction(),
             "a/", EndPointKind::PREFIXED_INCLUSIVE,
@@ -319,7 +320,7 @@ TEST_F(ShirakamiIteratorTest, join) {
     };
     while (left.next() == StatusCode::OK) {
         auto left_v = *left.value().data<int>();
-        Iterator right {
+        TestIterator right {
                 storage(),
                 transaction(),
                 "b/", EndPointKind::PREFIXED_INCLUSIVE,
@@ -351,7 +352,7 @@ TEST_F(ShirakamiIteratorTest, join_using_seek) {
     putv("b/3", 13);
 
     std::vector<std::pair<int, int>> results {};
-    Iterator left {
+    TestIterator left {
             storage(),
             transaction(),
             "a/", EndPointKind::PREFIXED_INCLUSIVE,
@@ -373,4 +374,4 @@ TEST_F(ShirakamiIteratorTest, join_using_seek) {
     EXPECT_EQ(results[0], std::make_pair(2, 12));
 }
 
-}  // namespace sharksfin::memory
+}  // namespace sharksfin::shirakami

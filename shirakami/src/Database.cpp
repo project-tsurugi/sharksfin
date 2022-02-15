@@ -21,7 +21,6 @@
 #include "Transaction.h"
 #include "Storage.h"
 #include "Error.h"
-#include "shirakami_api_helper.h"
 
 namespace sharksfin::shirakami {
 
@@ -158,11 +157,10 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     };
     std::string k{};
     qualify_meta(key, k);
-    Tuple* tuple{};
+    std::string v{};
 
     Holder holder{this};
-    auto res = search_key_with_retry(*holder.tx_,
-        holder.tx_->native_handle(), default_storage_->handle(), k, tuple);
+    auto res = ::shirakami::search_key(holder.tx_->native_handle(), default_storage_->handle(), k, v);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         holder.tx_->deactivate();
     }
@@ -173,9 +171,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
         }
         ABORT();
     }
-    assert(tuple != nullptr);  //NOLINT
     ::shirakami::Storage handle{};
-    auto v = tuple->get_value();
     assert(sizeof(handle) == v.size());  //NOLINT
     std::memcpy(&handle, v.data(), v.size());
     storage_cache_.add(key, handle);
@@ -219,11 +215,18 @@ StatusCode Database::list_storages(std::unordered_map<std::string, ::shirakami::
     ::shirakami::Storage handle{};
     StatusCode res{};
     while((res = iter->next()) == StatusCode::OK) {
-        std::string_view v{iter->value().to_string_view()};
+        Slice v{};
+        if((res = iter->value(v)) != StatusCode::OK) {
+            break;
+        }
         assert(v.size() == sizeof(handle)); //NOLINT
         std::memcpy(&handle, v.data(), v.size());
+        Slice k{};
+        if((res = iter->key(k)) != StatusCode::OK) {
+            break;
+        }
         out.emplace(
-            subkey(iter->key()).to_string_view(),
+            subkey(k).to_string_view(),
             handle
         );
     }

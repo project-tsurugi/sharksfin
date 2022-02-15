@@ -77,14 +77,22 @@ public:
     bool is_valid() const;
 
     /**
-     * @return key on the current position
+     * @brief retrieve the key
+     * @param s [out] key on the current position
+     * @return StatusCode::OK if next entry exists
+     * @return StatusCode::NOT_FOUND if next entry does not exist
+     * @return StatusCode::ERR_ABORTED_RETRYABLE when shirakami scans uncommitted record
      */
-    Slice key();
+    StatusCode key(Slice& s);
 
     /**
-     * @return value on the current position
+     * @brief retrieve the value
+     * @param s [out] value on the current position
+     * @return StatusCode::OK if next entry exists
+     * @return StatusCode::NOT_FOUND if next entry does not exist
+     * @return StatusCode::ERR_ABORTED_RETRYABLE when shirakami scans uncommitted record
      */
-    Slice value();
+    StatusCode value(Slice& s);
 
 private:
     Storage* owner_{};
@@ -97,12 +105,12 @@ private:
     EndPointKind begin_kind_{};
     std::string end_key_{};
     EndPointKind end_kind_{};
-    ::shirakami::Tuple* tuple_{};
     bool is_valid_{false};
     bool handle_open_{false};
 
     StatusCode next_cursor();
     StatusCode open_cursor();
+    StatusCode resolve_errors(::shirakami::Status res);
 };
 
 }  // namespace sharksfin::shirakami

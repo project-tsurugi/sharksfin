@@ -347,8 +347,7 @@ StatusCode iterator_get_key(
     if (!iter->is_valid()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    *result = iter->key();
-    return StatusCode::OK;
+    return iter->key(*result);
 }
 
 StatusCode iterator_get_value(
@@ -358,8 +357,7 @@ StatusCode iterator_get_value(
     if (!iter->is_valid()) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    *result = iter->value();
-    return StatusCode::OK;
+    return iter->value(*result);
 }
 
 StatusCode iterator_dispose(
