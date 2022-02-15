@@ -98,6 +98,11 @@ enum class StatusCode : std::int64_t {
      * @brief api call timed out
      */
     ERR_TIME_OUT = -9,
+
+    /**
+     * @brief the feature is not yet implemented
+     */
+    ERR_NOT_IMPLEMENTED = -10,
 };
 
 /**
@@ -120,6 +125,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_ABORTED: return "ERR_ABORTED";
         case StatusCode::ERR_ABORTED_RETRYABLE: return "ERR_ABORTED_RETRYABLE";
         case StatusCode::ERR_TIME_OUT: return "ERR_TIME_OUT";
+        case StatusCode::ERR_NOT_IMPLEMENTED: return "ERR_NOT_IMPLEMENTED";
         default: return "UNDEFINED";
     }
 }

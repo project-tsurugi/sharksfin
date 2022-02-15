@@ -49,6 +49,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             return StatusCode::ERR_INVALID_STATE;
         case ::shirakami::Status::ERR_FATAL:
             return StatusCode::ERR_UNKNOWN;
+        case ::shirakami::Status::ERR_NOT_IMPLEMENTED:
+            return StatusCode::ERR_UNKNOWN;
         case ::shirakami::Status::ERR_FAIL_WP:
             return StatusCode::ERR_IO_ERROR;
         case ::shirakami::Status::ERR_VALIDATION:
