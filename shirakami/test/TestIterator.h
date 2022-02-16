@@ -63,13 +63,17 @@ public:
 
     Slice key() {
         Slice ret{};
-        key(ret);
+        if(auto res = key(ret); res != StatusCode::OK) {
+            std::abort();
+        }
         return ret;
     }
 
     Slice value() {
         Slice ret{};
-        value(ret);
+        if(auto res = value(ret); res != StatusCode::OK) {
+            std::abort();
+        }
         return ret;
     }
 

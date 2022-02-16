@@ -21,6 +21,7 @@
 #include "Transaction.h"
 #include "Storage.h"
 #include "Error.h"
+#include "shirakami_api_helper.h"
 
 namespace sharksfin::shirakami {
 
@@ -160,7 +161,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     std::string v{};
 
     Holder holder{this};
-    auto res = ::shirakami::search_key(holder.tx_->native_handle(), default_storage_->handle(), k, v);
+    auto res = utils::search_key(*holder.tx_, default_storage_->handle(), k, v);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         holder.tx_->deactivate();
     }

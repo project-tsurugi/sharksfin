@@ -110,7 +110,7 @@ private:
 
     StatusCode next_cursor();
     StatusCode open_cursor();
-    StatusCode resolve_errors(::shirakami::Status res);
+    StatusCode resolve_scan_errors(::shirakami::Status res);
 };
 
 }  // namespace sharksfin::shirakami

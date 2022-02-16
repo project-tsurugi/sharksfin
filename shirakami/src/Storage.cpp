@@ -21,13 +21,14 @@
 #include "Iterator.h"
 #include "Transaction.h"
 #include "Error.h"
+#include "shirakami_api_helper.h"
 
 namespace sharksfin::shirakami {
 
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
     std::string value{};
-    auto res = ::shirakami::search_key(tx->native_handle(), handle_, key.to_string_view(), buffer);
+    auto res = utils::search_key(*tx, handle_, key.to_string_view(), buffer);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         tx->deactivate();
     }
@@ -48,7 +49,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
             if (rc != StatusCode::OK &&
                 rc != StatusCode::ALREADY_EXISTS &&
                 rc != StatusCode::ERR_ABORTED_RETRYABLE &&
-                rc != StatusCode::ERR_INVALID_ARGUMENT // write operation on readonly tx TODO better status code
+                rc != StatusCode::ERR_ILLEGAL_OPERATION // write operation on readonly tx
             ) {
                 ABORT();
             }
@@ -59,7 +60,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
                 key.to_string_view(), value.to_string_view()));
             if (rc != StatusCode::OK &&
                 rc != StatusCode::NOT_FOUND &&
-                rc != StatusCode::ERR_INVALID_ARGUMENT // write operation on readonly tx TODO better status code
+                rc != StatusCode::ERR_ILLEGAL_OPERATION // write operation on readonly tx
                 ) {
                 ABORT();
             }
@@ -74,7 +75,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
                 break;
             }
             if (rc != StatusCode::OK &&
-                rc != StatusCode::ERR_INVALID_ARGUMENT // write operation on readonly tx TODO better status code
+                rc != StatusCode::ERR_ILLEGAL_OPERATION // write operation on readonly tx
                 ) {
                 ABORT();
             }

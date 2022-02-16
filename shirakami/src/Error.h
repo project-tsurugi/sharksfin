@@ -50,7 +50,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case ::shirakami::Status::ERR_FATAL:
             return StatusCode::ERR_UNKNOWN;
         case ::shirakami::Status::ERR_NOT_IMPLEMENTED:
-            return StatusCode::ERR_UNKNOWN;
+            return StatusCode::ERR_NOT_IMPLEMENTED;
         case ::shirakami::Status::ERR_FAIL_WP:
             return StatusCode::ERR_IO_ERROR;
         case ::shirakami::Status::ERR_VALIDATION:
@@ -77,6 +77,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             return StatusCode::ERR_ABORTED_RETRYABLE;
         case ::shirakami::Status::WARN_CONCURRENT_UPDATE:
             return StatusCode::ERR_ABORTED_RETRYABLE;
+        case ::shirakami::Status::WARN_ILLEGAL_OPERATION:
+            return StatusCode::ERR_ILLEGAL_OPERATION;
         case ::shirakami::Status::WARN_INVALID_HANDLE:
             return StatusCode::ERR_INVALID_ARGUMENT;
         case ::shirakami::Status::WARN_NOT_IN_A_SESSION:

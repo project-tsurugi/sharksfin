@@ -22,6 +22,7 @@
 #include "Storage.h"
 #include "Transaction.h"
 #include "Error.h"
+#include "shirakami_api_helper.h"
 
 namespace sharksfin::shirakami {
 
@@ -51,6 +52,7 @@ StatusCode Iterator::next() {
     if (state_ == State::INIT) {
         auto rc = open_cursor();
         if(rc == StatusCode::OK) {
+            is_valid_ = true;
             state_ = State::BODY;
         }
         return rc;
@@ -66,7 +68,8 @@ bool Iterator::is_valid() const {
     return is_valid_;
 }
 
-StatusCode Iterator::resolve_errors(::shirakami::Status res) {
+// common status code handling for scan functions
+StatusCode Iterator::resolve_scan_errors(::shirakami::Status res) {
     if (res == ::shirakami::Status::ERR_PHANTOM) {
         tx_->deactivate();
         is_valid_ = false;
@@ -87,20 +90,20 @@ StatusCode Iterator::resolve_errors(::shirakami::Status res) {
 }
 
 StatusCode Iterator::key(Slice& s) {
-    auto res = ::shirakami::read_key_from_scan(tx_->native_handle(), handle_, buffer_key_);
+    auto res = utils::read_key_from_scan(*tx_, handle_, buffer_key_);
     s = buffer_key_;
-    return resolve_errors(res);
+    return resolve_scan_errors(res);
 }
 
 StatusCode Iterator::value(Slice& s) {
-    auto res = ::shirakami::read_value_from_scan(tx_->native_handle(), handle_, buffer_value_);
+    auto res = utils::read_value_from_scan(*tx_, handle_, buffer_value_);
     s = buffer_value_;
-    return resolve_errors(res);
+    return resolve_scan_errors(res);
 }
 
 StatusCode Iterator::next_cursor() {
     auto res = ::shirakami::next(tx_->native_handle(), handle_);
-    return resolve_errors(res);
+    return resolve_scan_errors(res);
 }
 
 /**
