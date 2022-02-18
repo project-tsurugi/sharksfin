@@ -54,7 +54,7 @@ std::vector<Storage*> create_storages(TransactionOptions::WritePreserves const& 
 Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
     Transaction(
         owner,
-        opts.operation_kind() == TransactionOptions::OperationKind::READ_ONLY,
+        opts.transaction_type() == TransactionOptions::TransactionType::READ_ONLY,
         opts.transaction_type() == TransactionOptions::TransactionType::LONG,
         create_storages(opts.write_preserves())
     )

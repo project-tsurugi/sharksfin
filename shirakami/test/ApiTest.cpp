@@ -1457,7 +1457,7 @@ TEST_F(ShirakamiApiTest, readonly_transaction) {
         static bool run(DatabaseHandle db, S& s) {
             HandleHolder<TransactionControlHandle> tch{};
             TransactionOptions options{};
-            options.operation_kind(TransactionOptions::OperationKind::READ_ONLY);
+            options.transaction_type(TransactionOptions::TransactionType::READ_ONLY);
             if (auto c = transaction_begin(db, options, &tch.get()); c != StatusCode::OK) {
                 return false;
             }

@@ -26,17 +26,18 @@ public:
 };
 
 using Type = TransactionOptions::TransactionType;
-using Kind = TransactionOptions::OperationKind;
 
 TEST_F(TransactionOptionsTest, defaults) {
     EXPECT_EQ(options.transaction_type(), Type::SHORT);
-    EXPECT_EQ(options.operation_kind(), Kind::READ_WRITE);
 }
 
-TEST_F(TransactionOptionsTest, set_kind_type) {
-    options.transaction_type(Type::LONG).operation_kind(Kind::READ_ONLY);
+TEST_F(TransactionOptionsTest, set_type) {
+    options.transaction_type(Type::LONG);
     EXPECT_EQ(options.transaction_type(), Type::LONG);
-    EXPECT_EQ(options.operation_kind(), Kind::READ_ONLY);
+    options.transaction_type(Type::SHORT);
+    EXPECT_EQ(options.transaction_type(), Type::SHORT);
+    options.transaction_type(Type::READ_ONLY);
+    EXPECT_EQ(options.transaction_type(), Type::READ_ONLY);
 }
 
 TEST_F(TransactionOptionsTest, set_retry_count) {
@@ -78,9 +79,7 @@ TEST_F(TransactionOptionsTest, constructor) {
 
 TEST_F(TransactionOptionsTest, constructor_read_only_batch) {
     TransactionOptions opts{ Type::LONG, {} };
-    opts.operation_kind(TransactionOptions::OperationKind::READ_ONLY);
     EXPECT_EQ(opts.transaction_type(), TransactionOptions::TransactionType::LONG);
-    EXPECT_EQ(opts.operation_kind(), TransactionOptions::OperationKind::READ_ONLY);
     EXPECT_EQ(opts.write_preserves().size(), 0);
 }
 

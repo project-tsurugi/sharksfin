@@ -75,7 +75,7 @@ TEST_F(ShirakamiTransactionTest, readonly) {
     wait_epochs(10);
     {
         TransactionOptions ops{};
-        ops.operation_kind(TransactionOptions::OperationKind::READ_ONLY);
+        ops.transaction_type(TransactionOptions::TransactionType::READ_ONLY);
         auto tx = db->create_transaction(ops);
         ASSERT_EQ(st->get(tx.get(), "a", buf), StatusCode::OK);
         EXPECT_EQ(buf, "A");

@@ -145,7 +145,7 @@ StatusCode transaction_exec(
         TransactionCallback callback,
         void *arguments) {
     bool readonly =
-        options.operation_kind() == TransactionOptions::OperationKind::READ_ONLY;
+        options.transaction_type() == TransactionOptions::TransactionType::READ_ONLY;
     auto database = unwrap(handle);
     auto tx = database->create_transaction(readonly);
     tx->acquire();
@@ -174,7 +174,7 @@ StatusCode transaction_begin(
         TransactionOptions const& options,
         TransactionControlHandle *result) {
     bool readonly =
-        options.operation_kind() == TransactionOptions::OperationKind::READ_ONLY;
+        options.transaction_type() == TransactionOptions::TransactionType::READ_ONLY;
     auto database = unwrap(handle);
     auto tx = database->create_transaction(readonly);
     tx->acquire();
