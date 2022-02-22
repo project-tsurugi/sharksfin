@@ -65,6 +65,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             return StatusCode::NOT_FOUND;
         case ::shirakami::Status::WARN_CANCEL_PREVIOUS_INSERT:
             return StatusCode::OK;
+        case ::shirakami::Status::WARN_CANCEL_PREVIOUS_UPDATE:
+            return StatusCode::OK;
         case ::shirakami::Status::WARN_WRITE_TO_LOCAL_WRITE:
             return StatusCode::OK;
         case ::shirakami::Status::WARN_INVARIANT:
