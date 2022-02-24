@@ -168,6 +168,11 @@ void Transaction::declare_begin() {
         storages.emplace_back(e->handle());
     }
     ::shirakami::tx_begin(session_->id(), readonly_, is_long_, storages);
+    if(is_long_) {
+        // until shirakami supports api to query status, long tx should wait for the assigned epoch
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(40ms);
+    }
 }
 
 }  // namespace sharksfin::shirakami
