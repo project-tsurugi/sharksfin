@@ -101,18 +101,15 @@ static void ensure_end_of_transaction(Transaction& tx, bool to_abort = false) {
     }
 }
 
-StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<Storage>& result) {
+StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result) {
     if (! active_) ABORT();
-    assert(tx.active());  //NOLINT
     std::unique_ptr<Storage> stg{};
     if (get_storage(key, stg) == StatusCode::OK) {
-        ensure_end_of_transaction(tx);
         return StatusCode::ALREADY_EXISTS;
     }
     // Not found, let's create new one acquiring lock
     std::unique_lock lock{mutex_for_storage_metadata_};
     if (get_storage(key, stg) == StatusCode::OK) {
-        ensure_end_of_transaction(tx);
         return StatusCode::ALREADY_EXISTS;
     }
     std::string k{};
@@ -124,11 +121,12 @@ StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<
     }
     v.resize(sizeof(handle));
     std::memcpy(v.data(), &handle, sizeof(handle));
-    if (auto rc = resolve(::shirakami::upsert(tx.native_handle(), default_storage_->handle(), k, v));
+    auto tx = create_transaction();
+    if (auto rc = resolve(::shirakami::upsert(tx->native_handle(), default_storage_->handle(), k, v));
         rc != StatusCode::OK) {
         ABORT();
     }
-    ensure_end_of_transaction(tx);
+    ensure_end_of_transaction(*tx);
     return get_storage(key, result);
 }
 

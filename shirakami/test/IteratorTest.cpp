@@ -32,8 +32,7 @@ public:
         options.attribute(KEY_LOCATION, path());
         Database::open(options, &database_);
         tx_ = std::make_unique<Transaction>(database_.get());
-        database_->create_storage("@", *tx_, storage_);
-        tx_->reset();
+        database_->create_storage("@", storage_);
     }
 
     void TearDown() override {

@@ -38,12 +38,11 @@ TEST_F(ShirakamiCCTest, simple) {
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());
     Database::open(options, &db);
-    auto tx = db->create_transaction();
     std::unique_ptr<Storage> st{};
-    db->create_storage("S", *tx, st);
+    db->create_storage("S", st);
+    auto tx = db->create_transaction();
     {
         // prepare data
-        tx->reset();
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->put(tx.get(), "a1", "A1", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->put(tx.get(), "d", "D", PutOperation::CREATE), StatusCode::OK);
@@ -133,11 +132,10 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
     options.attribute(KEY_LOCATION, path());
     Database::open(options, &db);
     {
-        auto tx = db->create_transaction();
         std::unique_ptr<Storage> st{};
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
+        auto tx = db->create_transaction();
         // prepare data
-        tx->reset();
         ASSERT_EQ(st->put(tx.get(), "aA", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->put(tx.get(), "az", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
@@ -201,10 +199,9 @@ TEST_F(ShirakamiCCTest, DISABLED_scan_and_delete) {
     options.attribute(KEY_LOCATION, path());
     Database::open(options, &db);
     {
-        auto tx = db->create_transaction();
         std::unique_ptr<Storage> st{};
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
-        tx->reset();
+        ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
+        auto tx = db->create_transaction();
         for (std::size_t i = 0U; i < COUNT; ++i) {
             EXPECT_EQ(st->put(tx.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
@@ -272,11 +269,10 @@ TEST_F(ShirakamiCCTest, get_concurrently) {
     options.attribute(KEY_LOCATION, path());
     Database::open(options, &db);
     {
-        auto tx = db->create_transaction();
         std::unique_ptr<Storage> st{};
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
         // prepare data
-        tx->reset();
+        auto tx = db->create_transaction();
         ASSERT_EQ(st->put(tx.get(), "aX0", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }

@@ -33,39 +33,33 @@ public:
 TEST_F(ShirakamiDatabaseTest, create_storage) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        ASSERT_EQ(db->create_storage("S0", *tx, st), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S0", st), StatusCode::OK);
         EXPECT_TRUE(st);
         st.reset();
         EXPECT_FALSE(st);
-        tx->reset();
         std::unordered_map<std::string, ::shirakami::Storage> map{};
         ASSERT_EQ(StatusCode::OK, db->list_storages(map));
         ASSERT_EQ(1, map.size());
-        ASSERT_EQ(db->create_storage("S0", *tx, st), StatusCode::ALREADY_EXISTS);
+        ASSERT_EQ(db->create_storage("S0", st), StatusCode::ALREADY_EXISTS);
         EXPECT_FALSE(st);
-        tx->reset();
-        ASSERT_EQ(db->create_storage("S1", *tx, st), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S1", st), StatusCode::OK);
         EXPECT_TRUE(st);
         ASSERT_EQ(StatusCode::OK, db->list_storages(map));
         ASSERT_EQ(2, map.size());
-        tx->reset();
     }
 }
 
 TEST_F(ShirakamiDatabaseTest, get_storage) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
         ASSERT_EQ(db->get_storage("S", st), StatusCode::NOT_FOUND);
         EXPECT_FALSE(st);
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
         EXPECT_TRUE(st);
         st.reset();
         EXPECT_FALSE(st);
-        tx->reset();
         ASSERT_EQ(db->get_storage("S", st), StatusCode::OK);
         EXPECT_TRUE(st);
     }
@@ -77,12 +71,10 @@ TEST_F(ShirakamiDatabaseTest, delete_storage) {
         TransactionHolder tx{db};
         std::unique_ptr<Storage> st0{};
         std::unique_ptr<Storage> st1{};
-        ASSERT_EQ(db->create_storage("S0", *tx, st0), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S0", st0), StatusCode::OK);
         EXPECT_TRUE(st0);
-        tx->reset();
-        ASSERT_EQ(db->create_storage("S1", *tx, st1), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S1", st1), StatusCode::OK);
         EXPECT_TRUE(st1);
-        tx->reset();
         std::unordered_map<std::string, ::shirakami::Storage> map{};
         ASSERT_EQ(StatusCode::OK, db->list_storages(map));
         ASSERT_EQ(2, map.size());
@@ -105,15 +97,12 @@ TEST_F(ShirakamiDatabaseTest, delete_storage) {
 TEST_F(ShirakamiDatabaseTest, clean_storages) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st0{};
         std::unique_ptr<Storage> st1{};
-        ASSERT_EQ(db->create_storage("S0", *tx, st0), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S0", st0), StatusCode::OK);
         EXPECT_TRUE(st0);
-        tx->reset();
-        ASSERT_EQ(db->create_storage("S1", *tx, st1), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S1", st1), StatusCode::OK);
         EXPECT_TRUE(st1);
-        tx->reset();
         std::unordered_map<std::string, ::shirakami::Storage> map{};
         ASSERT_EQ(StatusCode::OK, db->list_storages(map));
         ASSERT_EQ(2, map.size());

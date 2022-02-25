@@ -70,9 +70,8 @@ StatusCode storage_create(
         Slice key,
         StorageHandle *result) {
     auto db = unwrap(handle);
-    auto tx = db->create_transaction();
     std::unique_ptr<shirakami::Storage> stg{};
-    auto rc = db->create_storage(key, *tx, stg);
+    auto rc = db->create_storage(key, stg);
     if (rc != StatusCode::OK) {
         return rc;
     }

@@ -33,10 +33,9 @@ public:
 TEST_F(ShirakamiStorageTest, simple) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();
@@ -48,10 +47,9 @@ TEST_F(ShirakamiStorageTest, simple) {
 TEST_F(ShirakamiStorageTest, simple_uncommitted) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, TESTING);
@@ -61,10 +59,9 @@ TEST_F(ShirakamiStorageTest, simple_uncommitted) {
 TEST_F(ShirakamiStorageTest, get) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::NOT_FOUND);
         ASSERT_EQ(st->put(tx, "K", "testing", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
@@ -80,10 +77,9 @@ TEST_F(ShirakamiStorageTest, get) {
 TEST_F(ShirakamiStorageTest, get_uncommitted) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::NOT_FOUND);
         ASSERT_EQ(st->put(tx, "K", "testing", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
@@ -97,10 +93,9 @@ TEST_F(ShirakamiStorageTest, get_uncommitted) {
 TEST_F(ShirakamiStorageTest, put) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();
@@ -118,10 +113,9 @@ TEST_F(ShirakamiStorageTest, put) {
 TEST_F(ShirakamiStorageTest, put_uncommitted) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "a");
@@ -135,10 +129,9 @@ TEST_F(ShirakamiStorageTest, put_uncommitted) {
 TEST_F(ShirakamiStorageTest, put_operations) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();
@@ -173,10 +166,9 @@ TEST_F(ShirakamiStorageTest, put_operations) {
 TEST_F(ShirakamiStorageTest, put_operations_uncommitted) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "a");
@@ -204,10 +196,9 @@ TEST_F(ShirakamiStorageTest, put_operations_uncommitted) {
 TEST_F(ShirakamiStorageTest, remove) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", "testing"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "testing");
@@ -226,10 +217,9 @@ TEST_F(ShirakamiStorageTest, remove) {
 TEST_F(ShirakamiStorageTest, remove_uncommitted) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", "testing"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "testing");
@@ -244,12 +234,10 @@ TEST_F(ShirakamiStorageTest, remove_uncommitted) {
 TEST_F(ShirakamiStorageTest, prefix_conflict) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> s0{}, s1{};
-        db->create_storage("a", *tx, s0);
-        tx->reset();
-        db->create_storage("b", *tx, s1);
-        tx->reset();
+        db->create_storage("a", s0);
+        db->create_storage("b", s1);
+        TransactionHolder tx{db};
         s1->put(tx, "a", "B");
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();
@@ -264,11 +252,9 @@ TEST_F(ShirakamiStorageTest, prefix_conflict) {
 TEST_F(ShirakamiStorageTest, scan_prefix) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
-
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "a", "a"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "a/", "a-"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "a/a", "a-a"), StatusCode::OK);
@@ -305,10 +291,9 @@ TEST_F(ShirakamiStorageTest, scan_prefix) {
 TEST_F(ShirakamiStorageTest, scan_prefix_uncommitted) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
 
         ASSERT_EQ(st->put(tx, "a", "a"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "a/", "a-"), StatusCode::OK);
@@ -344,10 +329,9 @@ TEST_F(ShirakamiStorageTest, scan_prefix_uncommitted) {
 TEST_F(ShirakamiStorageTest, scan_range) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
 
         ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "b", "B"), StatusCode::OK);
@@ -378,10 +362,9 @@ TEST_F(ShirakamiStorageTest, scan_range) {
 TEST_F(ShirakamiStorageTest, scan_range_exclusive) {
     DatabaseHolder db{path()};
     {
-        TransactionHolder tx{db};
         std::unique_ptr<Storage> st{};
-        db->create_storage("S", *tx, st);
-        tx->reset();
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
 
         ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "b", "B"), StatusCode::OK);

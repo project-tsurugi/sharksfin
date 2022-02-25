@@ -75,13 +75,12 @@ public:
     /**
      * @brief creates a new storage space.
      * @param key the storage key
-     * @param tx the transaction to use - this call ends transaction (i.e. tx is committed or aborted when return)
      * @param result [out] non empty pointer if the storage was successfully created (valid only when StatusCode::OK is returned)
      * @return StatusCode::OK when storage is successfully created
      * @return StatusCode::ALREADY_EXISTS if the storage space with the key already exists
      * @return otherwise
      */
-    StatusCode create_storage(Slice key, Transaction& tx, std::unique_ptr<Storage>& result);
+    StatusCode create_storage(Slice key, std::unique_ptr<Storage>& result);
 
     /**
      * @brief returns a storage space.

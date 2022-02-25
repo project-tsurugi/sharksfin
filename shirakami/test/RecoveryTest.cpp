@@ -32,19 +32,17 @@ TEST_F(ShirakamiRecoveryTest, basic) {
     {
         DatabaseHolder db{location};
         {
-            TransactionHolder tx{db};
             std::unique_ptr<Storage> st0{};
-            ASSERT_EQ(db->create_storage("S0", *tx, st0), StatusCode::OK);
+            ASSERT_EQ(db->create_storage("S0", st0), StatusCode::OK);
             EXPECT_TRUE(st0);
-            tx->reset();
+            TransactionHolder tx{db};
             ASSERT_EQ(st0->put(tx, "a", "A"), StatusCode::OK);
             ASSERT_EQ(st0->put(tx, "b", "B"), StatusCode::OK);
             ASSERT_EQ(tx->commit(false), StatusCode::OK);
             tx->reset();
             std::unique_ptr<Storage> st1{};
-            ASSERT_EQ(db->create_storage("S1", *tx, st1), StatusCode::OK);
+            ASSERT_EQ(db->create_storage("S1", st1), StatusCode::OK);
             EXPECT_TRUE(st1);
-            tx->reset();
             ASSERT_EQ(st1->put(tx, "x", "X"), StatusCode::OK);
             ASSERT_EQ(st1->put(tx, "y", "Y"), StatusCode::OK);
             ASSERT_EQ(tx->commit(false), StatusCode::OK);
@@ -59,9 +57,8 @@ TEST_F(ShirakamiRecoveryTest, basic) {
             ASSERT_EQ(2, map.size());
             {
                 std::unique_ptr<Storage> st{};
-                ASSERT_EQ(db->create_storage("S0", *tx, st), StatusCode::ALREADY_EXISTS);
+                ASSERT_EQ(db->create_storage("S0", st), StatusCode::ALREADY_EXISTS);
                 EXPECT_FALSE(st);
-                tx->reset();
                 ASSERT_EQ(db->get_storage("S0", st), StatusCode::OK);
                 EXPECT_TRUE(st);
                 std::string buf{};
@@ -74,9 +71,8 @@ TEST_F(ShirakamiRecoveryTest, basic) {
             }
             {
                 std::unique_ptr<Storage> st{};
-                ASSERT_EQ(db->create_storage("S1", *tx, st), StatusCode::ALREADY_EXISTS);
+                ASSERT_EQ(db->create_storage("S1", st), StatusCode::ALREADY_EXISTS);
                 EXPECT_FALSE(st);
-                tx->reset();
                 ASSERT_EQ(db->get_storage("S1", st), StatusCode::OK);
                 EXPECT_TRUE(st);
                 std::string buf{};

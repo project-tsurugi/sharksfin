@@ -41,9 +41,7 @@ TEST_F(ShirakamiTransactionTest, empty_tx_option) {
     std::unique_ptr<Storage> st{};
     {
         // prepare storage
-        TransactionOptions ops{};
-        auto tx = db->create_transaction(ops);
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
     }
     {
         TransactionOptions ops{};
@@ -65,10 +63,9 @@ TEST_F(ShirakamiTransactionTest, readonly) {
     std::unique_ptr<Storage> st{};
     {
         // prepare storage
+        ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
         TransactionOptions ops{};
         auto tx = db->create_transaction(ops);
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
-        tx->reset();
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }
@@ -96,9 +93,7 @@ TEST_F(ShirakamiTransactionTest, long_tx) {
     std::unique_ptr<Storage> st{};
     {
         // prepare storage
-        TransactionOptions ops{};
-        auto tx = db->create_transaction(ops);
-        ASSERT_EQ(db->create_storage("S", *tx, st), StatusCode::OK);
+        ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
     }
     {
         TransactionOptions ops{
