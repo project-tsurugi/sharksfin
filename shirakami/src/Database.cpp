@@ -139,35 +139,18 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
         result = std::make_unique<Storage>(this, key, *handle);
         return StatusCode::OK;
     }
-    // RAII class to hold transaction
-    struct Holder {  //NOLINT
-        explicit Holder(Database* db) :
-            db_(db),
-            owner_(db_->create_transaction()),
-            tx_(owner_.get())
-        {
-            assert(tx_->active());  //NOLINT
-        }
-        ~Holder() {
-            tx_->abort();
-        }
-        Database* db_{};  //NOLINT
-        std::unique_ptr<Transaction> owner_{};  //NOLINT
-        bool tx_passed_{};  //NOLINT
-        Transaction* tx_{};  //NOLINT
-    };
     std::string k{};
     qualify_meta(key, k);
     std::string v{};
-
-    Holder holder{this};
-    auto res = utils::search_key(*holder.tx_, default_storage_->handle(), k, v);
+    auto tx = create_transaction();
+    auto res = utils::search_key(*tx, default_storage_->handle(), k, v);
     if (res == ::shirakami::Status::ERR_PHANTOM) {
-        holder.tx_->deactivate();
+        tx->deactivate();
     }
     StatusCode rc = resolve(res);
     if (rc != StatusCode::OK) {
         if (rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+            tx->abort();
             return rc;
         }
         ABORT();
@@ -177,6 +160,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     std::memcpy(&handle, v.data(), v.size());
     storage_cache_.add(key, handle);
     result = std::make_unique<Storage>(this, key, handle);
+    tx->abort();
     return StatusCode::OK;
 }
 
