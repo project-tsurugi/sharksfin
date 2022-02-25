@@ -96,8 +96,7 @@ StatusCode storage_get(
 StatusCode storage_delete(StorageHandle handle) {
     auto stg = unwrap(handle);
     auto db = stg->owner();
-    auto tx = db->create_transaction();
-    return db->delete_storage(*stg, *tx);
+    return db->delete_storage(*stg);
 }
 
 StatusCode storage_dispose(StorageHandle handle) {

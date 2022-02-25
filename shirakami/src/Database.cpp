@@ -78,7 +78,6 @@ void Database::init_default_storage() {
 
 StatusCode Database::clean() {
     if (! active_) ABORT();
-    auto tx = create_transaction();
     std::vector<Tuple const*> tuples{};
     std::unordered_map<std::string, ::shirakami::Storage> map{};
     if (auto res = list_storages(map); res != StatusCode::OK) {
@@ -86,11 +85,7 @@ StatusCode Database::clean() {
     }
     for(auto const& [n, s] : map) {
         Storage stg{this, n, s};
-        delete_storage(stg, *tx);
-        tx->reset();
-    }
-    if (auto res = tx->commit(false); res != StatusCode::OK) {
-        ABORT();
+        delete_storage(stg);
     }
     return StatusCode::OK;
 }
@@ -161,7 +156,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     return StatusCode::OK;
 }
 
-StatusCode Database::delete_storage(Storage &storage, Transaction& tx) {
+StatusCode Database::delete_storage(Storage &storage) {
     if (! active_) ABORT();
     auto rc = resolve(::shirakami::delete_storage(storage.handle()));
     if (rc == StatusCode::ERR_INVALID_ARGUMENT) {
@@ -174,11 +169,12 @@ StatusCode Database::delete_storage(Storage &storage, Transaction& tx) {
     storage_cache_.remove(storage.name());
     std::string k{};
     qualify_meta(storage.name(), k);
-    if (auto rc2 = resolve(::shirakami::delete_record(tx.native_handle(), default_storage_->handle(), k));
+    auto tx = create_transaction();
+    if (auto rc2 = resolve(::shirakami::delete_record(tx->native_handle(), default_storage_->handle(), k));
         rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
         ABORT();
     }
-    ensure_end_of_transaction(tx);
+    ensure_end_of_transaction(*tx);
     return rc;
 }
 

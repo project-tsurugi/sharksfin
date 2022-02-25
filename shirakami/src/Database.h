@@ -95,9 +95,8 @@ public:
     /**
      * @brief deletes storage.
      * @param storage the target storage
-     * @param tx the transaction to use - this function ends transaction (i.e. tx is committed or aborted when return)
      */
-    StatusCode delete_storage(Storage& storage, Transaction& tx);
+    StatusCode delete_storage(Storage& storage);
 
     /**
      * @brief returns whether or not performance tracking feature is enabled.
