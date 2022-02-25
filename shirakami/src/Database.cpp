@@ -128,7 +128,6 @@ StatusCode Database::create_storage(Slice key, Transaction& tx, std::unique_ptr<
         rc != StatusCode::OK) {
         ABORT();
     }
-    auto storage = std::make_unique<Storage>(this, key, handle);
     ensure_end_of_transaction(tx);
     return get_storage(key, result);
 }
