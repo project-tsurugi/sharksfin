@@ -22,6 +22,7 @@
 #include "Storage.h"
 #include "Error.h"
 #include "shirakami_api_helper.h"
+#include "logging.h"
 
 namespace sharksfin::shirakami {
 
@@ -217,7 +218,7 @@ StatusCode Database::list_storages(std::unordered_map<std::string, ::shirakami::
     }
     auto res2 = tx->commit(false);
     if (res2 != StatusCode::OK) {
-        LOG(ERROR) << "commit failed";
+        VLOG(log_error) << "commit failed";
         return res2;
     }
     return StatusCode::OK;

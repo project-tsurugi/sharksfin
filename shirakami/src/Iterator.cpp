@@ -23,6 +23,7 @@
 #include "Transaction.h"
 #include "Error.h"
 #include "shirakami_api_helper.h"
+#include "logging.h"
 
 namespace sharksfin::shirakami {
 
@@ -188,7 +189,7 @@ StatusCode Iterator::open_cursor() {
         state_ = State::SAW_EOF;
         return StatusCode::NOT_FOUND;
     } else if(res == ::shirakami::Status::WARN_SCAN_LIMIT) {  //NOLINT
-        LOG(ERROR) << "too many open scan";
+        VLOG(log_error) << "too many open scan";
         return StatusCode::ERR_UNKNOWN;
     } else {
         handle_open_ = true;

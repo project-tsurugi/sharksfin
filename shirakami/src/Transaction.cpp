@@ -25,6 +25,7 @@
 #include "Session.h"
 #include "Storage.h"
 #include "Error.h"
+#include "logging.h"
 
 namespace sharksfin::shirakami {
 
@@ -63,7 +64,7 @@ Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
 Transaction::~Transaction() noexcept {
     if (is_active_) {
         // usually this implies usage error
-        LOG(WARNING) << "aborting a transaction implicitly";
+        VLOG(log_warning) << "aborting a transaction implicitly";
         abort();
     }
 }

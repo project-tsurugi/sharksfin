@@ -19,6 +19,7 @@
 #include "glog/logging.h"
 #include "sharksfin/StatusCode.h"
 #include "shirakami/scheme.h"
+#include "logging.h"
 
 namespace sharksfin::shirakami {
 
@@ -90,7 +91,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case ::shirakami::Status::ERR_SESSION_LIMIT:
             return StatusCode::ERR_INVALID_STATE;
     }
-    LOG(ERROR) << "Shirakami error : " << result;
+    VLOG(log_error) << "Shirakami error : " << result;
     return StatusCode::ERR_UNKNOWN;
 }
 
@@ -101,7 +102,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
     buf << file;
     buf << " line:";
     buf << line;
-    LOG(ERROR) << buf.str();
+    LOG(ERROR) << buf.str(); // use LOG because DBMS is crashing
     std::abort();
 }
 

@@ -23,6 +23,7 @@
 #include "Storage.h"
 #include "Error.h"
 #include "handle_utils.h"
+#include "logging.h"
 
 namespace sharksfin {
 
@@ -146,7 +147,7 @@ StatusCode transaction_exec(
                 if(rc != StatusCode::OK) {
                     if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                         // retry
-                        VLOG(1) << "commit failed. retry transaction.";
+                        VLOG(log_warning) << "commit failed. retry transaction.";
                         continue;
                     }
                     ABORT();

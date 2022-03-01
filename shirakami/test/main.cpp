@@ -16,10 +16,12 @@
 #include "gtest/gtest.h"
 #include "glog/logging.h"
 #include "sharksfin/Environment.h"
+#include "logging.h"
 
 int main(int argc, char** argv) {
     // first consume command line options for gtest
     ::testing::InitGoogleTest(&argc, argv);
+    FLAGS_v = FLAGS_v < sharksfin::log_info ? sharksfin::log_info : FLAGS_v;
     sharksfin::Environment env{};
     env.initialize();
     return RUN_ALL_TESTS();
