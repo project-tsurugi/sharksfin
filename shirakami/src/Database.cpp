@@ -117,7 +117,10 @@ StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result)
     }
     v.resize(sizeof(handle));
     std::memcpy(v.data(), &handle, sizeof(handle));
-    auto tx = create_transaction();
+    std::unique_ptr<Transaction> tx{};
+    if(auto res = create_transaction(tx); res != StatusCode::OK) {
+        return res;
+    }
     if (auto rc = resolve(::shirakami::upsert(tx->native_handle(), default_storage_->handle(), k, v));
         rc != StatusCode::OK) {
         ABORT();
@@ -135,7 +138,10 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     std::string k{};
     qualify_meta(key, k);
     std::string v{};
-    auto tx = create_transaction();
+    std::unique_ptr<Transaction> tx{};
+    if(auto res = create_transaction(tx); res != StatusCode::OK) {
+        return res;
+    }
     auto res = utils::search_key(*tx, default_storage_->handle(), k, v);
     StatusCode rc = resolve(res);
     if (rc != StatusCode::OK) {
@@ -167,7 +173,10 @@ StatusCode Database::delete_storage(Storage &storage) {
     storage_cache_.remove(storage.name());
     std::string k{};
     qualify_meta(storage.name(), k);
-    auto tx = create_transaction();
+    std::unique_ptr<Transaction> tx{};
+    if(auto res = create_transaction(tx); res != StatusCode::OK) {
+        return res;
+    }
     if (auto rc2 = resolve(::shirakami::delete_record(tx->native_handle(), default_storage_->handle(), k));
         rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
         ABORT();
@@ -176,15 +185,18 @@ StatusCode Database::delete_storage(Storage &storage) {
     return rc;
 }
 
-std::unique_ptr<Transaction> Database::create_transaction(TransactionOptions const& options) {
+StatusCode Database::create_transaction(std::unique_ptr<Transaction>& out, TransactionOptions const& options) {
     if (! active_) ABORT();
-    return std::make_unique<Transaction>(this, options);
+    return Transaction::construct(out, this, options);
 }
 
 StatusCode Database::list_storages(std::unordered_map<std::string, ::shirakami::Storage>& out) noexcept {
     if (! active_) ABORT();
     out.clear();
-    auto tx = create_transaction();
+    std::unique_ptr<Transaction> tx{};
+    if(auto res = create_transaction(tx); res != StatusCode::OK) {
+        return res;
+    }
     auto iter = default_storage_->scan(tx.get(),
         "", EndPointKind::UNBOUND,
         "", EndPointKind::UNBOUND);

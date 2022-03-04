@@ -22,6 +22,7 @@
 #include "shirakami/interface.h"
 
 #include "sharksfin/api.h"
+#include "sharksfin/StatusCode.h"
 #include "Database.h"
 #include "Session.h"
 #include "Error.h"
@@ -37,31 +38,31 @@ class Storage;
 class Transaction {
 public:
     /**
-     * @brief create a new instance.
-     * @param owner the owner of the transaction
-     * @param readonly specify whether the transaction is readonly or not
+     * @brief create empty object
      */
-    Transaction(
-        Database* owner,
-        bool readonly = false,
-        bool is_long = false,
-        std::vector<Storage*> write_preserves = {}
-    );
+    Transaction() = default;
 
-    /**
-     * @brief create a new instance.
-     * @param owner the owner of the transaction
-     * @param readonly specify whether the transaction is readonly or not
-     */
-    Transaction(
-        Database* owner,
-        TransactionOptions const& opts
-    );
+    Transaction(Transaction const& other) = delete;
+    Transaction& operator=(Transaction const& other) = delete;
+    Transaction(Transaction&& other) noexcept = default;
+    Transaction& operator=(Transaction&& other) noexcept = default;
 
     /**
      * @brief destructor - abort active transaction in case
      */
     ~Transaction() noexcept;
+
+    /**
+     * @brief factory to create new object
+     * @param tx [out] output prameter to be filled with new object
+     * @param owner the owner of the transaction
+     * @param opts the option for the new transaction
+     */
+    static StatusCode construct(
+        std::unique_ptr<Transaction>& tx,
+        Database* owner,
+        TransactionOptions const& opts
+    );
 
     /**
      * @brief commit the transaction.
@@ -144,7 +145,19 @@ private:
     bool is_long_{false};
     std::vector<Storage*> write_preserves_{};
 
-    void declare_begin();
+    Transaction(
+        Database* owner,
+        bool readonly = false,
+        bool is_long = false,
+        std::vector<Storage*> write_preserves = {}
+    );
+
+    Transaction(
+        Database* owner,
+        TransactionOptions const& opts
+    );
+
+    StatusCode declare_begin();
 };
 
 }  // namespace sharksfin::shirakami

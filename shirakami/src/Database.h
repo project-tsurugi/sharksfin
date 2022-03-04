@@ -166,10 +166,12 @@ public:
 
     /**
      * @brief creates a new transaction
+     * @param out the output parameter filled with newly created transaction
      * @param readonly specify whether the transaction is readonly or not
-     * @return the created transaction
+     * @return StatusCode::OK on successful
+     * @return any error otherwise
      */
-    std::unique_ptr<Transaction> create_transaction(TransactionOptions const& options = {});
+    StatusCode create_transaction(std::unique_ptr<Transaction>& out, TransactionOptions const& options = {});
 
     /**
      * @brief clean up all storage in this database

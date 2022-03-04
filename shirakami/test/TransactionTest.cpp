@@ -45,7 +45,8 @@ TEST_F(ShirakamiTransactionTest, empty_tx_option) {
     }
     {
         TransactionOptions ops{};
-        auto tx = db->create_transaction(ops);
+        std::unique_ptr<Transaction> tx{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();
@@ -65,7 +66,8 @@ TEST_F(ShirakamiTransactionTest, readonly) {
         // prepare storage
         ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
         TransactionOptions ops{};
-        auto tx = db->create_transaction(ops);
+        std::unique_ptr<Transaction> tx{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }
@@ -73,7 +75,8 @@ TEST_F(ShirakamiTransactionTest, readonly) {
     {
         TransactionOptions ops{};
         ops.transaction_type(TransactionOptions::TransactionType::READ_ONLY);
-        auto tx = db->create_transaction(ops);
+        std::unique_ptr<Transaction> tx{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
         ASSERT_EQ(st->get(tx.get(), "a", buf), StatusCode::OK);
         EXPECT_EQ(buf, "A");
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
@@ -102,7 +105,8 @@ TEST_F(ShirakamiTransactionTest, long_tx) {
                 wrap(st.get()),
             }
         };
-        auto tx = db->create_transaction(ops);
+        std::unique_ptr<Transaction> tx{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();

@@ -31,6 +31,15 @@ namespace sharksfin::shirakami {
 
 constexpr static std::size_t default_buffer_size = 1024;
 
+StatusCode Transaction::construct(
+    std::unique_ptr<Transaction>& tx,
+    Database* owner,
+    TransactionOptions const& opts
+) {
+    tx = std::unique_ptr<Transaction>(new Transaction(owner, opts));
+    return tx->declare_begin();
+}
+
 Transaction::Transaction(Database* owner, bool readonly, bool is_long, std::vector<Storage*> write_preserves) :
     owner_(owner),
     session_(std::make_unique<Session>()),
@@ -39,7 +48,6 @@ Transaction::Transaction(Database* owner, bool readonly, bool is_long, std::vect
     write_preserves_(std::move(write_preserves))
 {
     buffer_.reserve(default_buffer_size); // This automatically expands.
-    declare_begin();
 }
 
 std::vector<Storage*> create_storages(TransactionOptions::WritePreserves const& wps) {
@@ -162,18 +170,19 @@ TransactionState Transaction::check_state() const noexcept {
     return TransactionState{TransactionState::StateKind::FINISHED};
 }
 
-void Transaction::declare_begin() {
+StatusCode Transaction::declare_begin() {
     std::vector<::shirakami::Storage> storages{};
     storages.reserve(write_preserves_.size());
     for(auto&& e : write_preserves_) {
         storages.emplace_back(e->handle());
     }
-    ::shirakami::tx_begin(session_->id(), readonly_, is_long_, storages);
+    auto res = ::shirakami::tx_begin(session_->id(), readonly_, is_long_, storages);
     if(is_long_) {
         // until shirakami supports api to query status, long tx should wait for the assigned epoch
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(40ms);
     }
+    return resolve(res);
 }
 
 }  // namespace sharksfin::shirakami

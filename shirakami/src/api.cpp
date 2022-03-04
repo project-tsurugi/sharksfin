@@ -129,7 +129,10 @@ StatusCode transaction_exec(
             ++database->transaction_count();
             at_begin = shirakami::Database::clock::now();
         }
-        auto tx = database->create_transaction();
+        std::unique_ptr<shirakami::Transaction> tx{};
+        if(auto res = database->create_transaction(tx); res != StatusCode::OK) {
+            return res;
+        }
         if (database->enable_tracking()) {
             at_process = shirakami::Database::clock::now();
         }
@@ -184,7 +187,10 @@ StatusCode transaction_begin(
         [[maybe_unused]] TransactionOptions const& options,
         TransactionControlHandle *result) {
     auto database = unwrap(handle);
-    auto tx = database->create_transaction(options);
+    std::unique_ptr<shirakami::Transaction> tx{};
+    if(auto res = database->create_transaction(tx, options); res != StatusCode::OK) {
+        return res;
+    }
     *result = wrap_as_control_handle(tx.release());
     return StatusCode::OK;
 }

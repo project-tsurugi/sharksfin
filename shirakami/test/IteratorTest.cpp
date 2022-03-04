@@ -31,7 +31,9 @@ public:
         DatabaseOptions options{};
         options.attribute(KEY_LOCATION, path());
         Database::open(options, &database_);
-        tx_ = std::make_unique<Transaction>(database_.get());
+        std::unique_ptr<Transaction> tx{};
+        Transaction::construct(tx, database_.get(), {});
+        tx_ = std::move(tx);
         database_->create_storage("@", storage_);
     }
 

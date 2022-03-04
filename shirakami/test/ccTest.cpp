@@ -40,7 +40,8 @@ TEST_F(ShirakamiCCTest, simple) {
     Database::open(options, &db);
     std::unique_ptr<Storage> st{};
     db->create_storage("S", st);
-    auto tx = db->create_transaction();
+    std::unique_ptr<Transaction> tx{};
+    ASSERT_EQ(StatusCode::OK, db->create_transaction(tx));
     {
         // prepare data
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
@@ -94,7 +95,8 @@ TEST_F(ShirakamiCCTest, simple) {
     }
     {
         // verify the record is already removed
-        auto tx2 = db->create_transaction();
+        std::unique_ptr<Transaction> tx2{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx2));
         ASSERT_EQ(st->remove(tx2.get(), "a1"), StatusCode::NOT_FOUND);
         ASSERT_EQ(tx2->commit(false), StatusCode::OK);
     }
@@ -134,7 +136,8 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
     {
         std::unique_ptr<Storage> st{};
         ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
-        auto tx = db->create_transaction();
+        std::unique_ptr<Transaction> tx{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx));
         // prepare data
         ASSERT_EQ(st->put(tx.get(), "aA", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->put(tx.get(), "az", "A", PutOperation::CREATE), StatusCode::OK);
@@ -142,7 +145,8 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
     }
     std::size_t retry_error_count = 0;
     auto r1 = std::async(std::launch::async, [&] {
-        auto tx2 = db->create_transaction();
+        std::unique_ptr<Transaction> tx2{};
+        EXPECT_EQ(StatusCode::OK, db->create_transaction(tx2));
         std::unique_ptr<Storage> st{};
         EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         std::size_t row_count = 0;
@@ -171,7 +175,8 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
         return row_count;
     });
     auto r2 = std::async(std::launch::async, [&] {
-        auto tx3 = db->create_transaction();
+        std::unique_ptr<Transaction> tx3{};
+        EXPECT_EQ(StatusCode::OK, db->create_transaction(tx3));
         std::unique_ptr<Storage> st{};
         EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         for (std::size_t i = 0U; i < COUNT; ++i) {
@@ -201,7 +206,8 @@ TEST_F(ShirakamiCCTest, DISABLED_scan_and_delete) {
     {
         std::unique_ptr<Storage> st{};
         ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
-        auto tx = db->create_transaction();
+        std::unique_ptr<Transaction> tx{};
+        EXPECT_EQ(StatusCode::OK, db->create_transaction(tx));
         for (std::size_t i = 0U; i < COUNT; ++i) {
             EXPECT_EQ(st->put(tx.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
@@ -212,7 +218,8 @@ TEST_F(ShirakamiCCTest, DISABLED_scan_and_delete) {
         EXPECT_EQ(tx->commit(false), StatusCode::OK);
     }
     auto r1 = std::async(std::launch::async, [&] {
-        auto tx2 = db->create_transaction();
+        std::unique_ptr<Transaction> tx2{};
+        EXPECT_EQ(StatusCode::OK, db->create_transaction(tx2));
         std::unique_ptr<Storage> st{};
         EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         std::size_t row_count = 0;
@@ -243,7 +250,8 @@ TEST_F(ShirakamiCCTest, DISABLED_scan_and_delete) {
         return row_count;
     });
     auto r2 = std::async(std::launch::async, [&] {
-        auto tx3 = db->create_transaction();
+        std::unique_ptr<Transaction> tx3{};
+        EXPECT_EQ(StatusCode::OK, db->create_transaction(tx3));
         std::unique_ptr<Storage> st{};
         EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         for (std::size_t i = 0U; i < COUNT; ++i) {
@@ -272,12 +280,14 @@ TEST_F(ShirakamiCCTest, get_concurrently) {
         std::unique_ptr<Storage> st{};
         ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
         // prepare data
-        auto tx = db->create_transaction();
+        std::unique_ptr<Transaction> tx{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx));
         ASSERT_EQ(st->put(tx.get(), "aX0", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }
     auto r2 = std::async(std::launch::async, [&] {
-        auto tx3 = db->create_transaction();
+        std::unique_ptr<Transaction> tx3{};
+        EXPECT_EQ(StatusCode::OK, db->create_transaction(tx3));
         std::unique_ptr<Storage> st{};
         EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         for (std::size_t i = 1U; i < COUNT; ++i) {
@@ -292,7 +302,8 @@ TEST_F(ShirakamiCCTest, get_concurrently) {
         return true;
     });
     auto r1 = std::async(std::launch::async, [&] {
-        auto tx2 = db->create_transaction();
+        std::unique_ptr<Transaction> tx2{};
+        EXPECT_EQ(StatusCode::OK, db->create_transaction(tx2));
         std::unique_ptr<Storage> st{};
         EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         std::size_t row_count = 0;
