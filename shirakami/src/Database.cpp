@@ -34,7 +34,7 @@ StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Databa
     return StatusCode::OK;
 }
 
-StatusCode Database::shutdown() {
+StatusCode Database::close() {
     if (enable_tracking()) {
         std::cout << "transaction count: " << transaction_count() << std::endl;
         std::cout << "retry count: " << retry_count() << std::endl;
@@ -226,10 +226,10 @@ StatusCode Database::list_storages(std::unordered_map<std::string, ::shirakami::
 
 Database::~Database() {
     if (active_) {
-        // shutdown should have been called, but ensure it here for safety
+        // close() should have been called, but ensure it here for safety
         // this avoids stopping test after a failure
-        LOG(WARNING) << "Database shutdown implicitly";
-        shutdown();
+        LOG(WARNING) << "Database closed implicitly";
+        close();
     }
 }
 

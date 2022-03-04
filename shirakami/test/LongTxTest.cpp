@@ -42,7 +42,7 @@ TEST_F(ShirakamiLongTxTest, long_tx_build_test) {
     std::unique_ptr<Storage> st{};
     TransactionOptions ops{};
     ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
-    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+    EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
 }  // namespace

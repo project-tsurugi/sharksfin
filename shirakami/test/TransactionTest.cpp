@@ -52,7 +52,7 @@ TEST_F(ShirakamiTransactionTest, empty_tx_option) {
         ASSERT_EQ(st->get(tx.get(), "a", buf), StatusCode::OK);
         EXPECT_EQ(buf, "A");
     }
-    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+    EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
 TEST_F(ShirakamiTransactionTest, readonly) {
@@ -82,7 +82,7 @@ TEST_F(ShirakamiTransactionTest, readonly) {
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();
     }
-    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+    EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
 TEST_F(ShirakamiTransactionTest, long_tx) {
@@ -110,6 +110,6 @@ TEST_F(ShirakamiTransactionTest, long_tx) {
         EXPECT_EQ(buf, "A");
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }
-    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+    EXPECT_EQ(db->close(), StatusCode::OK);
 }
 }  // namespace

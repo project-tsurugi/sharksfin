@@ -57,7 +57,7 @@ StatusCode database_open(
 
 StatusCode database_close(DatabaseHandle handle) {
     auto db = unwrap(handle);
-    return db->shutdown();
+    return db->close();
 }
 
 StatusCode database_dispose(DatabaseHandle handle) {

@@ -70,7 +70,7 @@ public:
     /**
      * @brief shutdown this database.
      */
-    StatusCode shutdown();
+    StatusCode close();
 
     /**
      * @brief creates a new storage space.

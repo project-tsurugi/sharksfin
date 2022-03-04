@@ -37,7 +37,7 @@ public:
         Database::open(options, &db_);
     }
     ~DatabaseHolder() {
-        db_->shutdown();
+        db_->close();
     }
     Database* operator->() {
         return db_.get();

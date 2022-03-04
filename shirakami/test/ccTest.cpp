@@ -121,7 +121,7 @@ TEST_F(ShirakamiCCTest, simple) {
         ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }
-    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+    EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
 TEST_F(ShirakamiCCTest, scan_concurrently) {
@@ -187,7 +187,7 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
     r1.get();
     std::cout << "ERR_ABORT_RETRYABLE returned " << retry_error_count << " times" << std::endl;
     EXPECT_TRUE(r2.get());
-    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+    EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
 // delete requires some time to become effective
@@ -258,7 +258,7 @@ TEST_F(ShirakamiCCTest, DISABLED_scan_and_delete) {
     });
     EXPECT_GE(r1.get(), 2);
     EXPECT_TRUE(r2.get());
-    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+    EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
 TEST_F(ShirakamiCCTest, get_concurrently) {
@@ -316,7 +316,7 @@ TEST_F(ShirakamiCCTest, get_concurrently) {
     });
     EXPECT_GE(r1.get(), 1);
     EXPECT_TRUE(r2.get());
-    EXPECT_EQ(db->shutdown(), StatusCode::OK);
+    EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
 }  // namespace

@@ -37,7 +37,7 @@ public:
 
     void TearDown() override {
         tx_->abort();
-        database_->shutdown();
+        database_->close();
         TestRoot::TearDown();
     }
 
