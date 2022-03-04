@@ -137,9 +137,6 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
     std::string v{};
     auto tx = create_transaction();
     auto res = utils::search_key(*tx, default_storage_->handle(), k, v);
-    if (res == ::shirakami::Status::ERR_PHANTOM) {
-        tx->deactivate();
-    }
     StatusCode rc = resolve(res);
     if (rc != StatusCode::OK) {
         if (rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE) {

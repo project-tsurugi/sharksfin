@@ -29,9 +29,6 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NO
     assert(tx->active());  //NOLINT
     std::string value{};
     auto res = utils::search_key(*tx, handle_, key.to_string_view(), buffer);
-    if (res == ::shirakami::Status::ERR_PHANTOM) {
-        tx->deactivate();
-    }
     return resolve(res);
 }
 

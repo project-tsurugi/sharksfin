@@ -23,9 +23,9 @@
 
 namespace sharksfin::shirakami::utils {
 
-namespace {
+namespace details {
 
-bool abort_if_needed(Transaction& tx, ::shirakami::Status res) {
+inline bool abort_if_needed(Transaction& tx, ::shirakami::Status res) {
     if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
         res == ::shirakami::Status::WARN_CONCURRENT_INSERT ||
         res == ::shirakami::Status::WARN_CONCURRENT_UPDATE) {
@@ -43,7 +43,7 @@ inline ::shirakami::Status search_key(
     const std::string_view key,
     std::string& value) {
     auto res = ::shirakami::search_key(tx.native_handle(), storage, key, value);
-    abort_if_needed(tx, res);
+    details::abort_if_needed(tx, res);
     return res;
 }
 
@@ -52,7 +52,7 @@ inline ::shirakami::Status read_key_from_scan(
     const ::shirakami::ScanHandle handle,
     std::string& key) {
     auto res = ::shirakami::read_key_from_scan(tx.native_handle(), handle, key);
-    abort_if_needed(tx, res);
+    details::abort_if_needed(tx, res);
     return res;
 }
 
@@ -61,7 +61,7 @@ inline ::shirakami::Status read_value_from_scan(
     const ::shirakami::ScanHandle handle,
     std::string& value) {
     auto res = ::shirakami::read_value_from_scan(tx.native_handle(), handle, value);
-    abort_if_needed(tx, res);
+    details::abort_if_needed(tx, res);
     return res;
 }
 
