@@ -18,53 +18,95 @@
 
 #include <memory>
 
-#include "Transaction.h"
+#include "shirakami/scheme.h"
+#include "shirakami/interface.h"
+
 #include "Error.h"
 
-namespace sharksfin::shirakami::utils {
+namespace sharksfin::shirakami {
 
-namespace details {
+using Status = ::shirakami::Status;
+using Token = ::shirakami::Token;
+using ScanHandle = ::shirakami::ScanHandle;
+using scan_endpoint = ::shirakami::scan_endpoint;
 
-inline bool abort_if_needed(Transaction& tx, ::shirakami::Status res) {
-    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE ||
-        res == ::shirakami::Status::WARN_CONCURRENT_INSERT ||
-        res == ::shirakami::Status::WARN_CONCURRENT_UPDATE) {
-        tx.abort();
-        return true;
-    }
-    return false;
-}
+class Transaction;
 
-}
+namespace utils {
 
-inline ::shirakami::Status search_key(
+Status enter(Token& token);
+
+Status leave(Token token);
+
+Status search_key(
     Transaction& tx,
     ::shirakami::Storage storage, // NOLINT
-    const std::string_view key,
-    std::string& value) {
-    auto res = ::shirakami::search_key(tx.native_handle(), storage, key, value);
-    details::abort_if_needed(tx, res);
-    return res;
-}
+    std::string_view key,
+    std::string& value);
 
-inline ::shirakami::Status read_key_from_scan(
+Status open_scan(
+    Token token,
+    ::shirakami::Storage storage,
+    std::string_view l_key, scan_endpoint l_end,
+    std::string_view r_key, scan_endpoint r_end,
+    ScanHandle& handle,
+    std::size_t max_size = 0);
+
+Status read_key_from_scan(
     Transaction& tx,
-    const ::shirakami::ScanHandle handle,
-    std::string& key) {
-    auto res = ::shirakami::read_key_from_scan(tx.native_handle(), handle, key);
-    details::abort_if_needed(tx, res);
-    return res;
-}
+    ScanHandle handle,
+    std::string& key);
 
-inline ::shirakami::Status read_value_from_scan(
+Status read_value_from_scan(
     Transaction& tx,
-    const ::shirakami::ScanHandle handle,
-    std::string& value) {
-    auto res = ::shirakami::read_value_from_scan(tx.native_handle(), handle, value);
-    details::abort_if_needed(tx, res);
-    return res;
-}
+    ScanHandle handle,
+    std::string& value);
 
-}  // namespace sharksfin
+Status next(Token token, ScanHandle handle);
+
+void fin(bool force_shut_down_cpr = true);
+
+Status list_storage(std::vector<::shirakami::Storage>& out);
+
+Status register_storage(::shirakami::Storage& storage);
+
+Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
+
+Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
+
+Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
+
+Status delete_storage(::shirakami::Storage storage);
+
+Status delete_record(Token token, ::shirakami::Storage storage, std::string_view key);
+
+Status init(bool enable_recovery, std::string_view log_directory_path);
+
+Status init(bool enable_recovery);
+
+Status close_scan(Token token, ScanHandle handle);
+
+Status commit(Token token, ::shirakami::commit_param* cp = nullptr);
+
+Status abort(Token token);
+
+Status tx_begin(
+    Token token,
+    bool read_only = false,
+    bool for_batch = false,
+    std::vector<::shirakami::Storage> write_preserve = {});
+
+bool check_commit(Token token, std::uint64_t commit_id);
+
+Status create_sequence(::shirakami::SequenceId* id);
+
+Status update_sequence(Token token, ::shirakami::SequenceId id, ::shirakami::SequenceVersion version, ::shirakami::SequenceValue value);
+
+Status read_sequence(::shirakami::SequenceId id, ::shirakami::SequenceVersion* version, ::shirakami::SequenceValue* value);
+
+Status delete_sequence(::shirakami::SequenceId id);
+
+}  // namespace utils
+}  // namespace sharksfin::shirakami
 
 #endif  // SHARKSFIN_SHIRAKAMI_API_HELPER_H_

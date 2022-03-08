@@ -86,7 +86,7 @@ StatusCode Transaction::commit(bool async) {
         commit_params_ = std::make_unique<::shirakami::commit_param>();
         commit_params_->set_cp(::shirakami::commit_property::WAIT_FOR_COMMIT);
     }
-    auto rc = resolve(::shirakami::commit(session_->id(), commit_params_.get()));
+    auto rc = resolve(utils::commit(session_->id(), commit_params_.get()));
     if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
         is_active_ = false;
     }
@@ -104,7 +104,7 @@ StatusCode Transaction::wait_for_commit(std::size_t timeout_ns) {
     std::size_t left = timeout_ns;
     auto commit_id = commit_params_->get_ctid();
     while(true) {
-        if(::shirakami::check_commit(session_->id(), commit_id)) {
+        if(utils::check_commit(session_->id(), commit_id)) {
             return StatusCode::OK;
         }
         if (left == 0) {
@@ -121,7 +121,7 @@ StatusCode Transaction::abort() {
     if(!is_active_) {
         return StatusCode::OK;
     }
-    auto rc = resolve(::shirakami::abort(session_->id()));
+    auto rc = resolve(utils::abort(session_->id()));
     if (rc != StatusCode::OK) {
         ABORT_MSG("abort should always be successful");
     }
@@ -176,7 +176,7 @@ StatusCode Transaction::declare_begin() {
     for(auto&& e : write_preserves_) {
         storages.emplace_back(e->handle());
     }
-    auto res = ::shirakami::tx_begin(session_->id(), readonly_, is_long_, storages);
+    auto res = utils::tx_begin(session_->id(), readonly_, is_long_, storages);
     if(is_long_) {
         // until shirakami supports api to query status, long tx should wait for the assigned epoch
         using namespace std::chrono_literals;

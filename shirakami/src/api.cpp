@@ -24,6 +24,7 @@
 #include "Error.h"
 #include "handle_utils.h"
 #include "logging.h"
+#include "shirakami_api_helper.h"
 
 namespace sharksfin {
 
@@ -376,7 +377,7 @@ extern "C" StatusCode sequence_create(
     DatabaseHandle handle,
     SequenceId* id) {  //NOLINT
     (void)handle;
-    return shirakami::resolve(::shirakami::create_sequence(id));
+    return shirakami::resolve(shirakami::utils::create_sequence(id));
 }
 
 extern "C" StatusCode sequence_put(

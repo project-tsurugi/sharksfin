@@ -36,11 +36,11 @@ Iterator::Iterator(Storage* owner, Transaction* tx, Slice begin_key, EndPointKin
 
 Iterator::~Iterator() {
     if(handle_open_) {
-        auto rc = ::shirakami::close_scan(tx_->native_handle(), handle_);
-        if(rc == ::shirakami::Status::WARN_INVALID_HANDLE) {
+        auto rc = utils::close_scan(tx_->native_handle(), handle_);
+        if(rc == Status::WARN_INVALID_HANDLE) {
             // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on shirakami
             // we can safely ignore this error since the handle is already released on shirakami side
-        } else if (rc != ::shirakami::Status::OK) {
+        } else if (rc != Status::OK) {
             ABORT();
         }
     }
@@ -70,17 +70,17 @@ bool Iterator::is_valid() const {
 }
 
 // common status code handling for scan functions
-StatusCode Iterator::resolve_scan_errors(::shirakami::Status res) {
-    if (res == ::shirakami::Status::ERR_PHANTOM) {
+StatusCode Iterator::resolve_scan_errors(Status res) {
+    if (res == Status::ERR_PHANTOM) {
         tx_->deactivate();
         is_valid_ = false;
         return StatusCode::ERR_ABORTED_RETRYABLE;
     }
-    if (res == ::shirakami::Status::WARN_CONCURRENT_DELETE || res == ::shirakami::Status::WARN_CONCURRENT_INSERT) {
+    if (res == Status::WARN_CONCURRENT_DELETE || res == Status::WARN_CONCURRENT_INSERT) {
         is_valid_ = false;
         return StatusCode::ERR_ABORTED_RETRYABLE;
     }
-    if (res == ::shirakami::Status::WARN_SCAN_LIMIT) {
+    if (res == Status::WARN_SCAN_LIMIT) {
         state_ = State::SAW_EOF;
         is_valid_ = false;
         return StatusCode::NOT_FOUND;
@@ -103,7 +103,7 @@ StatusCode Iterator::value(Slice& s) {
 }
 
 StatusCode Iterator::next_cursor() {
-    auto res = ::shirakami::next(tx_->native_handle(), handle_);
+    auto res = utils::next(tx_->native_handle(), handle_);
     return resolve_scan_errors(res);
 }
 
@@ -131,8 +131,8 @@ Slice next_neighbor(Slice key) {
 }
 
 StatusCode Iterator::open_cursor() {
-    ::shirakami::scan_endpoint begin_endpoint{::shirakami::scan_endpoint::INF};
-    ::shirakami::scan_endpoint end_endpoint{::shirakami::scan_endpoint::INF};
+    scan_endpoint begin_endpoint{scan_endpoint::INF};
+    scan_endpoint end_endpoint{scan_endpoint::INF};
     is_valid_ = false;
     switch (begin_kind_) {
         case EndPointKind::UNBOUND:
@@ -140,13 +140,13 @@ StatusCode Iterator::open_cursor() {
             break;
         case EndPointKind::PREFIXED_INCLUSIVE:
         case EndPointKind::INCLUSIVE:
-            begin_endpoint = ::shirakami::scan_endpoint::INCLUSIVE;
+            begin_endpoint = scan_endpoint::INCLUSIVE;
             break;
         case EndPointKind::EXCLUSIVE:
-            begin_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;
+            begin_endpoint = scan_endpoint::EXCLUSIVE;
             break;
         case EndPointKind::PREFIXED_EXCLUSIVE:
-            begin_endpoint = ::shirakami::scan_endpoint::INCLUSIVE; // equal or larger than next neighbor
+            begin_endpoint = scan_endpoint::INCLUSIVE; // equal or larger than next neighbor
             auto n = next_neighbor(begin_key_).to_string_view();
             if (n.empty()) {
                 // there is no neighbor - exclude everything
@@ -162,33 +162,33 @@ StatusCode Iterator::open_cursor() {
             assert(end_key_.empty());  //NOLINT
             break;
         case EndPointKind::PREFIXED_INCLUSIVE: {
-            end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
+            end_endpoint = scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
             auto n = next_neighbor(end_key_).to_string_view();
             if (n.empty()) {
                 // there is no neighbor - upper bound is unlimited
                 end_key_.clear();
-                end_endpoint = ::shirakami::scan_endpoint::INF;
+                end_endpoint = scan_endpoint::INF;
             } else {
                 end_key_ = n;
             }
             break;
         }
         case EndPointKind::INCLUSIVE:
-            end_endpoint = ::shirakami::scan_endpoint::INCLUSIVE;
+            end_endpoint = scan_endpoint::INCLUSIVE;
             break;
         case EndPointKind::EXCLUSIVE:
         case EndPointKind::PREFIXED_EXCLUSIVE:
-            end_endpoint = ::shirakami::scan_endpoint::EXCLUSIVE;
+            end_endpoint = scan_endpoint::EXCLUSIVE;
             break;
     }
-    if (auto res = ::shirakami::open_scan(tx_->native_handle(),
+    if (auto res = utils::open_scan(tx_->native_handle(),
             owner_->handle(),
             begin_key_, begin_endpoint,
             end_key_, end_endpoint, handle_);
-        res == ::shirakami::Status::WARN_NOT_FOUND) {
+        res == Status::WARN_NOT_FOUND) {
         state_ = State::SAW_EOF;
         return StatusCode::NOT_FOUND;
-    } else if(res == ::shirakami::Status::WARN_SCAN_LIMIT) {  //NOLINT
+    } else if(res == Status::WARN_SCAN_LIMIT) {  //NOLINT
         VLOG(log_error) << "too many open scan";
         return StatusCode::ERR_UNKNOWN;
     } else {

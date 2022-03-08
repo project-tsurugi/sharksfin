@@ -41,7 +41,7 @@ StatusCode Database::close() {
         std::cout << "transaction process time: " << transaction_process_time().load().count() << std::endl;
         std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
-    ::shirakami::fin(false);
+    utils::fin(false);
     active_ = false;
     return StatusCode::OK;
 }
@@ -62,7 +62,7 @@ static Slice subkey(Slice key) {
 
 void Database::init_default_storage() {
     std::vector<::shirakami::Storage> storages{};
-    if(auto rc = ::shirakami::list_storage(storages);
+    if(auto rc = utils::list_storage(storages);
         rc != Status::WARN_NOT_FOUND && rc != Status::OK) {
         ABORT();
     }
@@ -70,7 +70,7 @@ void Database::init_default_storage() {
     if (! storages.empty()) {
         handle = storages[system_table_index];
     } else {
-        if(auto rc = ::shirakami::register_storage(handle); rc != Status::OK) {
+        if(auto rc = utils::register_storage(handle); rc != Status::OK) {
             ABORT();
         }
     }
@@ -112,7 +112,7 @@ StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result)
     std::string v{};
     qualify_meta(key, k);
     ::shirakami::Storage handle{};
-    if (auto rc = resolve(::shirakami::register_storage(handle)); rc != StatusCode::OK) {
+    if (auto rc = resolve(utils::register_storage(handle)); rc != StatusCode::OK) {
         ABORT();
     }
     v.resize(sizeof(handle));
@@ -121,8 +121,7 @@ StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result)
     if(auto res = create_transaction(tx); res != StatusCode::OK) {
         return res;
     }
-    if (auto rc = resolve(::shirakami::upsert(tx->native_handle(), default_storage_->handle(), k, v));
-        rc != StatusCode::OK) {
+    if (auto rc = resolve(utils::upsert(*tx, default_storage_->handle(), k, v)); rc != StatusCode::OK) {
         ABORT();
     }
     ensure_end_of_transaction(*tx);
@@ -162,7 +161,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
 
 StatusCode Database::delete_storage(Storage &storage) {
     if (! active_) ABORT();
-    auto rc = resolve(::shirakami::delete_storage(storage.handle()));
+    auto rc = resolve(utils::delete_storage(storage.handle()));
     if (rc == StatusCode::ERR_INVALID_ARGUMENT) {
         // when not found, shirakami returns ERR_INVALID_ARGUMENT
         rc = StatusCode::NOT_FOUND;
@@ -177,7 +176,7 @@ StatusCode Database::delete_storage(Storage &storage) {
     if(auto res = create_transaction(tx); res != StatusCode::OK) {
         return res;
     }
-    if (auto rc2 = resolve(::shirakami::delete_record(tx->native_handle(), default_storage_->handle(), k));
+    if (auto rc2 = resolve(utils::delete_record(tx->native_handle(), default_storage_->handle(), k));
         rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
         ABORT();
     }
@@ -247,15 +246,15 @@ Storage& Database::default_storage() const noexcept {
 }
 
 Database::Database() {
-    ::shirakami::init();
+    utils::init(false);
     init_default_storage();
 }
 
 Database::Database(DatabaseOptions const& options) {
     if (auto loc = options.attribute(KEY_LOCATION); loc) {
-        ::shirakami::init(true, *loc);
+        utils::init(true, *loc);
     } else {
-        ::shirakami::init(true);
+        utils::init(true);
     }
     init_default_storage();
 }

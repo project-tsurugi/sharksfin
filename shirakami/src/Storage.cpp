@@ -34,56 +34,20 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NO
 
 StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {//NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
-    StatusCode rc{};
     switch(operation) {
-        case PutOperation::CREATE: {
-            auto res = ::shirakami::insert(tx->native_handle(), handle_, key.to_string_view(),
-                value.to_string_view());
-            if (res == ::shirakami::Status::ERR_PHANTOM) {
-                tx->deactivate();
-            }
-            rc = resolve(res);
-            if (rc != StatusCode::OK &&
-                rc != StatusCode::ALREADY_EXISTS &&
-                rc != StatusCode::ERR_ABORTED_RETRYABLE &&
-                rc != StatusCode::ERR_ILLEGAL_OPERATION // write operation on readonly tx
-            ) {
-                ABORT();
-            }
-            break;
-        }
-        case PutOperation::UPDATE: {
-            rc = resolve(::shirakami::update(tx->native_handle(), handle_,
-                key.to_string_view(), value.to_string_view()));
-            if (rc != StatusCode::OK &&
-                rc != StatusCode::NOT_FOUND &&
-                rc != StatusCode::ERR_ILLEGAL_OPERATION // write operation on readonly tx
-                ) {
-                ABORT();
-            }
-            break;
-        }
+        case PutOperation::CREATE:
+            return resolve(utils::insert(*tx, handle_, key.to_string_view(), value.to_string_view()));
+        case PutOperation::UPDATE:
+            return resolve(utils::update(*tx, handle_, key.to_string_view(), value.to_string_view()));
         case PutOperation::CREATE_OR_UPDATE:
-            auto res = ::shirakami::upsert(tx->native_handle(), handle_,
-                key.to_string_view(), value.to_string_view());
-            rc = resolve(res);
-            if (res == ::shirakami::Status::ERR_PHANTOM) {
-                tx->deactivate();
-                break;
-            }
-            if (rc != StatusCode::OK &&
-                rc != StatusCode::ERR_ILLEGAL_OPERATION // write operation on readonly tx
-                ) {
-                ABORT();
-            }
-            break;
+            return resolve(utils::upsert(*tx, handle_, key.to_string_view(), value.to_string_view()));
     }
-    return rc;
+    ABORT();
 }
 
 StatusCode Storage::remove(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
-    auto rc = resolve(::shirakami::delete_record(tx->native_handle(), handle_, key.to_string_view()));
+    auto rc = resolve(utils::delete_record(tx->native_handle(), handle_, key.to_string_view()));
     if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
         ABORT();
     }

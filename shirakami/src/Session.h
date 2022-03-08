@@ -22,6 +22,7 @@
 #include "shirakami/scheme.h"
 #include "shirakami/interface.h"
 #include "Error.h"
+#include "shirakami_api_helper.h"
 
 namespace sharksfin::shirakami {
 
@@ -31,7 +32,7 @@ namespace sharksfin::shirakami {
 class Session {
 public:
     Session() {
-        if (auto res = ::shirakami::enter(id_); res != ::shirakami::Status::OK) {
+        if (auto res = utils::enter(id_); res != Status::OK) {
             ABORT_MSG("enter should always be successful");
         }
     };
@@ -39,9 +40,9 @@ public:
     Session(Session&& other) = default;
     Session& operator=(Session const& other) = default;
     Session& operator=(Session&& other) = default;
-    explicit Session(::shirakami::Token id) noexcept : id_(id) {}
+    explicit Session(Token id) noexcept : id_(id) {}
     ~Session() noexcept {
-        if (auto res = ::shirakami::leave(id_); res != ::shirakami::Status::OK) {
+        if (auto res = utils::leave(id_); res != Status::OK) {
             ABORT_MSG("leave should always be successful");
         }
     };
