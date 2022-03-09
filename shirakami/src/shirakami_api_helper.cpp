@@ -137,7 +137,8 @@ Status register_storage(::shirakami::Storage& storage) {
 }
 
 Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
-    log_entry << "insert() token:" << tx.native_handle() << " key:" << key << " value:" << val;
+    log_entry <<
+        "insert() token:" << tx.native_handle() << " storage:" << storage << " key:" << key << " value:" << val;
     auto rc = ::shirakami::insert(tx.native_handle(), storage, key, val);
     log_exit << "insert() rc:" << rc;
     if (rc == Status::ERR_PHANTOM) {
@@ -155,7 +156,8 @@ Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
 }
 
 Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
-    log_entry << "update() token:" << tx.native_handle() << " key:" << key << " value:" << val;
+    log_entry
+        << "update() token:" << tx.native_handle() << " storage:" << storage << " key:" << key << " value:" << val;
     auto rc = ::shirakami::update(tx.native_handle(), storage, key, val);
     log_exit << "update() rc:" << rc;
     auto r = resolve(rc);
@@ -169,7 +171,8 @@ Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
 }
 
 Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
-    log_entry << "upsert() token:" << tx.native_handle() << " key:" << key << " value:" << val;
+    log_entry
+        << "upsert() token:" << tx.native_handle() << " storage:" << storage << " key:" << key << " value:" << val;
     auto rc = ::shirakami::upsert(tx.native_handle(), storage, key, val);
     log_exit << "upsert() rc:" << rc;
     auto r = resolve(rc);
