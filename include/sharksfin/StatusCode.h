@@ -108,6 +108,11 @@ enum class StatusCode : std::int64_t {
      * @brief the operation is not valid
      */
     ERR_ILLEGAL_OPERATION = -11,
+
+    /**
+     * @brief the operation conflicted on write preserve
+     */
+    ERR_CONFLICT_ON_WRITE_PRESERVE = -12,
 };
 
 /**
@@ -132,6 +137,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_TIME_OUT: return "ERR_TIME_OUT";
         case StatusCode::ERR_NOT_IMPLEMENTED: return "ERR_NOT_IMPLEMENTED";
         case StatusCode::ERR_ILLEGAL_OPERATION: return "ERR_ILLEGAL_OPERATION";
+        case StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE: return "ERR_CONFLICT_ON_WRITE_PRESERVE";
         default: return "UNDEFINED";
     }
 }

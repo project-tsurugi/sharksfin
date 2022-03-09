@@ -68,20 +68,6 @@ Status search_key(Transaction& tx, ::shirakami::Storage storage, std::string_vie
     return rc;
 }
 
-inline constexpr std::string_view to_string_view(scan_endpoint ep) noexcept {
-    using namespace std::string_view_literals;
-    switch (ep) {
-        case scan_endpoint::EXCLUSIVE: return "EXCLUSIVE"sv;  //NOLINT
-        case scan_endpoint::INCLUSIVE: return "INCLUSIVE"sv;  //NOLINT
-        case scan_endpoint::INF: return "INF"sv;  //NOLINT
-    }
-    std::abort();
-}
-
-inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
-    return out << to_string_view(op);
-}
-
 Status open_scan(Token token, ::shirakami::Storage storage, std::string_view l_key, scan_endpoint l_end,
     std::string_view r_key, scan_endpoint r_end, ScanHandle& handle, std::size_t max_size) {
     log_entry <<

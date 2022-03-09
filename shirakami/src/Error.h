@@ -61,7 +61,9 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_INVALID_HANDLE: return StatusCode::ERR_INVALID_ARGUMENT;
         case Status::WARN_NOT_IN_A_SESSION: return StatusCode::ERR_INVALID_ARGUMENT;
         case Status::WARN_SCAN_LIMIT: break; // WARN_SCAN_LIMIT has multiple meanings, so should not be mapped to a single StatusCode here
+        case Status::WARN_STORAGE_NOT_FOUND: return StatusCode::ERR_INVALID_ARGUMENT;
         case Status::ERR_SESSION_LIMIT: return StatusCode::ERR_INVALID_STATE;
+        case Status::WARN_CONFLICT_ON_WRITE_PRESERVE: return StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE;
     }
     VLOG(log_error) << "Shirakami error : " << result;
     return StatusCode::ERR_UNKNOWN;
