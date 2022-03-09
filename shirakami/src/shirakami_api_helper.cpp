@@ -63,7 +63,7 @@ Status leave(Token token) {
 Status search_key(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string& value) {
     log_entry << "search_key() token:" << tx.native_handle() << " storage:" << storage << " key:" << key;
     auto rc = ::shirakami::search_key(tx.native_handle(), storage, key, value);
-    log_exit << "read_key_from_scan() rc:" << rc << " value:" << value;
+    log_exit << "search_key() rc:" << rc << " value:" << value;
     details::abort_if_needed(tx, rc);
     return rc;
 }
