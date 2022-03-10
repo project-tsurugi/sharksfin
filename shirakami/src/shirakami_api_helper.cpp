@@ -61,7 +61,7 @@ Status leave(Token token) {
     return rc;
 }
 
-#define binstring(arg) " " #arg "(len=" << arg.size() << "):\"" << binary_printer(arg) << "\""
+#define binstring(arg) " " #arg "(len=" << (arg).size() << "):\"" << binary_printer(arg) << "\"" //NOLINT
 
 Status search_key(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string& value) {
     log_entry << "search_key() token:" << tx.native_handle() << " storage:" << storage << binstring(key);
