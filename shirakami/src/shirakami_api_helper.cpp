@@ -19,6 +19,7 @@
 
 #include "Transaction.h"
 #include "Error.h"
+#include "binary_printer.h"
 
 #define log_entry DVLOG(log_trace) << std::boolalpha << "--> "  //NOLINT
 #define log_exit DVLOG(log_trace) << std::boolalpha << "<-- "  //NOLINT
@@ -60,10 +61,12 @@ Status leave(Token token) {
     return rc;
 }
 
+#define binstring(arg) " " #arg "(len=" << arg.size() << "):\"" << binary_printer(arg) << "\""
+
 Status search_key(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string& value) {
-    log_entry << "search_key() token:" << tx.native_handle() << " storage:" << storage << " key:" << key;
+    log_entry << "search_key() token:" << tx.native_handle() << " storage:" << storage << binstring(key);
     auto rc = ::shirakami::search_key(tx.native_handle(), storage, key, value);
-    log_exit << "search_key() rc:" << rc << " value:" << value;
+    log_exit << "search_key() rc:" << rc << binstring(value);
     details::abort_if_needed(tx, rc);
     return rc;
 }
@@ -72,8 +75,8 @@ Status open_scan(Token token, ::shirakami::Storage storage, std::string_view l_k
     std::string_view r_key, scan_endpoint r_end, ScanHandle& handle, std::size_t max_size) {
     log_entry <<
         "open_scan() token:" << token << " storage:" << storage <<
-        " l_key(" << l_end << "):" << l_key <<
-        " r_key(" << r_end << "):" << r_key;
+        binstring(l_key) << " (" << l_end << ")" <<
+        binstring(r_key) << " (" << r_end << ")";
     auto rc = ::shirakami::open_scan(token, storage, l_key, l_end, r_key, r_end, handle, max_size);
     log_exit << "open_scan() rc:" << rc << " handle:" << handle;
     return rc;
@@ -82,7 +85,7 @@ Status open_scan(Token token, ::shirakami::Storage storage, std::string_view l_k
 Status read_key_from_scan(Transaction& tx, ScanHandle handle, std::string& key) {
     log_entry << "read_key_from_scan() token:" << tx.native_handle() << " handle:" << handle;
     auto rc = ::shirakami::read_key_from_scan(tx.native_handle(), handle, key);
-    log_exit << "read_key_from_scan() rc:" << rc << " key:" << key;
+    log_exit << "read_key_from_scan() rc:" << rc << binstring(key);
     details::abort_if_needed(tx, rc);
     return rc;
 }
@@ -90,7 +93,7 @@ Status read_key_from_scan(Transaction& tx, ScanHandle handle, std::string& key) 
 Status read_value_from_scan(Transaction& tx, ScanHandle handle, std::string& value) {
     log_entry << "read_value_from_scan() token:" << tx.native_handle() << " handle:" << handle;
     auto rc = ::shirakami::read_value_from_scan(tx.native_handle(), handle, value);
-    log_exit << "read_value_from_scan() rc:" << rc << " value:" << value;
+    log_exit << "read_value_from_scan() rc:" << rc << binstring(value);
     details::abort_if_needed(tx, rc);
     return rc;
 }
@@ -124,7 +127,7 @@ Status register_storage(::shirakami::Storage& storage) {
 
 Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry <<
-        "insert() token:" << tx.native_handle() << " storage:" << storage << " key:" << key << " value:" << val;
+        "insert() token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
     auto rc = ::shirakami::insert(tx.native_handle(), storage, key, val);
     log_exit << "insert() rc:" << rc;
     if (rc == Status::ERR_PHANTOM) {
@@ -143,7 +146,7 @@ Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
 
 Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry
-        << "update() token:" << tx.native_handle() << " storage:" << storage << " key:" << key << " value:" << val;
+        << "update() token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
     auto rc = ::shirakami::update(tx.native_handle(), storage, key, val);
     log_exit << "update() rc:" << rc;
     auto r = resolve(rc);
@@ -158,7 +161,7 @@ Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
 
 Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry
-        << "upsert() token:" << tx.native_handle() << " storage:" << storage << " key:" << key << " value:" << val;
+        << "upsert() token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
     auto rc = ::shirakami::upsert(tx.native_handle(), storage, key, val);
     log_exit << "upsert() rc:" << rc;
     auto r = resolve(rc);
@@ -182,7 +185,7 @@ Status delete_storage(::shirakami::Storage storage) {
 }
 
 Status delete_record(Token token, ::shirakami::Storage storage, std::string_view key) {
-    log_entry << "delete_record() token:" << token << " storage:" << storage << " key:" << key;
+    log_entry << "delete_record() token:" << token << " storage:" << storage << binstring(key);
     auto rc = ::shirakami::delete_record(token, storage, key);
     log_exit << "delete_record() rc:" << rc;
     return rc;
