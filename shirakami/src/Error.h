@@ -64,6 +64,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_STORAGE_NOT_FOUND: return StatusCode::ERR_INVALID_ARGUMENT;
         case Status::ERR_SESSION_LIMIT: return StatusCode::ERR_INVALID_STATE;
         case Status::WARN_CONFLICT_ON_WRITE_PRESERVE: return StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE;
+        case Status::ERR_CONFLICT_ON_WRITE_PRESERVE: return StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE;
+        case Status::WARN_WAITING_FOR_OTHER_TX: return StatusCode::ERR_WAITING_FOR_OTHER_TX;
     }
     VLOG(log_error) << "Shirakami error : " << result;
     return StatusCode::ERR_UNKNOWN;

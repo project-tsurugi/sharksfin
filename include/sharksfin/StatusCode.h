@@ -113,6 +113,11 @@ enum class StatusCode : std::int64_t {
      * @brief the operation conflicted on write preserve
      */
     ERR_CONFLICT_ON_WRITE_PRESERVE = -12,
+
+    /**
+     * @brief the operation is blocked by other transaction
+     */
+    ERR_WAITING_FOR_OTHER_TX = -13,
 };
 
 /**
@@ -138,6 +143,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_NOT_IMPLEMENTED: return "ERR_NOT_IMPLEMENTED";
         case StatusCode::ERR_ILLEGAL_OPERATION: return "ERR_ILLEGAL_OPERATION";
         case StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE: return "ERR_CONFLICT_ON_WRITE_PRESERVE";
+        case StatusCode::ERR_WAITING_FOR_OTHER_TX: return "ERR_WAITING_FOR_OTHER_TX";
         default: return "UNDEFINED";
     }
 }
