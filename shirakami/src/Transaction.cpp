@@ -180,7 +180,7 @@ StatusCode Transaction::declare_begin() {
     if(is_long_) {
         // until shirakami supports api to query status, long tx should wait for the assigned epoch
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(40ms);
+        std::this_thread::sleep_for(80ms);
     }
     return resolve(res);
 }
