@@ -45,18 +45,25 @@ inline bool abort_if_needed(Transaction& tx, Status res) {
     return false;
 }
 
+Status sanitize_rc(Status rc) {
+    if(rc >= Status::INTERNAL_BEGIN) {
+        ABORT();
+    }
+    return rc;
+}
+
 } // namespace details
 
 Status enter(Token& token) {
     log_entry << "enter()";
-    auto rc = ::shirakami::enter(token);
+    auto rc = details::sanitize_rc(::shirakami::enter(token));
     log_exit << "enter() rc:" << rc << " token:" << token;
     return rc;
 }
 
 Status leave(Token token) {
     log_entry << "leave()";
-    auto rc = ::shirakami::leave(token);
+    auto rc = details::sanitize_rc(::shirakami::leave(token));
     log_exit << "leave() rc:" << rc;
     return rc;
 }
@@ -65,7 +72,7 @@ Status leave(Token token) {
 
 Status search_key(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string& value) {
     log_entry << "search_key() token:" << tx.native_handle() << " storage:" << storage << binstring(key);
-    auto rc = ::shirakami::search_key(tx.native_handle(), storage, key, value);
+    auto rc = details::sanitize_rc(::shirakami::search_key(tx.native_handle(), storage, key, value));
     log_exit << "search_key() rc:" << rc << binstring(value);
     details::abort_if_needed(tx, rc);
     return rc;
@@ -77,14 +84,14 @@ Status open_scan(Token token, ::shirakami::Storage storage, std::string_view l_k
         "open_scan() token:" << token << " storage:" << storage <<
         binstring(l_key) << " (" << l_end << ")" <<
         binstring(r_key) << " (" << r_end << ")";
-    auto rc = ::shirakami::open_scan(token, storage, l_key, l_end, r_key, r_end, handle, max_size);
+    auto rc = details::sanitize_rc(::shirakami::open_scan(token, storage, l_key, l_end, r_key, r_end, handle, max_size));
     log_exit << "open_scan() rc:" << rc << " handle:" << handle;
     return rc;
 }
 
 Status read_key_from_scan(Transaction& tx, ScanHandle handle, std::string& key) {
     log_entry << "read_key_from_scan() token:" << tx.native_handle() << " handle:" << handle;
-    auto rc = ::shirakami::read_key_from_scan(tx.native_handle(), handle, key);
+    auto rc = details::sanitize_rc(::shirakami::read_key_from_scan(tx.native_handle(), handle, key));
     log_exit << "read_key_from_scan() rc:" << rc << binstring(key);
     details::abort_if_needed(tx, rc);
     return rc;
@@ -92,7 +99,7 @@ Status read_key_from_scan(Transaction& tx, ScanHandle handle, std::string& key) 
 
 Status read_value_from_scan(Transaction& tx, ScanHandle handle, std::string& value) {
     log_entry << "read_value_from_scan() token:" << tx.native_handle() << " handle:" << handle;
-    auto rc = ::shirakami::read_value_from_scan(tx.native_handle(), handle, value);
+    auto rc = details::sanitize_rc(::shirakami::read_value_from_scan(tx.native_handle(), handle, value));
     log_exit << "read_value_from_scan() rc:" << rc << binstring(value);
     details::abort_if_needed(tx, rc);
     return rc;
@@ -100,7 +107,7 @@ Status read_value_from_scan(Transaction& tx, ScanHandle handle, std::string& val
 
 Status next(Token token, ScanHandle handle) {
     log_entry << "next() token:" << token << " handle:" << handle;
-    auto rc = ::shirakami::next(token, handle);
+    auto rc = details::sanitize_rc(::shirakami::next(token, handle));
     log_exit << "next() rc:" << rc;
     return rc;
 }
@@ -113,14 +120,14 @@ void fin(bool force_shut_down_cpr) {
 
 Status list_storage(std::vector<::shirakami::Storage>& out) {
     log_entry << "list_storage()";
-    auto rc = ::shirakami::list_storage(out);
+    auto rc = details::sanitize_rc(::shirakami::list_storage(out));
     log_exit << "list_storage() rc:" << rc << " count:" << out.size();
     return rc;
 }
 
 Status register_storage(::shirakami::Storage& storage) {
     log_entry << "register_storage()";
-    auto rc = ::shirakami::register_storage(storage);
+    auto rc = details::sanitize_rc(::shirakami::register_storage(storage));
     log_exit << "register_storage() rc: " << rc << " storage:" << storage;
     return rc;
 }
@@ -128,7 +135,7 @@ Status register_storage(::shirakami::Storage& storage) {
 Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry <<
         "insert() token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
-    auto rc = ::shirakami::insert(tx.native_handle(), storage, key, val);
+    auto rc = details::sanitize_rc(::shirakami::insert(tx.native_handle(), storage, key, val));
     log_exit << "insert() rc:" << rc;
     if (rc == Status::ERR_PHANTOM) {
         tx.deactivate();
@@ -148,7 +155,7 @@ Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
 Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry
         << "update() token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
-    auto rc = ::shirakami::update(tx.native_handle(), storage, key, val);
+    auto rc = details::sanitize_rc(::shirakami::update(tx.native_handle(), storage, key, val));
     log_exit << "update() rc:" << rc;
     auto r = resolve(rc);
     if (r != StatusCode::OK &&
@@ -164,7 +171,7 @@ Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
 Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry
         << "upsert() token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
-    auto rc = ::shirakami::upsert(tx.native_handle(), storage, key, val);
+    auto rc = details::sanitize_rc(::shirakami::upsert(tx.native_handle(), storage, key, val));
     log_exit << "upsert() rc:" << rc;
     auto r = resolve(rc);
     if (rc == Status::ERR_PHANTOM) {
@@ -181,49 +188,49 @@ Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
 
 Status delete_storage(::shirakami::Storage storage) {
     log_entry << "delete_storage() storage:" << storage;
-    auto rc = ::shirakami::delete_storage(storage);
+    auto rc = details::sanitize_rc(::shirakami::delete_storage(storage));
     log_exit << "delete_storage() rc:" << rc;
     return rc;
 }
 
 Status delete_record(Token token, ::shirakami::Storage storage, std::string_view key) {
     log_entry << "delete_record() token:" << token << " storage:" << storage << binstring(key);
-    auto rc = ::shirakami::delete_record(token, storage, key);
+    auto rc = details::sanitize_rc(::shirakami::delete_record(token, storage, key));
     log_exit << "delete_record() rc:" << rc;
     return rc;
 }
 
 Status init(bool enable_recovery) {
     log_entry << "init() enable_recovery:" << enable_recovery;
-    auto rc = ::shirakami::init(enable_recovery);
+    auto rc = details::sanitize_rc(::shirakami::init(enable_recovery));
     log_exit << "init() rc:" << rc;
     return rc;
 }
 
 Status init(bool enable_recovery, std::string_view log_directory_path) {
     log_entry << "init() enable_recovery:" << enable_recovery << " log_directory_path:" << log_directory_path;
-    auto rc = ::shirakami::init(enable_recovery, log_directory_path);
+    auto rc = details::sanitize_rc(::shirakami::init(enable_recovery, log_directory_path));
     log_exit << "init() rc:" << rc;
     return rc;
 }
 
 Status close_scan(Token token, ScanHandle handle) {
     log_entry << "close_scan() token:" << token << " handle:" << handle;
-    auto rc = ::shirakami::close_scan(token, handle);
+    auto rc = details::sanitize_rc(::shirakami::close_scan(token, handle));
     log_exit << "close_scan() rc:" << rc;
     return rc;
 }
 
 Status commit(Token token, ::shirakami::commit_param* cp) {
     log_entry << "commit() token:" << token;
-    auto rc = ::shirakami::commit(token, cp);
+    auto rc = details::sanitize_rc(::shirakami::commit(token, cp));
     log_exit << "commit() rc:" << rc;
     return rc;
 }
 
 Status abort(Token token) {
     log_entry << "abort() token:" << token;
-    auto rc = ::shirakami::abort(token);
+    auto rc = details::sanitize_rc(::shirakami::abort(token));
     log_exit << "abort() rc:" << rc;
     return rc;
 }
@@ -239,14 +246,14 @@ Status tx_begin(Token token, bool read_only, bool for_batch, std::vector<::shira
     log_entry <<
         "tx_begin() token:" << token << " read_only:" << read_only <<
         " for_batch:" << for_batch << " #wp:" << write_preserve.size();
-    auto rc = ::shirakami::tx_begin(token, read_only, for_batch, std::move(write_preserve));
+    auto rc = details::sanitize_rc(::shirakami::tx_begin(token, read_only, for_batch, std::move(write_preserve)));
     log_exit << "tx_begin() rc:" << rc;
     return rc;
 }
 
 Status create_sequence(::shirakami::SequenceId* id) {
     log_entry << "create_sequence() id:" << id;
-    auto rc = ::shirakami::create_sequence(id);
+    auto rc = details::sanitize_rc(::shirakami::create_sequence(id));
     log_exit << "create_sequence() rc:" << rc;
     return rc;
 }
@@ -257,7 +264,7 @@ Status update_sequence(
     ::shirakami::SequenceVersion version,
     ::shirakami::SequenceValue value) {
     log_entry << "update_sequence() token:" << token << " id:" << id << " version:" << version << " value:" << value;
-    auto rc = ::shirakami::update_sequence(token, id, version, value);
+    auto rc = details::sanitize_rc(::shirakami::update_sequence(token, id, version, value));
     log_exit << "update_sequence() rc:" << rc;
     return rc;
 }
@@ -267,14 +274,14 @@ Status read_sequence(
     ::shirakami::SequenceVersion* version,
     ::shirakami::SequenceValue* value) {
     log_entry << "read_sequence() id:" << id;
-    auto rc = ::shirakami::read_sequence(id, version, value);
+    auto rc = details::sanitize_rc(::shirakami::read_sequence(id, version, value));
     log_exit << "read_sequence() rc:" << rc << " version:" << *version << " value:" << *value;
     return rc;
 }
 
 Status delete_sequence(::shirakami::SequenceId id) {
     log_entry << "delete_sequence() id:" << id;
-    auto rc = ::shirakami::delete_sequence(id);
+    auto rc = details::sanitize_rc(::shirakami::delete_sequence(id));
     log_exit << "delete_sequence() rc:" << rc;
     return rc;
 }
