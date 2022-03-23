@@ -69,12 +69,14 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::ERR_SESSION_LIMIT: rc = StatusCode::ERR_INVALID_STATE; break;
         case Status::WARN_CONFLICT_ON_WRITE_PRESERVE: rc = StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE; break;
         case Status::ERR_CONFLICT_ON_WRITE_PRESERVE: rc = StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE; break;
+        case Status::WARN_NOT_BEGIN: rc = StatusCode::ERR_INVALID_STATE; break;
         case Status::WARN_WAITING_FOR_OTHER_TX: rc = StatusCode::ERR_WAITING_FOR_OTHER_TX; break;
 
         // shiarakmi internal errors - they should not be passed to sharksfin
         case Status::INTERNAL_BEGIN:
         case Status::INTERNAL_WARN_CONCURRENT_INSERT:
         case Status::INTERNAL_WARN_NOT_DELETED:
+        case Status::INTERNAL_WARN_NOT_FOUND:
         case Status::INTERNAL_WARN_PREMATURE:
             std::abort();
     }
