@@ -53,44 +53,48 @@ TEST_F(ShirakamiCCTest, simple) {
     {
         // read committed, remove and abort
         tx->reset();
-        auto iter = test_iterator(st->scan(tx.get(),
+        {
+            auto iter = test_iterator(st->scan(tx.get(),
                 "", EndPointKind::PREFIXED_INCLUSIVE,
                 "", EndPointKind::PREFIXED_INCLUSIVE));
 
-        ASSERT_EQ(iter->next(), StatusCode::OK);
-        EXPECT_EQ(iter->key().to_string_view(), "a");
-        EXPECT_EQ(iter->value().to_string_view(), "A");
-        ASSERT_EQ(iter->next(), StatusCode::OK);
-        EXPECT_EQ(iter->key().to_string_view(), "a1");
-        EXPECT_EQ(iter->value().to_string_view(), "A1");
-        ASSERT_EQ(iter->next(), StatusCode::OK);
-        EXPECT_EQ(iter->key().to_string_view(), "d");
-        EXPECT_EQ(iter->value().to_string_view(), "D");
-        ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
+            ASSERT_EQ(iter->next(), StatusCode::OK);
+            EXPECT_EQ(iter->key().to_string_view(), "a");
+            EXPECT_EQ(iter->value().to_string_view(), "A");
+            ASSERT_EQ(iter->next(), StatusCode::OK);
+            EXPECT_EQ(iter->key().to_string_view(), "a1");
+            EXPECT_EQ(iter->value().to_string_view(), "A1");
+            ASSERT_EQ(iter->next(), StatusCode::OK);
+            EXPECT_EQ(iter->key().to_string_view(), "d");
+            EXPECT_EQ(iter->value().to_string_view(), "D");
+            ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
 
-        ASSERT_EQ(st->remove(tx.get(), "a"), StatusCode::OK);
-        ASSERT_EQ(st->remove(tx.get(), "a1"), StatusCode::OK);
-        ASSERT_EQ(st->remove(tx.get(), "d"), StatusCode::OK);
+            ASSERT_EQ(st->remove(tx.get(), "a"), StatusCode::OK);
+            ASSERT_EQ(st->remove(tx.get(), "a1"), StatusCode::OK);
+            ASSERT_EQ(st->remove(tx.get(), "d"), StatusCode::OK);
+        }
         ASSERT_EQ(tx->abort(), StatusCode::OK);
     }
     {
         // read committed, remove and commit
         tx->reset();
-        auto iter = test_iterator(st->scan(tx.get(),
+        {
+            auto iter = test_iterator(st->scan(tx.get(),
                 "a", EndPointKind::PREFIXED_INCLUSIVE,
                 "a", EndPointKind::PREFIXED_INCLUSIVE));
 
-        ASSERT_EQ(iter->next(), StatusCode::OK);
-        EXPECT_EQ(iter->key().to_string_view(), "a");
-        EXPECT_EQ(iter->value().to_string_view(), "A");
-        ASSERT_EQ(iter->next(), StatusCode::OK);
-        EXPECT_EQ(iter->key().to_string_view(), "a1");
-        EXPECT_EQ(iter->value().to_string_view(), "A1");
-        ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
+            ASSERT_EQ(iter->next(), StatusCode::OK);
+            EXPECT_EQ(iter->key().to_string_view(), "a");
+            EXPECT_EQ(iter->value().to_string_view(), "A");
+            ASSERT_EQ(iter->next(), StatusCode::OK);
+            EXPECT_EQ(iter->key().to_string_view(), "a1");
+            EXPECT_EQ(iter->value().to_string_view(), "A1");
+            ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
 
-        ASSERT_EQ(st->remove(tx.get(), "a"), StatusCode::OK);
-        ASSERT_EQ(st->remove(tx.get(), "a1"), StatusCode::OK);
-        ASSERT_EQ(st->remove(tx.get(), "d"), StatusCode::OK);
+            ASSERT_EQ(st->remove(tx.get(), "a"), StatusCode::OK);
+            ASSERT_EQ(st->remove(tx.get(), "a1"), StatusCode::OK);
+            ASSERT_EQ(st->remove(tx.get(), "d"), StatusCode::OK);
+        }
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }
     {
@@ -110,17 +114,19 @@ TEST_F(ShirakamiCCTest, simple) {
     }
     {
         tx->reset();
-        auto iter = test_iterator(st->scan(tx.get(),
+        {
+            auto iter = test_iterator(st->scan(tx.get(),
                 "", EndPointKind::PREFIXED_INCLUSIVE,
                 "", EndPointKind::PREFIXED_INCLUSIVE));
 
-        ASSERT_EQ(iter->next(), StatusCode::OK);
-        EXPECT_EQ(iter->key().to_string_view(), "a");
-        EXPECT_EQ(iter->value().to_string_view(), "A");
-        ASSERT_EQ(iter->next(), StatusCode::OK);
-        EXPECT_EQ(iter->key().to_string_view(), "a/");
-        EXPECT_EQ(iter->value().to_string_view(), "A/");
-        ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
+            ASSERT_EQ(iter->next(), StatusCode::OK);
+            EXPECT_EQ(iter->key().to_string_view(), "a");
+            EXPECT_EQ(iter->value().to_string_view(), "A");
+            ASSERT_EQ(iter->next(), StatusCode::OK);
+            EXPECT_EQ(iter->key().to_string_view(), "a/");
+            EXPECT_EQ(iter->value().to_string_view(), "A/");
+            ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
+        }
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
     }
     EXPECT_EQ(db->close(), StatusCode::OK);
@@ -151,19 +157,21 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
         EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         std::size_t row_count = 0;
         for (std::size_t i = 0U; i < COUNT; ++i) {
-            auto iter = test_iterator(st->scan(tx2.get(),
+            StatusCode rc{};
+            {
+                auto iter = test_iterator(st->scan(tx2.get(),
                     "a", EndPointKind::PREFIXED_INCLUSIVE,
                     "a", EndPointKind::PREFIXED_INCLUSIVE));
-            StatusCode rc{};
-            while((rc = iter->next()) == StatusCode::OK) {
-                Slice s{};
-                if((rc = iter->key(s)) != StatusCode::OK) break;
-                EXPECT_EQ(s.to_string_view().substr(0,1), "a");
-                if((rc = iter->value(s)) != StatusCode::OK) break;
-                EXPECT_EQ(s.to_string_view().substr(0,1), "A");
-                ++row_count;
+                while((rc = iter->next()) == StatusCode::OK) {
+                    Slice s{};
+                    if((rc = iter->key(s)) != StatusCode::OK) break;
+                    EXPECT_EQ(s.to_string_view().substr(0,1), "a");
+                    if((rc = iter->value(s)) != StatusCode::OK) break;
+                    EXPECT_EQ(s.to_string_view().substr(0,1), "A");
+                    ++row_count;
+                }
+                EXPECT_TRUE(rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
             }
-            EXPECT_TRUE(rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
             if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                 ++retry_error_count;
             } else {
@@ -225,19 +233,21 @@ TEST_F(ShirakamiCCTest, DISABLED_scan_and_delete) {
         std::size_t row_count = 0;
         std::size_t retry_error_count = 0;
         for (std::size_t i = 0U; i < COUNT; ++i) {
-            auto iter = test_iterator(st->scan(tx2.get(),
+            StatusCode rc{};
+            {
+                auto iter = test_iterator(st->scan(tx2.get(),
                     "a", EndPointKind::PREFIXED_INCLUSIVE,
                     "a", EndPointKind::PREFIXED_INCLUSIVE));
-            StatusCode rc{};
-            while((rc = iter->next()) == StatusCode::OK) {
-                Slice s{};
-                if((rc = iter->key(s)) != StatusCode::OK) break;
-                EXPECT_EQ(s.to_string_view().substr(0,1), "a");
-                if((rc = iter->value(s)) != StatusCode::OK) break;
-                EXPECT_EQ(s.to_string_view().substr(0,1), "A");
-                ++row_count;
+                while((rc = iter->next()) == StatusCode::OK) {
+                    Slice s{};
+                    if((rc = iter->key(s)) != StatusCode::OK) break;
+                    EXPECT_EQ(s.to_string_view().substr(0,1), "a");
+                    if((rc = iter->value(s)) != StatusCode::OK) break;
+                    EXPECT_EQ(s.to_string_view().substr(0,1), "A");
+                    ++row_count;
+                }
+                EXPECT_TRUE(rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
             }
-            EXPECT_TRUE(rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
             if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                 ++retry_error_count;
             } else {

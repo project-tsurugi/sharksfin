@@ -196,33 +196,35 @@ StatusCode Database::list_storages(std::unordered_map<std::string, ::shirakami::
     if(auto res = create_transaction(tx); res != StatusCode::OK) {
         return res;
     }
-    auto iter = default_storage_->scan(tx.get(),
-        "", EndPointKind::UNBOUND,
-        "", EndPointKind::UNBOUND);
-    ::shirakami::Storage handle{};
-    StatusCode res{};
-    while((res = iter->next()) == StatusCode::OK) {
-        Slice v{};
-        if((res = iter->value(v)) != StatusCode::OK) {
-            break;
+    {    // iterator should be closed before commit
+        auto iter = default_storage_->scan(tx.get(),
+            "", EndPointKind::UNBOUND,
+            "", EndPointKind::UNBOUND);
+        ::shirakami::Storage handle{};
+        StatusCode res{};
+        while((res = iter->next()) == StatusCode::OK) {
+            Slice v{};
+            if((res = iter->value(v)) != StatusCode::OK) {
+                break;
+            }
+            assert(v.size() == sizeof(handle)); //NOLINT
+            std::memcpy(&handle, v.data(), v.size());
+            Slice k{};
+            if((res = iter->key(k)) != StatusCode::OK) {
+                break;
+            }
+            out.emplace(
+                subkey(k).to_string_view(),
+                handle
+            );
         }
-        assert(v.size() == sizeof(handle)); //NOLINT
-        std::memcpy(&handle, v.data(), v.size());
-        Slice k{};
-        if((res = iter->key(k)) != StatusCode::OK) {
-            break;
+        if (res != StatusCode::NOT_FOUND) {
+            if (res == StatusCode::ERR_ABORTED_RETRYABLE) {
+                tx->deactivate();
+                return StatusCode::ERR_ABORTED_RETRYABLE;
+            }
+            ABORT();
         }
-        out.emplace(
-            subkey(k).to_string_view(),
-            handle
-        );
-    }
-    if (res != StatusCode::NOT_FOUND) {
-        if (res == StatusCode::ERR_ABORTED_RETRYABLE) {
-            tx->deactivate();
-            return StatusCode::ERR_ABORTED_RETRYABLE;
-        }
-        ABORT();
     }
     auto res2 = tx->commit(false);
     if (res2 != StatusCode::OK) {
