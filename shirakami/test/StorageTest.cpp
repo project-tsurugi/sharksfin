@@ -194,6 +194,9 @@ TEST_F(ShirakamiStorageTest, put_operations_uncommitted) {
 }
 
 TEST_F(ShirakamiStorageTest, remove) {
+    if (BUILD_WP) {  //TODO
+        GTEST_SKIP() << "wp build does not yet support remove";
+    }
     DatabaseHolder db{path()};
     {
         std::unique_ptr<Storage> st{};

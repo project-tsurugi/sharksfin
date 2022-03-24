@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if(BUILD_SHIRAKAMI_WP)
+    add_definitions(-DBUILD_SHIRAKAMI_WP)
+endif()
+
 add_subdirectory(src)
 if(BUILD_TESTS)
     add_subdirectory(test)

@@ -1483,6 +1483,9 @@ TEST_F(ShirakamiApiTest, readonly_transaction) {
 }
 
 TEST_F(ShirakamiApiTest, sequence) {
+    if (BUILD_WP) {  //TODO
+        GTEST_SKIP() << "wp build does not yet support sequence";
+    }
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;

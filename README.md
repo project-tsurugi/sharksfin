@@ -47,6 +47,7 @@ available options:
 * `-DBUILD_TESTS=OFF` - never build test programs
 * `-DBUILD_MEMORY=OFF` - never build API in-memory implementation
 * `-DBUILD_SHIRAKAMI=OFF` - never build shirakami bridge
+* `-DBUILD_SHIRAKAMI_WP=ON` - (temporary) enables building with shirakami build with BUILD_WP=ON/BUILD_CPR=OFF. Use with BUILD_SHIRAKAMI=ON.
 * `-DBUILD_EXAMPLES=OFF` - never build example programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
 * `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths

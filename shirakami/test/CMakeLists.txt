@@ -16,9 +16,21 @@ if(NOT TARGET Boost::filesystem)
     message(FATAL_ERROR "Boost::filesystem was not installed, please configure with -DBUILD_SHIRAKAMI=OFF or -DBUILD_TESTS=OFF to skip")
 endif()
 
-file(GLOB TEST_SOURCES
-    "*.cpp"
+list(APPEND TEST_SOURCES
+        "ApiTest.cpp"
+        "ccTest.cpp"
+        "DatabaseTest.cpp"
+        "IteratorTest.cpp"
+        "LongTxTest.cpp"
+        "StorageTest.cpp"
+        "TransactionTest.cpp"
 )
+
+if(NOT BUILD_SHIRAKAMI_WP)
+    list(APPEND TEST_SOURCES
+            "RecoveryTest.cpp"  # recovery not supported by shiarakami WP build
+            )
+endif()
 
 register_tests(
     TARGET shirakami

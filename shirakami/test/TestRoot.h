@@ -27,6 +27,12 @@
 #include "Transaction.h"
 #include "TemporaryFolder.h"
 
+#ifdef BUILD_SHIRAKAMI_WP
+static constexpr bool BUILD_WP = true;
+#else
+static constexpr bool BUILD_WP = false;
+#endif
+
 namespace sharksfin::shirakami {
 
 class DatabaseHolder {
