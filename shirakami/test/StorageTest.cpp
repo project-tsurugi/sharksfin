@@ -194,9 +194,6 @@ TEST_F(ShirakamiStorageTest, put_operations_uncommitted) {
 }
 
 TEST_F(ShirakamiStorageTest, remove) {
-    if (BUILD_WP) {  //TODO
-        GTEST_SKIP() << "wp build does not yet support remove";
-    }
     DatabaseHolder db{path()};
     {
         std::unique_ptr<Storage> st{};
@@ -211,6 +208,7 @@ TEST_F(ShirakamiStorageTest, remove) {
 
         ASSERT_EQ(st->remove(tx, "K"), StatusCode::OK);
         ASSERT_EQ(tx->commit(true), StatusCode::OK);
+        wait_epochs(2);
         ASSERT_EQ(StatusCode::OK, tx->wait_for_commit(2000*1000*1000));
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::NOT_FOUND);
