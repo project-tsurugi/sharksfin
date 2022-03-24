@@ -48,7 +48,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
 StatusCode Storage::remove(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
     auto rc = resolve(utils::delete_record(tx->native_handle(), handle_, key.to_string_view()));
-    if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND) {
+    if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND && rc != StatusCode::ERR_WRITE_WITHOUT_WP) {
         ABORT();
     }
     return rc;
