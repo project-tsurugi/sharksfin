@@ -44,7 +44,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_PREMATURE: rc = StatusCode::ERR_INVALID_STATE; break;
         case Status::ERR_FATAL: rc = StatusCode::ERR_UNKNOWN; break;
         case Status::ERR_NOT_IMPLEMENTED: rc = StatusCode::ERR_NOT_IMPLEMENTED; break;
-        case Status::ERR_FAIL_WP: rc = StatusCode::ERR_IO_ERROR; break;
+        case Status::ERR_FAIL_WP: rc = StatusCode::ERR_ABORTED; break;
         case Status::ERR_VALIDATION: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::ERR_PHANTOM: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_READ_FROM_OWN_OPERATION: rc = StatusCode::OK; break;
