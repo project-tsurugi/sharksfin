@@ -32,8 +32,8 @@ TEST_F(TransactionStateTest, defaults) {
 }
 
 TEST_F(TransactionStateTest, construct) {
-    TransactionState state{Kind::WAITING_FINISH};
-    EXPECT_EQ(state.state_kind(), Kind::WAITING_FINISH);
+    TransactionState state{Kind::WAITING_COMMIT};
+    EXPECT_EQ(state.state_kind(), Kind::WAITING_COMMIT);
 }
 
 TEST_F(TransactionStateTest, copy) {

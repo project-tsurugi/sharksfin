@@ -320,6 +320,20 @@ StatusCode transaction_dispose(
     TransactionControlHandle handle);
 
 /**
+ * @brief query if a content on the target key exists.
+ * @param transaction the current transaction handle
+ * @param storage the target storage
+ * @param key the content key
+ * @return Status::OK if the target content exists
+ * @return Status::NOT_FOUND if the target content does not exist
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode content_check(
+    TransactionHandle transaction,
+    StorageHandle storage,
+    Slice key);
+
+/**
  * @brief obtains a content on the target key.
  * The result is available only if the returned status was Status::OK.
  * The returned slice will be disposed after calling other API functions.

@@ -50,16 +50,29 @@ public:
         STARTED,
 
         /**
-         * @brief transaction is going to finish but not yet completed
-         * @details the transaction is finishing and no further operations are permitted
-         */
-        WAITING_FINISH,
+         * @brief transaction needs to wait for commit as it cannot execute validation due to other transactions
+          */
+        WAITING_COMMIT,
 
         /**
-         * @brief transaction is finished
-         * @details the transaction finished completely
+         * @brief transaction can be committed immediately
          */
-        FINISHED
+        COMMITTABLE,
+
+        /**
+         * @brief the transaction was aborted
+         */
+        ABORTED,
+
+        /**
+          * @brief commit validation completed and is waiting for the log to be durable
+          */
+        WAITING_DURABLE,
+
+        /**
+          * @brief the log became durable
+          */
+        DURABLE
     };
 
     /**
@@ -125,8 +138,11 @@ inline constexpr std::string_view to_string_view(TransactionState::StateKind val
         case StateKind::UNKNOWN: return "UNKNOWN";
         case StateKind::WAITING_START: return "WAITING_START";
         case StateKind::STARTED: return "STARTED";
-        case StateKind::WAITING_FINISH: return "WAITING_FINISH";
-        case StateKind::FINISHED: return "FINISHED";
+        case StateKind::WAITING_COMMIT: return "WAITING_COMMIT";
+        case StateKind::COMMITTABLE: return "COMMITTABLE";
+        case StateKind::ABORTED: return "ABORTED";
+        case StateKind::WAITING_DURABLE: return "WAITING_DURABLE";
+        case StateKind::DURABLE: return "DURABLE";
         default: return "UNDEFINED";
     }
 }

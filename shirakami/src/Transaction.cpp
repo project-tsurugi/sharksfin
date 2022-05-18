@@ -168,12 +168,17 @@ bool Transaction::is_long() const noexcept {
     return type_ == TransactionOptions::TransactionType::LONG;
 }
 
-TransactionState Transaction::check_state() const noexcept {
-    // TODO implement
-    if (is_active_) {
-        return TransactionState{TransactionState::StateKind::STARTED};
+TransactionState Transaction::check_state() {
+    if(state_handle_ == ::shirakami::undefined_handle) {
+        if(auto res = ::shirakami::acquire_tx_state_handle(session_->id(), state_handle_); res != ::shirakami::Status::OK) {
+            std::abort();
+        }
     }
-    return TransactionState{TransactionState::StateKind::FINISHED};
+    ::shirakami::TxState state{};
+    if(auto res = ::shirakami::tx_check(state_handle_, state); res != ::shirakami::Status::OK) {
+        std::abort();
+    }
+    return from(state);
 }
 
 TX_TYPE from(TransactionOptions::TransactionType type) {

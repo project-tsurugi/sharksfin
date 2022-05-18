@@ -20,6 +20,7 @@
 #include <chrono>
 #include "glog/logging.h"
 #include "shirakami/interface.h"
+#include "shirakami/transaction_state.h"
 
 #include "sharksfin/api.h"
 #include "sharksfin/StatusCode.h"
@@ -140,7 +141,7 @@ public:
      * @brief return the state of the transaction
      * @return object holding transaction's state
      */
-    TransactionState check_state() const noexcept;
+    TransactionState check_state();
 
 private:
     Database* owner_{};
@@ -150,6 +151,7 @@ private:
     TransactionOptions::TransactionType type_{};
     std::unique_ptr<::shirakami::commit_param> commit_params_{};
     std::vector<Storage*> write_preserves_{};
+    ::shirakami::TxStateHandle state_handle_{::shirakami::undefined_handle};
 
     Transaction(
         Database* owner,
@@ -163,6 +165,23 @@ private:
     );
 
     StatusCode declare_begin();
+
+    inline TransactionState from(::shirakami::TxState st) {
+        using Kind = TransactionState::StateKind;
+        using k = ::shirakami::TxState::StateKind;
+        switch(st.state_kind()) {
+            case k::UNKNOWN: return TransactionState{Kind::UNKNOWN};
+            case k::WAITING_START: return TransactionState{Kind::WAITING_START};
+            case k::STARTED: return TransactionState{Kind::UNKNOWN};
+            case k::WAITING_CC_COMMIT: return TransactionState{Kind::UNKNOWN};
+            case k::COMMITTABLE: return TransactionState{Kind::UNKNOWN};
+            case k::ABORTED: return TransactionState{Kind::UNKNOWN};
+            case k::WAITING_DURABLE: return TransactionState{Kind::UNKNOWN};
+            case k::DURABLE: return TransactionState{Kind::UNKNOWN};
+        }
+        std::abort();
+    }
+
 };
 
 }  // namespace sharksfin::shirakami
