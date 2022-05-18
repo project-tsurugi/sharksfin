@@ -172,12 +172,12 @@ private:
         switch(st.state_kind()) {
             case k::UNKNOWN: return TransactionState{Kind::UNKNOWN};
             case k::WAITING_START: return TransactionState{Kind::WAITING_START};
-            case k::STARTED: return TransactionState{Kind::UNKNOWN};
-            case k::WAITING_CC_COMMIT: return TransactionState{Kind::UNKNOWN};
-            case k::COMMITTABLE: return TransactionState{Kind::UNKNOWN};
-            case k::ABORTED: return TransactionState{Kind::UNKNOWN};
-            case k::WAITING_DURABLE: return TransactionState{Kind::UNKNOWN};
-            case k::DURABLE: return TransactionState{Kind::UNKNOWN};
+            case k::STARTED: return TransactionState{Kind::STARTED};
+            case k::WAITING_CC_COMMIT: return TransactionState{Kind::WAITING_COMMIT};
+            case k::COMMITTABLE: return TransactionState{Kind::COMMITTABLE};
+            case k::ABORTED: return TransactionState{Kind::ABORTED};
+            case k::WAITING_DURABLE: return TransactionState{Kind::WAITING_DURABLE};
+            case k::DURABLE: return TransactionState{Kind::DURABLE};
         }
         std::abort();
     }

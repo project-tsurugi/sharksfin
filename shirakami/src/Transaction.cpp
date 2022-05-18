@@ -77,6 +77,11 @@ Transaction::~Transaction() noexcept {
         VLOG(log_warning) << "aborting a transaction implicitly";
         abort();
     }
+    if(state_handle_ != ::shirakami::undefined_handle) {
+        if(auto res = ::shirakami::release_tx_state_handle(state_handle_); res != ::shirakami::Status::OK) {
+            std::abort();
+        }
+    }
 }
 
 StatusCode Transaction::commit(bool async) {

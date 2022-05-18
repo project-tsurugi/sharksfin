@@ -117,4 +117,33 @@ TEST_F(ShirakamiTransactionTest, long_tx) {
     }
     EXPECT_EQ(db->close(), StatusCode::OK);
 }
+
+TEST_F(ShirakamiTransactionTest, check_tx_status) {
+    std::unique_ptr<Database> db{};
+    DatabaseOptions options{};
+    options.attribute(KEY_LOCATION, path());
+    Database::open(options, &db);
+    std::unique_ptr<Storage> st{};
+    {
+        // prepare storage
+        ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);
+    }
+    {
+        TransactionOptions ops{
+            TransactionOptions::TransactionType::LONG,
+            {
+                wrap(st.get()),
+            }
+        };
+        std::unique_ptr<Transaction> tx{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
+        ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
+        auto s = tx->check_state();
+        ASSERT_EQ(TransactionState::StateKind::COMMITTABLE, s.state_kind());
+        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        s = tx->check_state();
+        ASSERT_EQ(TransactionState::StateKind::DURABLE, s.state_kind());
+    }
+    EXPECT_EQ(db->close(), StatusCode::OK);
+}
 }  // namespace
