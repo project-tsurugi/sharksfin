@@ -69,6 +69,14 @@ Status leave(Token token) {
 
 #define binstring(arg) " " #arg "(len=" << (arg).size() << "):\"" << binary_printer(arg) << "\"" //NOLINT
 
+Status exist_key(Transaction& tx, ::shirakami::Storage storage, std::string_view key) {
+    log_entry << "exist_key() token:" << tx.native_handle() << " storage:" << storage << binstring(key);
+    auto rc = details::sanitize_rc(::shirakami::exist_key(tx.native_handle(), storage, key));
+    log_exit << "exist_key() rc:" << rc;
+    details::abort_if_needed(tx, rc);
+    return rc;
+}
+
 Status search_key(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string& value) {
     log_entry << "search_key() token:" << tx.native_handle() << " storage:" << storage << binstring(key);
     auto rc = details::sanitize_rc(::shirakami::search_key(tx.native_handle(), storage, key, value));

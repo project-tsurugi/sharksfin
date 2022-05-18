@@ -59,6 +59,16 @@ public:
     }
 
     /**
+     * @brief check an entry for the given key exists
+     * @param tx the transaction where the operation is executed
+     * @param key the entry key
+     * @return StatusCode::OK if the entry is found
+     * @return StatusCode::NOT_FOUND if the entry is not found
+     * @return StatusCode::ERR_ABORTED_RETRYABLE when shirakami reads uncommitted record
+     */
+    StatusCode check(Transaction* tx, Slice key);
+
+    /**
      * @brief obtains an entry and write its value into the given buffer.
      * @param tx the transaction where the operation is executed
      * @param key the entry key

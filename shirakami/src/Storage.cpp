@@ -25,6 +25,13 @@
 
 namespace sharksfin::shirakami {
 
+StatusCode Storage::check(Transaction* tx, Slice key) {
+    assert(tx->active());  //NOLINT
+    std::string value{};
+    auto res = utils::exist_key(*tx, handle_, key.to_string_view());
+    return resolve(res);
+}
+
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NOLINT(readability-make-member-function-const)
     assert(tx->active());  //NOLINT
     std::string value{};

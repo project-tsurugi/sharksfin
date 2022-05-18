@@ -39,6 +39,11 @@ Status enter(Token& token);
 
 Status leave(Token token);
 
+Status exist_key(
+    Transaction& tx,
+    ::shirakami::Storage storage,
+    std::string_view key);
+
 Status search_key(
     Transaction& tx,
     ::shirakami::Storage storage, // NOLINT

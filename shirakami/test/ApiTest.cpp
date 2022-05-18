@@ -623,6 +623,14 @@ TEST_F(ShirakamiApiTest, contents) {
             }
             return TransactionOperation::COMMIT;
         }
+        static TransactionOperation check_miss(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_check(tx, st, "a") != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
         static TransactionOperation put_create(TransactionHandle tx, void* args) {
             auto st = extract<S>(args);
             if (content_put(tx, st, "a", "A", PutOperation::CREATE) != StatusCode::OK) {
@@ -648,6 +656,14 @@ TEST_F(ShirakamiApiTest, contents) {
             }
             return TransactionOperation::COMMIT;
         }
+        static TransactionOperation check_exists(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_check(tx, st, "a") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
         static TransactionOperation delete_exists(TransactionHandle tx, void* args) {
             auto st = extract<S>(args);
             if (content_delete(tx, st, "a") != StatusCode::OK) {
@@ -669,13 +685,16 @@ TEST_F(ShirakamiApiTest, contents) {
     HandleHolder sth { s.st };
 
     EXPECT_EQ(transaction_exec(db, {}, &S::get_miss, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::check_miss, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::delete_miss, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::put_create, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::put_update, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::get_exists, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::check_exists, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::delete_exists, &s), StatusCode::OK);
     wait_epochs();
     EXPECT_EQ(transaction_exec(db, {}, &S::get_miss, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::check_miss, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 

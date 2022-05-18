@@ -232,6 +232,22 @@ StatusCode transaction_check(
     return StatusCode::OK;
 }
 
+StatusCode content_check(
+    TransactionHandle transaction,
+    StorageHandle storage,
+    Slice key) {
+    auto tx = unwrap(transaction);
+    auto st = unwrap(storage);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto buffer = st->get(key);
+    if (buffer) {
+        return StatusCode::OK;
+    }
+    return StatusCode::NOT_FOUND;
+}
+
 StatusCode content_get(
         TransactionHandle transaction,
         StorageHandle storage,

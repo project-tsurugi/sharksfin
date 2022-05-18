@@ -243,6 +243,19 @@ StatusCode transaction_check(
     return StatusCode::OK;
 }
 
+StatusCode content_check(
+    TransactionHandle transaction,
+    StorageHandle storage,
+    Slice key) {
+    auto tx = unwrap(transaction);
+    auto stg = unwrap(storage);
+    auto db = tx->owner();
+    if (!db) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    return stg->check(tx, key);
+}
+
 StatusCode content_get(
         TransactionHandle transaction,
         StorageHandle storage,
