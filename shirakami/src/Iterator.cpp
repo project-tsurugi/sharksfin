@@ -76,7 +76,7 @@ StatusCode Iterator::resolve_scan_errors(Status res) {
         is_valid_ = false;
         return StatusCode::ERR_ABORTED_RETRYABLE;
     }
-    if (res == Status::WARN_CONCURRENT_DELETE || res == Status::WARN_CONCURRENT_INSERT) {
+    if (res == Status::WARN_CONCURRENT_INSERT) {
         is_valid_ = false;
         return StatusCode::ERR_ABORTED_RETRYABLE;
     }

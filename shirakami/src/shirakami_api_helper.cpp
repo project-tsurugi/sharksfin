@@ -36,8 +36,7 @@ namespace utils {
 namespace details {
 
 inline bool abort_if_needed(Transaction& tx, Status res) {
-    if (res == Status::WARN_CONCURRENT_DELETE ||
-        res == Status::WARN_CONCURRENT_INSERT ||
+    if (res == Status::WARN_CONCURRENT_INSERT ||
         res == Status::WARN_CONCURRENT_UPDATE) {
         tx.abort();
         return true;

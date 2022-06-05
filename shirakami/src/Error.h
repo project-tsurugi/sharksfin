@@ -55,7 +55,6 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_WRITE_TO_LOCAL_WRITE: rc = StatusCode::OK; break;
         case Status::WARN_INVARIANT: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
         case Status::ERR_WRITE_TO_DELETED_RECORD: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
-        case Status::WARN_CONCURRENT_DELETE: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_CONCURRENT_INSERT: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_CONCURRENT_UPDATE: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_ILLEGAL_OPERATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; break;
