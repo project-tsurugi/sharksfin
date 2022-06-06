@@ -378,7 +378,7 @@ TEST_F(ShirakamiApiTest, storage_delete) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-// WIP investigating
+// with shirakami, transaction doesn't wait but (early) aborts. OCC error and retry is tested in other testcase below.
 TEST_F(ShirakamiApiTest, DISABLED_transaction_wait) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
@@ -443,6 +443,93 @@ TEST_F(ShirakamiApiTest, DISABLED_transaction_wait) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+// with shirakami, transaction doesn't wait, so instead of transaction_wait(), here is the new test for occ aborts .
+TEST_F(ShirakamiApiTest, transaction_retry) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            std::int8_t v = 0;
+            if (content_put(tx, st, "k", { &v, sizeof(v) }) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation run(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (auto rc = content_get(tx, st, "k", &s); rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+                return TransactionOperation::RETRY;
+            } else if (rc != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            std::int8_t v = static_cast<std::int8_t>(*s.data<std::int8_t>() + 1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            if (auto rc = content_put(tx, st, "k", { &v, sizeof(v) }); rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+                return TransactionOperation::RETRY;
+            } else if (rc != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation validate(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_get(tx, st, "k", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (*s.data<std::int8_t>() != 10) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    ASSERT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+
+    std::atomic_size_t success_count_0{0};
+    auto r1 = std::async(std::launch::async, [&] {
+        for (std::size_t i = 0U; i < 1000U; ++i) {  // assuming eventually successful with many retries
+            if (auto rc = transaction_exec(db, {}, &S::run, &s); rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+                continue;
+            } else if (rc != StatusCode::OK) {
+                return rc;
+            }
+            ++success_count_0;
+            if (success_count_0 == 5) {
+                return StatusCode::OK;
+            }
+        }
+        return StatusCode::ERR_UNKNOWN;
+    });
+
+    std::atomic_size_t success_count_1{0};
+    for (std::size_t i = 0U; i < 1000U; ++i) {
+        auto rc = transaction_exec(db, {}, &S::run, &s);
+        if(rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+            continue;
+        }
+        ASSERT_EQ(rc, StatusCode::OK);
+
+        ++success_count_1;
+        if (success_count_1 == 5) {
+            break;
+        }
+    }
+    EXPECT_EQ(r1.get(), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::validate, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
 TEST_F(ShirakamiApiTest, transaction_failed) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
