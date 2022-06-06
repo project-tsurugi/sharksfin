@@ -378,7 +378,8 @@ TEST_F(ShirakamiApiTest, storage_delete) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-TEST_F(ShirakamiApiTest, transaction_wait) {
+// WIP investigating
+TEST_F(ShirakamiApiTest, DISABLED_transaction_wait) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
 
