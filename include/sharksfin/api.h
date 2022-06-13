@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <iostream>
 #include <type_traits>
+#include <any>
 
 #include "DatabaseOptions.h"
 #include "Slice.h"
@@ -631,6 +632,19 @@ extern "C" StatusCode sequence_delete(
  */
 extern "C" StatusCode implementation_id(
     Slice* name);
+
+/**
+ * @brief accessor for the datastore implementation
+ * @details this function is to retrieve datastore reference held by the cc engine
+ * @param result [OUT] any to hold pointer to the datastore instance. The result is available only when the return
+ * code is StatusCode::OK.
+ * @return StatusCode::OK if the call is successful
+ * @return StatusCode::NOT_FOUND if the datastore is not initialized or not available
+ * @return StatusCode::ERR_UNSUPPORTED if the cc engine implementation doesn't support datastore
+ */
+StatusCode implementation_get_datastore(
+    DatabaseHandle handle,
+    std::any* result);
 
 }  // namespace sharksfin
 

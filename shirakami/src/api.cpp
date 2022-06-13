@@ -421,4 +421,15 @@ extern "C" StatusCode implementation_id(
     return StatusCode::OK;
 }
 
+StatusCode implementation_get_datastore(
+    DatabaseHandle,
+    std::any* result) {
+    auto p = ::shirakami::get_datastore();
+    if(p) {
+        *result = p;
+        return StatusCode::OK;
+    }
+    return StatusCode::NOT_FOUND;
+}
+
 }  // namespace sharksfin

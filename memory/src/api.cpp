@@ -453,4 +453,10 @@ extern "C" StatusCode implementation_id(
     return StatusCode::OK;
 }
 
+StatusCode implementation_get_datastore(
+    DatabaseHandle,
+    std::any*) {
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
 }  // namespace sharksfin
