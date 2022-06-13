@@ -157,8 +157,9 @@ inline constexpr std::string_view to_string_view(TransactionOptions::Transaction
     switch (value) {
         case TransactionOptions::TransactionType::SHORT: return "SHORT";
         case TransactionOptions::TransactionType::LONG: return "LONG";
-        default: abort();
+        case TransactionOptions::TransactionType::READ_ONLY: return "READ_ONLY";
     }
+    std::abort();
 }
 
 /**
