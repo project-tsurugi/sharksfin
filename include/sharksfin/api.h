@@ -636,6 +636,7 @@ extern "C" StatusCode implementation_id(
 /**
  * @brief accessor for the datastore implementation
  * @details this function is to retrieve datastore reference held by the cc engine
+ * @param handle the database handle where the datastore is held
  * @param result [OUT] any to hold pointer to the datastore instance. The result is available only when the return
  * code is StatusCode::OK.
  * @return StatusCode::OK if the call is successful
