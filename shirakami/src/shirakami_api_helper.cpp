@@ -244,11 +244,11 @@ bool check_commit(Token token, std::uint64_t commit_id) {
     return rc;
 }
 
-Status tx_begin(Token token, bool read_only, bool for_batch, std::vector<::shirakami::Storage> write_preserve) {
+Status tx_begin(Token token, TX_TYPE tx_type, std::vector<::shirakami::Storage> write_preserve) {
     log_entry <<
-        "tx_begin() token:" << token << " read_only:" << read_only <<
-        " for_batch:" << for_batch << " #wp:" << write_preserve.size();
-    auto rc = details::sanitize_rc(::shirakami::tx_begin(token, read_only, for_batch, std::move(write_preserve)));
+        "tx_begin() token:" << token << " tx_type:" << tx_type <<
+        " #wp:" << write_preserve.size();
+    auto rc = details::sanitize_rc(::shirakami::tx_begin(token, tx_type, std::move(write_preserve)));
     log_exit << "tx_begin() rc:" << rc;
     return rc;
 }

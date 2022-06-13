@@ -29,6 +29,7 @@ using Status = ::shirakami::Status;
 using Token = ::shirakami::Token;
 using ScanHandle = ::shirakami::ScanHandle;
 using scan_endpoint = ::shirakami::scan_endpoint;
+using TX_TYPE = ::shirakami::TX_TYPE;
 
 class Transaction;
 
@@ -92,8 +93,7 @@ Status abort(Token token);
 
 Status tx_begin(
     Token token,
-    bool read_only = false,
-    bool for_batch = false,
+    TX_TYPE tx_type = TX_TYPE::SHORT,
     std::vector<::shirakami::Storage> write_preserve = {});
 
 bool check_commit(Token token, std::uint64_t commit_id);

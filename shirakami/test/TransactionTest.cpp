@@ -56,7 +56,8 @@ TEST_F(ShirakamiTransactionTest, empty_tx_option) {
     EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
-TEST_F(ShirakamiTransactionTest, readonly) {
+// shirakami not yet implement readonly tx
+TEST_F(ShirakamiTransactionTest, DISABLED_readonly) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());

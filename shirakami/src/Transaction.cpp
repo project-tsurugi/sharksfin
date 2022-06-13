@@ -40,11 +40,14 @@ StatusCode Transaction::construct(
     return tx->declare_begin();
 }
 
-Transaction::Transaction(Database* owner, bool readonly, bool is_long, std::vector<Storage*> write_preserves) :
+Transaction::Transaction(
+    Database* owner,
+    TransactionOptions::TransactionType type,
+    std::vector<Storage*> write_preserves
+) :
     owner_(owner),
     session_(std::make_unique<Session>()),
-    readonly_(readonly),
-    is_long_(is_long),
+    type_(type),
     write_preserves_(std::move(write_preserves))
 {
     buffer_.reserve(default_buffer_size); // This automatically expands.
@@ -63,8 +66,7 @@ std::vector<Storage*> create_storages(TransactionOptions::WritePreserves const& 
 Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
     Transaction(
         owner,
-        opts.transaction_type() == TransactionOptions::TransactionType::READ_ONLY,
-        opts.transaction_type() == TransactionOptions::TransactionType::LONG,
+        opts.transaction_type(),
         create_storages(opts.write_preserves())
     )
 {}
@@ -159,7 +161,11 @@ void Transaction::deactivate() noexcept {
 }
 
 bool Transaction::readonly() const noexcept {
-    return readonly_;
+    return type_ == TransactionOptions::TransactionType::READ_ONLY;
+}
+
+bool Transaction::is_long() const noexcept {
+    return type_ == TransactionOptions::TransactionType::LONG;
 }
 
 TransactionState Transaction::check_state() const noexcept {
@@ -170,14 +176,23 @@ TransactionState Transaction::check_state() const noexcept {
     return TransactionState{TransactionState::StateKind::FINISHED};
 }
 
+TX_TYPE from(TransactionOptions::TransactionType type) {
+    switch(type) {
+        case TransactionOptions::TransactionType::SHORT: return TX_TYPE::SHORT;
+        case TransactionOptions::TransactionType::LONG: return TX_TYPE::LONG;
+        case TransactionOptions::TransactionType::READ_ONLY: return TX_TYPE::READ_ONLY;
+    }
+    std::abort();
+}
+
 StatusCode Transaction::declare_begin() {
     std::vector<::shirakami::Storage> storages{};
     storages.reserve(write_preserves_.size());
     for(auto&& e : write_preserves_) {
         storages.emplace_back(e->handle());
     }
-    auto res = utils::tx_begin(session_->id(), readonly_, is_long_, storages);
-    if(is_long_) {
+    auto res = utils::tx_begin(session_->id(), from(type_), storages);
+    if(is_long()) {
         // until shirakami supports api to query status, long tx should wait for the assigned epoch
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(80ms);

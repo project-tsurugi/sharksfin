@@ -130,6 +130,13 @@ public:
     bool readonly() const noexcept;
 
     /**
+     * @brief return whether the transaction is long
+     * @return true if the transaction is long
+     * @return false otherwise
+     */
+    bool is_long() const noexcept;
+
+    /**
      * @brief return the state of the transaction
      * @return object holding transaction's state
      */
@@ -140,15 +147,13 @@ private:
     std::unique_ptr<Session> session_{};
     std::string buffer_{};
     bool is_active_{true};
-    bool readonly_{false};
+    TransactionOptions::TransactionType type_{};
     std::unique_ptr<::shirakami::commit_param> commit_params_{};
-    bool is_long_{false};
     std::vector<Storage*> write_preserves_{};
 
     Transaction(
         Database* owner,
-        bool readonly = false,
-        bool is_long = false,
+        TransactionOptions::TransactionType type,
         std::vector<Storage*> write_preserves = {}
     );
 
