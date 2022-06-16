@@ -328,7 +328,7 @@ StatusCode transaction_dispose(
  * @return Status::NOT_FOUND if the target content does not exist
  * @return otherwise if error was occurred
  */
-extern "C" StatusCode content_check(
+extern "C" StatusCode content_check_exist(
     TransactionHandle transaction,
     StorageHandle storage,
     Slice key);

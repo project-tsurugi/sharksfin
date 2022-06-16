@@ -243,7 +243,7 @@ StatusCode transaction_check(
     return StatusCode::OK;
 }
 
-StatusCode content_check(
+StatusCode content_check_exist(
     TransactionHandle transaction,
     StorageHandle storage,
     Slice key) {

@@ -626,7 +626,7 @@ TEST_F(ShirakamiApiTest, contents) {
         static TransactionOperation check_miss(TransactionHandle tx, void* args) {
             auto st = extract<S>(args);
             Slice s;
-            if (content_check(tx, st, "a") != StatusCode::NOT_FOUND) {
+            if (content_check_exist(tx, st, "a") != StatusCode::NOT_FOUND) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
@@ -659,7 +659,7 @@ TEST_F(ShirakamiApiTest, contents) {
         static TransactionOperation check_exists(TransactionHandle tx, void* args) {
             auto st = extract<S>(args);
             Slice s;
-            if (content_check(tx, st, "a") != StatusCode::OK) {
+            if (content_check_exist(tx, st, "a") != StatusCode::OK) {
                 return TransactionOperation::ERROR;
             }
             return TransactionOperation::COMMIT;
