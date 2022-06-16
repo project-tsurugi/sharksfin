@@ -166,14 +166,14 @@ private:
 
     StatusCode declare_begin();
 
-    inline TransactionState from(::shirakami::TxState st) {
+    inline TransactionState from_state(::shirakami::TxState st) {
         using Kind = TransactionState::StateKind;
         using k = ::shirakami::TxState::StateKind;
         switch(st.state_kind()) {
             case k::UNKNOWN: return TransactionState{Kind::UNKNOWN};
             case k::WAITING_START: return TransactionState{Kind::WAITING_START};
             case k::STARTED: return TransactionState{Kind::STARTED};
-            case k::WAITING_CC_COMMIT: return TransactionState{Kind::WAITING_COMMIT};
+            case k::WAITING_CC_COMMIT: return TransactionState{Kind::WAITING_CC_COMMIT};
             case k::COMMITTABLE: return TransactionState{Kind::COMMITTABLE};
             case k::ABORTED: return TransactionState{Kind::ABORTED};
             case k::WAITING_DURABLE: return TransactionState{Kind::WAITING_DURABLE};

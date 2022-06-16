@@ -183,7 +183,7 @@ TransactionState Transaction::check_state() {
     if(auto res = ::shirakami::tx_check(state_handle_, state); res != ::shirakami::Status::OK) {
         std::abort();
     }
-    return from(state);
+    return from_state(state);
 }
 
 TX_TYPE from(TransactionOptions::TransactionType type) {

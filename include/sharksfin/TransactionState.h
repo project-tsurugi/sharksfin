@@ -50,28 +50,31 @@ public:
         STARTED,
 
         /**
-         * @brief transaction needs to wait for commit as it cannot execute validation due to other transactions
-          */
-        WAITING_COMMIT,
+         * @brief commit of the transaction needs to wait
+         * @details the transaction is not ready for commit request and will reject it
+         */
+        WAITING_CC_COMMIT,
 
         /**
-         * @brief transaction can be committed immediately
+         * @brief transaction is ready to commit
+         * @details the transaction is ready for commit request
          */
         COMMITTABLE,
 
         /**
-         * @brief the transaction was aborted
+         * @brief transaction has been aborted
+         * @details the transaction is aborted
          */
         ABORTED,
 
         /**
-          * @brief commit validation completed and is waiting for the log to be durable
-          */
+         * @brief transaction is not yet durable and waiting for it
+         */
         WAITING_DURABLE,
 
         /**
-          * @brief the log became durable
-          */
+         * @brief transaction became durable
+         */
         DURABLE
     };
 
@@ -138,13 +141,13 @@ inline constexpr std::string_view to_string_view(TransactionState::StateKind val
         case StateKind::UNKNOWN: return "UNKNOWN";
         case StateKind::WAITING_START: return "WAITING_START";
         case StateKind::STARTED: return "STARTED";
-        case StateKind::WAITING_COMMIT: return "WAITING_COMMIT";
+        case StateKind::WAITING_CC_COMMIT: return "WAITING_CC_COMMIT";
         case StateKind::COMMITTABLE: return "COMMITTABLE";
         case StateKind::ABORTED: return "ABORTED";
         case StateKind::WAITING_DURABLE: return "WAITING_DURABLE";
         case StateKind::DURABLE: return "DURABLE";
-        default: return "UNDEFINED";
     }
+    std::abort();
 }
 
 /**
