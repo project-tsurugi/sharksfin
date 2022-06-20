@@ -34,7 +34,6 @@ inline StatusCode resolve(::shirakami::Status const& result) {
     StatusCode rc{StatusCode::ERR_UNKNOWN};
     switch(result) {
         case Status::OK: rc = StatusCode::OK; break;
-        case Status::ERR_CPR_ORDER_VIOLATION: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_NOT_FOUND: rc = StatusCode::NOT_FOUND; break;
         case Status::WARN_ALREADY_EXISTS: rc = StatusCode::ALREADY_EXISTS; break;
         case Status::WARN_ALREADY_BEGIN: rc = StatusCode::ERR_INVALID_STATE; break;
