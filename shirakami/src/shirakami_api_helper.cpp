@@ -296,5 +296,26 @@ Status delete_sequence(::shirakami::SequenceId id) {
     return rc;
 }
 
+Status acquire_tx_state_handle(Token token, ::shirakami::TxStateHandle& handle) {
+    log_entry << "acquire_tx_state_handle() token:" << token;
+    auto rc = details::sanitize_rc(::shirakami::acquire_tx_state_handle(token, handle));
+    log_exit << "acquire_tx_state_handle() rc:" << rc << " handle:" << handle;
+    return rc;
+}
+
+Status release_tx_state_handle(::shirakami::TxStateHandle handle) {
+    log_entry << "release_tx_state_handle() handle:" << handle;
+    auto rc = details::sanitize_rc(::shirakami::release_tx_state_handle(handle));
+    log_exit << "release_tx_state_handle() rc:" << rc;
+    return rc;
+}
+
+Status tx_check(::shirakami::TxStateHandle handle, ::shirakami::TxState& out) {
+    log_entry << "tx_check() handle:" << handle;
+    auto rc = details::sanitize_rc(::shirakami::tx_check(handle, out));
+    log_exit << "tx_check() rc:" << rc << " out:" << out;
+    return rc;
+}
+
 }  // namespace utils
 }  // namespace sharksfin::shirakami

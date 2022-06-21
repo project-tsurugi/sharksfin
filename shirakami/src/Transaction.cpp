@@ -18,9 +18,9 @@
 #include <thread>
 #include <chrono>
 #include "glog/logging.h"
-#include "shirakami/interface.h"
 
 #include "sharksfin/api.h"
+#include "shirakami_api_helper.h"
 #include "Database.h"
 #include "Session.h"
 #include "Storage.h"
@@ -78,7 +78,7 @@ Transaction::~Transaction() noexcept {
         abort();
     }
     if(state_handle_ != ::shirakami::undefined_handle) {
-        if(auto res = ::shirakami::release_tx_state_handle(state_handle_); res != ::shirakami::Status::OK) {
+        if(auto res = utils::release_tx_state_handle(state_handle_); res != ::shirakami::Status::OK) {
             std::abort();
         }
     }
@@ -175,12 +175,12 @@ bool Transaction::is_long() const noexcept {
 
 TransactionState Transaction::check_state() {
     if(state_handle_ == ::shirakami::undefined_handle) {
-        if(auto res = ::shirakami::acquire_tx_state_handle(session_->id(), state_handle_); res != ::shirakami::Status::OK) {
+        if(auto res = utils::acquire_tx_state_handle(session_->id(), state_handle_); res != ::shirakami::Status::OK) {
             std::abort();
         }
     }
     ::shirakami::TxState state{};
-    if(auto res = ::shirakami::tx_check(state_handle_, state); res != ::shirakami::Status::OK) {
+    if(auto res = utils::tx_check(state_handle_, state); res != ::shirakami::Status::OK) {
         std::abort();
     }
     return from_state(state);
