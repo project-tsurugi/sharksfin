@@ -202,11 +202,6 @@ StatusCode Transaction::declare_begin() {
         storages.emplace_back(e->handle());
     }
     auto res = utils::tx_begin(session_->id(), from(type_), storages);
-    if(is_long()) {
-        // until shirakami supports api to query status, long tx should wait for the assigned epoch
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(80ms);
-    }
     return resolve(res);
 }
 
