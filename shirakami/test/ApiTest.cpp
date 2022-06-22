@@ -1641,6 +1641,7 @@ TEST_F(ShirakamiApiTest, long_transaction) {
             if (auto c = transaction_begin(db, { TransactionOptions::TransactionType::LONG, { s.st } }, &tch.get()); c != StatusCode::OK) {
                 return false;
             }
+            wait_epochs(1); // wait for LTX to become ready
             TransactionHandle tx{};
             if (auto c = transaction_borrow_handle(tch.get(), &tx); c != StatusCode::OK) {
                 return false;

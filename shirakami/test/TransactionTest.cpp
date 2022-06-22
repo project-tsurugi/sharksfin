@@ -25,6 +25,7 @@
 namespace sharksfin::shirakami {
 
 using namespace std::string_literals;
+using namespace std::chrono_literals;
 
 static constexpr std::string_view TESTING { "test" }; // around 8 chars cause delete_record crash
 
@@ -108,9 +109,15 @@ TEST_F(ShirakamiTransactionTest, long_tx) {
         };
         std::unique_ptr<Transaction> tx{};
         ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
+        while(tx->check_state().state_kind() == TransactionState::StateKind::WAITING_START) {
+            std::this_thread::sleep_for(1ms);
+        }
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         tx->reset();
+        while(tx->check_state().state_kind() == TransactionState::StateKind::WAITING_START) {
+            std::this_thread::sleep_for(1ms);
+        }
         ASSERT_EQ(st->get(tx.get(), "a", buf), StatusCode::OK);
         EXPECT_EQ(buf, "A");
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
@@ -137,6 +144,9 @@ TEST_F(ShirakamiTransactionTest, check_tx_status) {
         };
         std::unique_ptr<Transaction> tx{};
         ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
+        while(tx->check_state().state_kind() == TransactionState::StateKind::WAITING_START) {
+            std::this_thread::sleep_for(1ms);
+        }
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
         auto s = tx->check_state();
         ASSERT_EQ(TransactionState::StateKind::STARTED, s.state_kind());

@@ -71,17 +71,21 @@ Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
     )
 {}
 
+void release_tx_handle(::shirakami::TxStateHandle& state_handle) {
+    if(state_handle != ::shirakami::undefined_handle) {
+        if(auto res = utils::release_tx_state_handle(state_handle); res != ::shirakami::Status::OK) {
+            std::abort();
+        }
+        state_handle = ::shirakami::undefined_handle;
+    }
+}
 Transaction::~Transaction() noexcept {
     if (is_active_) {
         // usually this implies usage error
         VLOG(log_warning) << "aborting a transaction implicitly";
         abort();
     }
-    if(state_handle_ != ::shirakami::undefined_handle) {
-        if(auto res = utils::release_tx_state_handle(state_handle_); res != ::shirakami::Status::OK) {
-            std::abort();
-        }
-    }
+    release_tx_handle(state_handle_);
 }
 
 StatusCode Transaction::commit(bool async) {
@@ -152,6 +156,7 @@ void Transaction::reset() {
     if(is_active_) {
         ABORT();
     }
+    release_tx_handle(state_handle_);
     is_active_ = true;
     commit_params_.reset();
     declare_begin();
