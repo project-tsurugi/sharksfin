@@ -41,6 +41,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_INVALID_ARGS: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
         case Status::WARN_NOT_INIT: rc = StatusCode::ERR_INVALID_STATE; break;
         case Status::WARN_PREMATURE: rc = StatusCode::ERR_INVALID_STATE; break;
+        case Status::ERR_FAIL_INSERT: rc = StatusCode::ERR_ABORTED; break;
         case Status::ERR_FATAL: rc = StatusCode::ERR_UNKNOWN; break;
         case Status::ERR_FATAL_INDEX: rc = StatusCode::ERR_UNKNOWN; break;
         case Status::ERR_NOT_IMPLEMENTED: rc = StatusCode::ERR_NOT_IMPLEMENTED; break;
