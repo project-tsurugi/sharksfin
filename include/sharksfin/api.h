@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <iostream>
 #include <type_traits>
+#include <functional>
 #include <any>
 
 #include "DatabaseOptions.h"
@@ -27,6 +28,7 @@
 #include "TransactionOperation.h"
 #include "TransactionOptions.h"
 #include "TransactionState.h"
+#include "LogRecordIterator.h"
 
 /**
  * @brief sharksfin interface definition
@@ -99,6 +101,14 @@ using IteratorHandle = std::add_pointer_t<IteratorStub>;
 using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionHandle, void*)>;
 
 /**
+ * @brief log event callback function type.
+ * @details callback invoked on logging event on cc engine or datastore. The callback arguments are
+ *   - the log worker number (0-origin index)
+ *   - the log record iterator to iterate the logged records
+ */
+using LogEventCallback = std::function<void(std::size_t, LogRecordIterator&)>;
+
+/**
  * @brief opens a database and returns its handle.
  * The created handle must be disposed by database_dispose().
  * @param options the target database options
@@ -128,6 +138,18 @@ StatusCode database_close(
  */
 StatusCode database_dispose(
     DatabaseHandle handle);
+
+/**
+ * @brief set logging event callback
+ * @details register the callback invoked on the logging event (cc engine or datastore defines event timing)
+ * @param handle the database handle
+ * @param callback the callback to be invoked whose arguments are log worker number and iterator for log records
+ * @return StatusCode::OK if the call is successful
+ * @return StatusCode::ERR_UNSUPPORTED if the cc engine implementation doesn't support datastore
+ */
+StatusCode database_set_logging_callback(
+    DatabaseHandle handle,
+    LogEventCallback callback);
 
 /**
  * @brief creates a new storage space onto the target database.
