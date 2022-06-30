@@ -28,6 +28,7 @@
 #include "TransactionOperation.h"
 #include "TransactionOptions.h"
 #include "TransactionState.h"
+#include "StorageOptions.h"
 #include "LogRecordIterator.h"
 
 /**
@@ -166,6 +167,24 @@ extern "C" StatusCode storage_create(
         DatabaseHandle handle,
         Slice key,
         StorageHandle *result);
+
+/**
+ * @brief creates a new storage space onto the target database with storage options
+ * The specified slice can be disposed after this operation.
+ * The created handle must be disposed by storage_dispose().
+ * @param handle the target database
+ * @param key the storage key
+ * @param options the options to customize storage setting
+ * @param result [OUT] the output target of storage handle, and it is available only if StatusCode::OK was returned
+ * @return StatusCode::OK if the target storage was successfully created
+ * @return StatusCode::ALREADY_EXISTS if the target storage already exists on the target database
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode storage_create_with_options(
+    DatabaseHandle handle,
+    Slice key,
+    StorageOptions const& options,
+    StorageHandle *result);
 
 /**
  * @brief obtains the registered storage on the database.
