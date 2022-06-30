@@ -164,10 +164,10 @@ StatusCode database_set_logging_callback(
  * @return StatusCode::ALREADY_EXISTS if the target storage already exists on the target database
  * @return otherwise if error was occurred
  */
-extern "C" StatusCode storage_create(
-        DatabaseHandle handle,
-        Slice key,
-        StorageHandle *result);
+StatusCode storage_create(
+    DatabaseHandle handle,
+    Slice key,
+    StorageHandle *result);
 
 /**
  * @brief creates a new storage space onto the target database with storage options
@@ -181,7 +181,7 @@ extern "C" StatusCode storage_create(
  * @return StatusCode::ALREADY_EXISTS if the target storage already exists on the target database
  * @return otherwise if error was occurred
  */
-extern "C" StatusCode storage_create_with_options(
+StatusCode storage_create(
     DatabaseHandle handle,
     Slice key,
     StorageOptions const& options,
@@ -209,8 +209,8 @@ extern "C" StatusCode storage_get(
  * @return StatusCode::OK if the target storage space was successfully deleted
  * @return otherwise if error was occurred
  */
-extern "C" StatusCode storage_delete(
-        StorageHandle handle);
+StatusCode storage_delete(
+    StorageHandle handle);
 
 /**
  * @brief disposes storage handles.
