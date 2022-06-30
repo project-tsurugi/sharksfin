@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_LOG_RECORD_ITERATOR_H_
-#define SHARKSFIN_LOG_RECORD_ITERATOR_H_
+#ifndef SHARKSFIN_LOG_RECORD_H_
+#define SHARKSFIN_LOG_RECORD_H_
 
 #include <cstdint>
-#include <iostream>
-#include <type_traits>
-#include <functional>
-#include <any>
+#include <cstdlib>
 #include <string_view>
 #include <memory>
+#include <ostream>
 
-#include "DatabaseOptions.h"
-#include "Slice.h"
-#include "StatusCode.h"
-#include "TransactionOperation.h"
-#include "TransactionOptions.h"
-#include "TransactionState.h"
+#include "StorageOptions.h"
 
 namespace sharksfin {
 
@@ -65,108 +58,106 @@ inline std::ostream& operator<<(std::ostream& out, LogOperation value) {
     return out << to_string_view(value);
 }
 
-class LogRecordIterator {
+/**
+ * @brief Log record entry
+ * @details This object represents a log record entry that is collected and shipped to OLAP.
+ * This class is intended to trivially copyable type and implementation provides compatible class and they can be
+ * used interchangeably by memcpy or reinterpret_cast.
+ */
+class LogRecord {
 
 public:
-    /**
-     * @brief implementation
-     */
-    class impl;
+    using storage_id_type = StorageOptions::storage_id_type;
 
     /**
      * @brief create empty object
      */
-    LogRecordIterator();
+    LogRecord() = default;
 
     /**
      * @brief destruct object
      */
-    ~LogRecordIterator();
+    ~LogRecord() = default;
 
     /**
      * @brief copy constructor
      */
-    LogRecordIterator(LogRecordIterator const& other);
+    LogRecord(LogRecord const& other) = default;
 
     /**
      * @brief copy assignment
      */
-    LogRecordIterator& operator=(LogRecordIterator const& other);
+    LogRecord& operator=(LogRecord const& other) = default;
 
     /**
      * @brief move constructor
      */
-    LogRecordIterator(LogRecordIterator&& other) noexcept;
+    LogRecord(LogRecord&& other) noexcept = default;
 
     /**
      * @brief move assignment
      */
-    LogRecordIterator& operator=(LogRecordIterator&& other) noexcept;
-
-    /**
-     * @brief create new object from impl object
-     */
-    LogRecordIterator(std::unique_ptr<impl> impl);
-
-    /**
-     * @brief move iterator to next entry
-     * @details this call advances the current iterator entry to next position, and make properties of the next record
-     * avaialbe by way of accessor methods below. Iterator is constructed with initial position undefined, so this
-     * call must be called before accessing record properties.
-     * @return StatusCode::OK if successful
-     * @return StatusCode::NOT_FOUND if the entry reaches its end and no entry is found
-     * @return any other error otherwise
-     */
-    StatusCode next();
+    LogRecord& operator=(LogRecord&& other) noexcept = default;
 
     /**
      * @brief accessor to the key data
      * @return string view referencing the key data
-     * @pre next() has been called beforehand with result StatusCode::OK
      */
-    std::string_view key();
-
+    [[nodiscard]] std::string_view key() const noexcept {
+        return key_;
+    }
 
     /**
      * @brief accessor to the value data
      * @return string view referencing the value data
-     * @pre next() has been called beforehand with result StatusCode::OK
      */
-    std::string_view value();
-
-    /**
-     * @brief accessor to the operation type code
-     * @return the operation type of this log entry
-     * @pre next() has been called beforehand with result StatusCode::OK
-     */
-    LogOperation operation();
+    [[nodiscard]] std::string_view value() const noexcept {
+        return value_;
+    }
 
     /**
      * @brief accessor to the major version
      * @return the major version number of this log entry
-     * @pre next() has been called beforehand with result StatusCode::OK
      */
-    std::uint64_t major_version();
+    [[nodiscard]] std::uint64_t major_version() const noexcept {
+        return major_version_;
+    }
 
     /**
      * @brief accessor to the minor version
      * @return the minor version number of this log entry
-     * @pre next() has been called beforehand with result StatusCode::OK
      */
-    std::uint64_t minor_version();
+    [[nodiscard]] std::uint64_t minor_version() const noexcept {
+        return minor_version_;
+    }
 
     /**
-     * @brief accessor to the storage
-     * @return the storage handle where current log entry was made
-     * @pre next() has been called beforehand with result StatusCode::OK
+     * @brief accessor to the storage id
+     * @return the storage id where the log record was made
      */
-    StorageHandle storage();
+    [[nodiscard]] storage_id_type storage_id() const noexcept {
+        return storage_id_;
+    }
+
+    /**
+     * @brief accessor to the operation type code
+     * @return the operation type of this log record
+     */
+    [[nodiscard]] LogOperation operation() const noexcept {
+        return operation_;
+    }
 
 private:
-    std::unique_ptr<impl> impl_{};
-    friend impl;
+    std::string_view key_{};
+    std::string_view value_{};
+    std::uint64_t major_version_{};
+    std::uint64_t minor_version_{};
+    storage_id_type storage_id_{};
+    LogOperation operation_{};
 };
+
+static_assert(std::is_trivially_copyable_v<LogRecord>);
 
 }  // namespace sharksfin
 
-#endif  // SHARKSFIN_LOG_RECORD_ITERATOR_H_
+#endif  // SHARKSFIN_LOG_RECORD_H_

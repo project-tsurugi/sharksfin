@@ -29,7 +29,7 @@
 #include "TransactionOptions.h"
 #include "TransactionState.h"
 #include "StorageOptions.h"
-#include "LogRecordIterator.h"
+#include "LogRecord.h"
 
 /**
  * @brief sharksfin interface definition
@@ -105,9 +105,10 @@ using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionH
  * @brief log event callback function type.
  * @details callback invoked on logging event on cc engine or datastore. The callback arguments are
  *   - the log worker number (0-origin index)
- *   - the log record iterator to iterate the logged records
+ *   - the log record begin pointer to iterate all the logged records
+ *   - the log record end pointer to detect end position of the logged records
  */
-using LogEventCallback = std::function<void(std::size_t, LogRecordIterator&)>;
+using LogEventCallback = std::function<void(std::size_t, LogRecord*, LogRecord*)>;
 
 /**
  * @brief opens a database and returns its handle.
