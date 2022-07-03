@@ -48,10 +48,10 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::ERR_FAIL_WP: rc = StatusCode::ERR_ABORTED; break;
         case Status::ERR_VALIDATION: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::ERR_PHANTOM: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
-        case Status::WARN_READ_FROM_OWN_OPERATION: rc = StatusCode::OK; break;
         case Status::WARN_ALREADY_DELETE: rc = StatusCode::NOT_FOUND; break;
         case Status::WARN_CANCEL_PREVIOUS_INSERT: rc = StatusCode::OK; break;
         case Status::WARN_CANCEL_PREVIOUS_UPDATE: rc = StatusCode::OK; break;
+        case Status::WARN_CANCEL_PREVIOUS_UPSERT: rc = StatusCode::OK; break;
         case Status::WARN_WRITE_TO_LOCAL_WRITE: rc = StatusCode::OK; break;
         case Status::ERR_WRITE_TO_DELETED_RECORD: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_CONCURRENT_INSERT: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
