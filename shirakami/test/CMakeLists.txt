@@ -22,15 +22,10 @@ list(APPEND TEST_SOURCES
         "DatabaseTest.cpp"
         "IteratorTest.cpp"
         "LongTxTest.cpp"
+        "RecoveryTest.cpp"
         "StorageTest.cpp"
         "TransactionTest.cpp"
 )
-
-if(NOT BUILD_SHIRAKAMI_WP)
-    list(APPEND TEST_SOURCES
-            "RecoveryTest.cpp"  # recovery not supported by shiarakami WP build
-            )
-endif()
 
 register_tests(
     TARGET shirakami
