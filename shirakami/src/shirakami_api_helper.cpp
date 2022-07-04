@@ -62,7 +62,7 @@ Status enter(Token& token) {
 }
 
 Status leave(Token token) {
-    log_entry << "leave()";
+    log_entry << "leave() token:" << token;
     auto rc = details::sanitize_rc(::shirakami::leave(token));
     log_exit << "leave() rc:" << rc;
     return rc;
