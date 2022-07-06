@@ -18,6 +18,8 @@
 #include <gtest/gtest.h>
 
 #include <vector>
+#include <future>
+#include <xmmintrin.h>
 
 namespace sharksfin::memory {
 
@@ -97,6 +99,19 @@ TEST_F(TransactionContextTest, readonly) {
         }
         ASSERT_TRUE(tx->release());
     }
+}
+
+TEST_F(TransactionContextTest, release_from_different_thread) {
+    Database db;
+    auto tx = db.create_transaction();
+    ASSERT_TRUE(tx->try_acquire());
+    std::atomic_bool run{false};
+    auto f = std::async(std::launch::async, [&](){
+        ASSERT_TRUE(tx->release());
+        run = true;
+    });
+    f.get();
+    db.shutdown();
 }
 
 }  // namespace sharksfin::memory
