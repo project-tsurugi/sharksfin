@@ -247,17 +247,26 @@ Storage& Database::default_storage() const noexcept {
     return *default_storage_;
 }
 
+::shirakami::database_options from(DatabaseOptions const& options) {
+    using open_mode = ::shirakami::database_options::open_mode;
+    open_mode mode{};
+    switch(options.open_mode()) {
+        case DatabaseOptions::OpenMode::RESTORE: mode = open_mode::RESTORE; break;
+        case DatabaseOptions::OpenMode::CREATE_OR_RESTORE: mode = open_mode::CREATE_OR_RESTORE; break;
+    }
+    if (auto loc = options.attribute(KEY_LOCATION); loc) {
+        return ::shirakami::database_options{mode, *loc};
+    }
+    return ::shirakami::database_options{mode};
+}
+
 Database::Database() {
-    utils::init(false);
+    utils::init(from({}));
     init_default_storage();
 }
 
 Database::Database(DatabaseOptions const& options) {
-    if (auto loc = options.attribute(KEY_LOCATION); loc) {
-        utils::init(true, *loc);
-    } else {
-        utils::init(true);
-    }
+    utils::init(from(options));
     init_default_storage();
 }
 

@@ -20,6 +20,7 @@
 
 #include "shirakami/scheme.h"
 #include "shirakami/interface.h"
+#include "shirakami/database_options.h"
 
 #include "Error.h"
 
@@ -86,9 +87,7 @@ Status delete_storage(::shirakami::Storage storage);
 
 Status delete_record(Token token, ::shirakami::Storage storage, std::string_view key);
 
-Status init(bool enable_recovery, std::string_view log_directory_path);
-
-Status init(bool enable_recovery);
+Status init(::shirakami::database_options options);
 
 Status close_scan(Token token, ScanHandle handle);
 

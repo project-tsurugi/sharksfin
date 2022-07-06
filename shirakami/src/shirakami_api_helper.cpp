@@ -30,6 +30,7 @@ using Status = ::shirakami::Status;
 using Token = ::shirakami::Token;
 using ScanHandle = ::shirakami::ScanHandle;
 using scan_endpoint = ::shirakami::scan_endpoint;
+using database_options = ::shirakami::database_options;
 
 namespace utils {
 
@@ -210,16 +211,9 @@ Status delete_record(Token token, ::shirakami::Storage storage, std::string_view
     return rc;
 }
 
-Status init(bool enable_recovery) {
-    log_entry << "init() enable_recovery:" << enable_recovery;
-    auto rc = details::sanitize_rc(::shirakami::init(enable_recovery));
-    log_exit << "init() rc:" << rc;
-    return rc;
-}
-
-Status init(bool enable_recovery, std::string_view log_directory_path) {
-    log_entry << "init() enable_recovery:" << enable_recovery << " log_directory_path:" << log_directory_path;
-    auto rc = details::sanitize_rc(::shirakami::init(enable_recovery, log_directory_path));
+Status init(database_options options) {
+    log_entry << "init() " << options;
+    auto rc = details::sanitize_rc(::shirakami::init(std::move(options)));
     log_exit << "init() rc:" << rc;
     return rc;
 }
