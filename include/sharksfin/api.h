@@ -202,9 +202,9 @@ StatusCode storage_create(
  * @return StatusCode::OK if the target storage space was successfully obtained
  * @return StatusCode::NOT_FOUND if the storage space does not exist
  * @return otherwise if error was occurred
- * @deprecated kept for compatibility. Use storage_get_transactional(TransactionHandle, Slice, StorageHandle*) instead.
+ * @deprecated kept for compatibility. Use storage_get(TransactionHandle, Slice, StorageHandle*) instead.
  */
-extern "C" StatusCode storage_get(
+StatusCode storage_get(
         DatabaseHandle handle,
         Slice key,
         StorageHandle *result);
@@ -221,7 +221,7 @@ extern "C" StatusCode storage_get(
  * @return otherwise if error was occurred
  * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
  */
-extern "C" StatusCode storage_get_transactional(
+StatusCode storage_get(
     TransactionHandle handle,
     Slice key,
     StorageHandle *result);
@@ -252,10 +252,11 @@ StatusCode storage_delete(
 
 /**
  * @brief disposes storage handles.
+ * @param handle the target of storage handle to dispose
  * @return operation status
  */
-extern "C" StatusCode storage_dispose(
-        StorageHandle handle);
+StatusCode storage_dispose(
+    StorageHandle handle);
 
 /**
  * @brief executes the given callback function in a new transaction process.
