@@ -26,6 +26,9 @@
 
 namespace sharksfin {
 
+/**
+ * @brief operation type for log entry
+ */
 enum class LogOperation : std::uint32_t {
     UNKNOWN = 0U,
     INSERT,
@@ -65,13 +68,25 @@ inline std::ostream& operator<<(std::ostream& out, LogOperation value) {
  * interchangeable by memcpy or reinterpret_cast.
  */
 struct LogRecord {
+    ///@brief type for storage id
     using storage_id_type = StorageOptions::storage_id_type;
 
+    ///@brief operation type for log record entry
     LogOperation operation_{};
+
+    ///@brief key part of the log record
     std::string_view key_{};
+
+    ///@brief value part of the log record
     std::string_view value_{};
+
+    ///@brief major version of the log record
     std::uint64_t major_version_{};
+
+    ///@brief minor version of the log record
     std::uint64_t minor_version_{};
+
+    ///@brief storage id where the log record is made
     storage_id_type storage_id_{};
 };
 

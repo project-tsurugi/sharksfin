@@ -30,24 +30,43 @@ namespace sharksfin {
  */
 class StorageOptions final {
 public:
+    ///@brief type for storage id
     using storage_id_type = std::uint64_t;
 
+    ///@brief constant for undefined storage id
+    static constexpr storage_id_type undefined = static_cast<storage_id_type>(-1);
+
+    /**
+     * @brief create storage option with default values
+     */
     StorageOptions() = default;
 
+    /**
+     * @brief create new storage option
+     * @param storage_id the storage id for the
+     */
     explicit StorageOptions(storage_id_type storage_id) :
         storage_id_(storage_id)
     {}
 
+    /**
+     * @brief accessor for the storage id
+     * @return the storage id
+     */
     [[nodiscard]] storage_id_type storage_id() const noexcept {
         return storage_id_;
     }
 
+    /**
+     * @brief setter for the storage id
+     * @param arg the storage id
+     */
     void storage_id(storage_id_type arg) noexcept {
         storage_id_ = arg;
     }
 
 private:
-    storage_id_type storage_id_{ 0L };
+    storage_id_type storage_id_{ undefined };
 };
 
 }  // namespace sharksfin
