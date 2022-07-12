@@ -133,9 +133,9 @@ Status list_storage(std::vector<::shirakami::Storage>& out) {
     return rc;
 }
 
-Status register_storage(::shirakami::Storage& storage) {
+Status create_storage(::shirakami::Storage& storage) {
     log_entry << "register_storage()";
-    auto rc = details::sanitize_rc(::shirakami::register_storage(storage));
+    auto rc = details::sanitize_rc(::shirakami::create_storage(storage));
     log_exit << "register_storage() rc: " << rc << " storage:" << storage;
     return rc;
 }
@@ -246,11 +246,11 @@ bool check_commit(Token token, std::uint64_t commit_id) {
     return rc;
 }
 
-Status tx_begin(Token token, TX_TYPE tx_type, std::vector<::shirakami::Storage> write_preserve) {
+Status tx_begin(transaction_options options) {
     log_entry <<
-        "tx_begin() token:" << token << " tx_type:" << tx_type <<
-        " #wp:" << write_preserve.size();
-    auto rc = details::sanitize_rc(::shirakami::tx_begin(token, tx_type, std::move(write_preserve)));
+        "tx_begin() token:" << options.get_token() << " tx_type:" << options.get_transaction_type() <<
+        " #wp:" << options.get_write_preserve().size();
+    auto rc = details::sanitize_rc(::shirakami::tx_begin(std::move(options)));
     log_exit << "tx_begin() rc:" << rc;
     return rc;
 }

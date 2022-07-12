@@ -21,6 +21,7 @@
 #include "shirakami/scheme.h"
 #include "shirakami/interface.h"
 #include "shirakami/database_options.h"
+#include "shirakami/transaction_options.h"
 
 #include "Error.h"
 
@@ -30,7 +31,7 @@ using Status = ::shirakami::Status;
 using Token = ::shirakami::Token;
 using ScanHandle = ::shirakami::ScanHandle;
 using scan_endpoint = ::shirakami::scan_endpoint;
-using TX_TYPE = ::shirakami::TX_TYPE;
+using transaction_options = ::shirakami::transaction_options;
 
 class Transaction;
 
@@ -75,7 +76,7 @@ void fin(bool force_shut_down_cpr = true);
 
 Status list_storage(std::vector<::shirakami::Storage>& out);
 
-Status register_storage(::shirakami::Storage& storage);
+Status create_storage(::shirakami::Storage& storage);
 
 Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
 
@@ -95,10 +96,7 @@ Status commit(Token token, ::shirakami::commit_param* cp = nullptr);
 
 Status abort(Token token);
 
-Status tx_begin(
-    Token token,
-    TX_TYPE tx_type = TX_TYPE::SHORT,
-    std::vector<::shirakami::Storage> write_preserve = {});
+Status tx_begin(transaction_options options);
 
 bool check_commit(Token token, std::uint64_t commit_id);
 
