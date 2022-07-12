@@ -191,11 +191,12 @@ TransactionState Transaction::check_state() {
     return from_state(state);
 }
 
-TX_TYPE from(TransactionOptions::TransactionType type) {
+::shirakami::transaction_options::transaction_type from(TransactionOptions::TransactionType type) {
+    using transaction_type = ::shirakami::transaction_options::transaction_type;
     switch(type) {
-        case TransactionOptions::TransactionType::SHORT: return TX_TYPE::SHORT;
-        case TransactionOptions::TransactionType::LONG: return TX_TYPE::LONG;
-        case TransactionOptions::TransactionType::READ_ONLY: return TX_TYPE::READ_ONLY;
+        case TransactionOptions::TransactionType::SHORT: return transaction_type::SHORT;
+        case TransactionOptions::TransactionType::LONG: return transaction_type::LONG;
+        case TransactionOptions::TransactionType::READ_ONLY: return transaction_type::READ_ONLY;
     }
     std::abort();
 }
@@ -206,7 +207,8 @@ StatusCode Transaction::declare_begin() {
     for(auto&& e : write_preserves_) {
         storages.emplace_back(e->handle());
     }
-    auto res = utils::tx_begin(session_->id(), from(type_), storages);
+    transaction_options options{session_->id(), from(type_), storages};
+    auto res = utils::tx_begin(std::move(options));
     return resolve(res);
 }
 

@@ -70,7 +70,7 @@ void Database::init_default_storage() {
     if (! storages.empty()) {
         handle = storages[system_table_index];
     } else {
-        if(auto rc = utils::register_storage(handle); rc != Status::OK) {
+        if(auto rc = utils::create_storage(handle); rc != Status::OK) {
             ABORT();
         }
     }
@@ -112,7 +112,7 @@ StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result)
     std::string v{};
     qualify_meta(key, k);
     ::shirakami::Storage handle{};
-    if (auto rc = resolve(utils::register_storage(handle)); rc != StatusCode::OK) {
+    if (auto rc = resolve(utils::create_storage(handle)); rc != StatusCode::OK) {
         ABORT();
     }
     v.resize(sizeof(handle));
