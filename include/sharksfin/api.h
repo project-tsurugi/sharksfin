@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <iostream>
 #include <type_traits>
+#include <functional>
 #include <any>
 
 #include "DatabaseOptions.h"
@@ -27,6 +28,8 @@
 #include "TransactionOperation.h"
 #include "TransactionOptions.h"
 #include "TransactionState.h"
+#include "StorageOptions.h"
+#include "LogRecord.h"
 
 /**
  * @brief sharksfin interface definition
@@ -99,6 +102,15 @@ using IteratorHandle = std::add_pointer_t<IteratorStub>;
 using TransactionCallback = std::add_pointer_t<TransactionOperation(TransactionHandle, void*)>;
 
 /**
+ * @brief log event callback function type.
+ * @details callback invoked on logging event on cc engine or datastore. The callback arguments are
+ *   - the log worker number (0-origin index)
+ *   - the log record begin pointer to iterate all the logged records
+ *   - the log record end pointer to detect end position of the logged records
+ */
+using LogEventCallback = std::function<void(std::size_t, LogRecord*, LogRecord*)>;
+
+/**
  * @brief opens a database and returns its handle.
  * The created handle must be disposed by database_dispose().
  * @param options the target database options
@@ -130,6 +142,18 @@ StatusCode database_dispose(
     DatabaseHandle handle);
 
 /**
+ * @brief set logging event callback
+ * @details register the callback invoked on the logging event (cc engine or datastore defines event timing)
+ * @param handle the database handle
+ * @param callback the callback to be invoked whose arguments are log worker number and iterator for log records
+ * @return StatusCode::OK if the call is successful
+ * @return StatusCode::ERR_UNSUPPORTED if the cc engine implementation doesn't support datastore
+ */
+StatusCode database_set_logging_callback(
+    DatabaseHandle handle,
+    LogEventCallback callback);
+
+/**
  * @brief creates a new storage space onto the target database.
  * The specified slice can be disposed after this operation.
  * The created handle must be disposed by storage_dispose().
@@ -139,11 +163,34 @@ StatusCode database_dispose(
  * @return StatusCode::OK if the target storage was successfully created
  * @return StatusCode::ALREADY_EXISTS if the target storage already exists on the target database
  * @return otherwise if error was occurred
+ * @deprecated kept for compatibility. Use storage_create(TransactionHandle, Slice, StorageOptions const&, StorageHandle*) instead.
  */
-extern "C" StatusCode storage_create(
-        DatabaseHandle handle,
-        Slice key,
-        StorageHandle *result);
+StatusCode storage_create(
+    DatabaseHandle handle,
+    Slice key,
+    StorageHandle *result);
+
+/**
+ * @brief creates a new storage space onto the target database with storage options
+ * The specified slice can be disposed after this operation.
+ * The created handle must be disposed by storage_dispose().
+ * The successfully created storage handles remain valid even after the transaction handle is disposed.
+ * If the transaction associated with `handle` aborts, created storage handle gets invalid and should not be used any more.
+ * Any changes made to the storage, and registered its metadata are discard on transaction abort.
+ * @param handle transaction handle on the target database to create the storage
+ * @param key the storage key
+ * @param options the options to customize storage setting
+ * @param result [OUT] the output target of storage handle, and it is available only if StatusCode::OK was returned
+ * @return StatusCode::OK if the target storage was successfully created
+ * @return StatusCode::ALREADY_EXISTS if the target storage already exists on the target database
+ * @return otherwise if error was occurred
+ * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
+ */
+StatusCode storage_create(
+    TransactionHandle handle,
+    Slice key,
+    StorageOptions const& options,
+    StorageHandle *result);
 
 /**
  * @brief obtains the registered storage on the database.
@@ -155,27 +202,61 @@ extern "C" StatusCode storage_create(
  * @return StatusCode::OK if the target storage space was successfully obtained
  * @return StatusCode::NOT_FOUND if the storage space does not exist
  * @return otherwise if error was occurred
+ * @deprecated kept for compatibility. Use storage_get(TransactionHandle, Slice, StorageHandle*) instead.
  */
-extern "C" StatusCode storage_get(
+StatusCode storage_get(
         DatabaseHandle handle,
         Slice key,
         StorageHandle *result);
 
 /**
+ * @brief obtains the registered storage on the database.
+ * The specified slice can be disposed after this operation.
+ * The created handle must be disposed by storage_dispose().
+ * @param handle transaction handle on the target database to get the storage
+ * @param key the target storage key
+ * @param result [OUT] the output target of storage handle, and it is available only if StatusCode::OK was returned
+ * @return StatusCode::OK if the target storage space was successfully obtained
+ * @return StatusCode::NOT_FOUND if the storage space does not exist
+ * @return otherwise if error was occurred
+ * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
+ */
+StatusCode storage_get(
+    TransactionHandle handle,
+    Slice key,
+    StorageHandle *result);
+
+/**
  * @brief removes a storage space from the corresponded database.
  * The handle must be disposed by storage_dispose() even if this operation was succeeded.
+ * @param handle the target of storage handle to delete
  * @return StatusCode::OK if the target storage space was successfully deleted
  * @return otherwise if error was occurred
+ * @deprecated kept for compatibility. Use storage_delete(TransactionHandle, StorageHandle) instead.
  */
-extern "C" StatusCode storage_delete(
-        StorageHandle handle);
+StatusCode storage_delete(
+    StorageHandle handle);
+
+/**
+ * @brief removes a storage space from the corresponded database.
+ * The handle must be disposed by storage_dispose() even if this operation was succeeded.
+ * @param tx transaction handle on the target database to delete the storage
+ * @param handle the target of storage handle to delete
+ * @return StatusCode::OK if the target storage space was successfully deleted
+ * @return otherwise if error was occurred
+ * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
+ */
+StatusCode storage_delete(
+    TransactionHandle tx,
+    StorageHandle handle);
 
 /**
  * @brief disposes storage handles.
+ * @param handle the target of storage handle to dispose
  * @return operation status
  */
-extern "C" StatusCode storage_dispose(
-        StorageHandle handle);
+StatusCode storage_dispose(
+    StorageHandle handle);
 
 /**
  * @brief executes the given callback function in a new transaction process.

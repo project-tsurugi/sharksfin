@@ -107,6 +107,14 @@ StatusCode database_dispose(DatabaseHandle handle) {
     return StatusCode::OK;
 }
 
+StatusCode database_set_logging_callback(
+    DatabaseHandle handle,
+    LogEventCallback callback) {  //NOLINT(performance-unnecessary-value-param)
+    (void)handle;
+    (void)callback;
+    return StatusCode::OK;
+}
+
 StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *result) {
     auto database = unwrap(handle);
     auto storage = database->create_storage(key);
@@ -114,6 +122,18 @@ StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *resul
         return StatusCode::ALREADY_EXISTS;
     }
     *result = wrap(storage.get()); // borrow
+    return StatusCode::OK;
+}
+
+StatusCode storage_create(
+    TransactionHandle handle,
+    Slice key,
+    StorageOptions const& options,
+    StorageHandle *result) {
+    (void) handle;
+    (void) key;
+    (void) options;
+    (void) result;
     return StatusCode::OK;
 }
 
@@ -127,10 +147,28 @@ StatusCode storage_get(DatabaseHandle handle, Slice key, StorageHandle *result) 
     return StatusCode::OK;
 }
 
+StatusCode storage_get(
+    TransactionHandle handle,
+    Slice key,
+    StorageHandle *result) {
+    (void) handle;
+    (void) key;
+    (void) result;
+    return StatusCode::OK;
+}
+
 StatusCode storage_delete(StorageHandle handle) {
     auto storage = unwrap(handle);
     auto database = storage->owner();
     database->delete_storage(storage->key());
+    return StatusCode::OK;
+}
+
+StatusCode storage_delete(
+    TransactionHandle tx,
+    StorageHandle handle) {
+    (void) tx;
+    (void) handle;
     return StatusCode::OK;
 }
 
