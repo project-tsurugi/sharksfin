@@ -69,7 +69,7 @@ StatusCode database_dispose(DatabaseHandle handle) {
 
 StatusCode database_set_logging_callback(
     DatabaseHandle handle,
-    LogEventCallback callback) {
+    LogEventCallback callback) {  //NOLINT(performance-unnecessary-value-param)
     (void)handle;
     (void)callback;
     return StatusCode::OK;
