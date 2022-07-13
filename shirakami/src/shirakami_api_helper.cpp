@@ -247,9 +247,7 @@ bool check_commit(Token token, std::uint64_t commit_id) {
 }
 
 Status tx_begin(transaction_options options) {
-    log_entry <<
-        "tx_begin() token:" << options.get_token() << " tx_type:" << options.get_transaction_type() <<
-        " #wp:" << options.get_write_preserve().size();
+    log_entry << "tx_begin() " << options;
     auto rc = details::sanitize_rc(::shirakami::tx_begin(std::move(options)));
     log_exit << "tx_begin() rc:" << rc;
     return rc;
