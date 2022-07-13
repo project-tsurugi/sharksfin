@@ -62,6 +62,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
             // WARN_SCAN_LIMIT has multiple meanings, so should not be mapped to a single StatusCode here
             VLOG(log_error) << "Shirakami error : " << result;
             break;
+        case Status::WARN_STORAGE_ID_DEPLETION: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
         case Status::WARN_STORAGE_NOT_FOUND: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
         case Status::ERR_SESSION_LIMIT: rc = StatusCode::ERR_INVALID_STATE; break;
         case Status::WARN_CONFLICT_ON_WRITE_PRESERVE: rc = StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE; break;
