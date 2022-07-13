@@ -67,6 +67,14 @@ StatusCode database_dispose(DatabaseHandle handle) {
     return StatusCode::OK;
 }
 
+StatusCode database_set_logging_callback(
+    DatabaseHandle handle,
+    LogEventCallback callback) {
+    (void)handle;
+    (void)callback;
+    return StatusCode::OK;
+}
+
 StatusCode storage_create(
         DatabaseHandle handle,
         Slice key,
@@ -78,6 +86,18 @@ StatusCode storage_create(
         return rc;
     }
     *result = wrap(stg.release());
+    return StatusCode::OK;
+}
+
+StatusCode storage_create(
+    TransactionHandle handle,
+    Slice key,
+    StorageOptions const& options,
+    StorageHandle *result) {
+    (void) handle;
+    (void) key;
+    (void) options;
+    (void) result;
     return StatusCode::OK;
 }
 
@@ -95,10 +115,28 @@ StatusCode storage_get(
     return StatusCode::OK;
 }
 
+StatusCode storage_get(
+    TransactionHandle handle,
+    Slice key,
+    StorageHandle *result) {
+    (void) handle;
+    (void) key;
+    (void) result;
+    return StatusCode::OK;
+}
+
 StatusCode storage_delete(StorageHandle handle) {
     auto stg = unwrap(handle);
     auto db = stg->owner();
     return db->delete_storage(*stg);
+}
+
+StatusCode storage_delete(
+    TransactionHandle tx,
+    StorageHandle handle) {
+    (void) tx;
+    (void) handle;
+    return StatusCode::OK;
 }
 
 StatusCode storage_dispose(StorageHandle handle) {
