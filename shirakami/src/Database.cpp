@@ -98,6 +98,10 @@ static void ensure_end_of_transaction(Transaction& tx, bool to_abort = false) {
 }
 
 StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result) {
+    return create_storage(key, {}, result);
+}
+
+StatusCode Database::create_storage(Slice key, StorageOptions const& options, std::unique_ptr<Storage>& result) {
     if (! active_) ABORT();
     std::unique_ptr<Storage> stg{};
     if (get_storage(key, stg) == StatusCode::OK) {
@@ -111,8 +115,12 @@ StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result)
     std::string k{};
     std::string v{};
     qualify_meta(key, k);
+
+    auto storage_id = options.storage_id();
+    static_assert(StorageOptions::undefined == ::shirakami::storage_id_undefined); // both defs must be compatible
+
     ::shirakami::Storage handle{};
-    if (auto rc = resolve(utils::create_storage(handle)); rc != StatusCode::OK) {
+    if (auto rc = resolve(utils::create_storage(handle, storage_id)); rc != StatusCode::OK) {
         ABORT();
     }
     v.resize(sizeof(handle));

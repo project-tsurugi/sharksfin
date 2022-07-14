@@ -83,6 +83,17 @@ public:
     StatusCode create_storage(Slice key, std::unique_ptr<Storage>& result);
 
     /**
+     * @brief creates a new storage space with options
+     * @param key the storage key
+     * @param options storage options
+     * @param result [out] non empty pointer if the storage was successfully created (valid only when StatusCode::OK is returned)
+     * @return StatusCode::OK when storage is successfully created
+     * @return StatusCode::ALREADY_EXISTS if the storage space with the key already exists
+     * @return otherwise
+     */
+    StatusCode create_storage(Slice key, StorageOptions const& options, std::unique_ptr<Storage>& result);
+
+    /**
      * @brief returns a storage space.
      * @param key the storage key
      * @param res [out] non empty pointer if it exists (valid only when StatusCode::OK is returned)

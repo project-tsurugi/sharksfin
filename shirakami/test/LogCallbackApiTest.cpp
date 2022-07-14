@@ -77,7 +77,7 @@ TEST_F(ShirakamiLogCallbackApiTest, simple) {
         StorageHandle st;
     };
     S s;
-    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    ASSERT_EQ(storage_create(db, "s", StorageOptions{100UL}, &s.st), StatusCode::OK);
     HandleHolder sth { s.st };
     EXPECT_EQ(S::run(db, s), true);
     wait_epochs(4); // wait for log flush
@@ -87,7 +87,7 @@ TEST_F(ShirakamiLogCallbackApiTest, simple) {
     EXPECT_EQ("a", records[0].key_);
     EXPECT_EQ("A", records[0].value_);
     EXPECT_EQ(LogOperation::INSERT, records[0].operation_);
-    EXPECT_EQ(0, records[0].storage_id_);
+    EXPECT_EQ(100, records[0].storage_id_);
     std::cout << "major version: " << records[0].major_version_ << std::endl;
     std::cout << "major version: " << records[0].minor_version_ << std::endl;
 }

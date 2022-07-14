@@ -87,9 +87,17 @@ StatusCode storage_create(
         DatabaseHandle handle,
         Slice key,
         StorageHandle *result) {
+    return storage_create(handle, key, {}, result);
+}
+
+StatusCode storage_create(
+    DatabaseHandle handle,
+    Slice key,
+    StorageOptions const& options,
+    StorageHandle *result) {
     auto db = unwrap(handle);
     std::unique_ptr<shirakami::Storage> stg{};
-    auto rc = db->create_storage(key, stg);
+    auto rc = db->create_storage(key, options, stg);
     if (rc != StatusCode::OK) {
         return rc;
     }
@@ -106,7 +114,7 @@ StatusCode storage_create(
     (void) key;
     (void) options;
     (void) result;
-    return StatusCode::OK;
+    return StatusCode::ERR_NOT_IMPLEMENTED;
 }
 
 StatusCode storage_get(
@@ -130,7 +138,7 @@ StatusCode storage_get(
     (void) handle;
     (void) key;
     (void) result;
-    return StatusCode::OK;
+    return StatusCode::ERR_NOT_IMPLEMENTED;
 }
 
 StatusCode storage_delete(StorageHandle handle) {
@@ -144,7 +152,7 @@ StatusCode storage_delete(
     StorageHandle handle) {
     (void) tx;
     (void) handle;
-    return StatusCode::OK;
+    return StatusCode::ERR_NOT_IMPLEMENTED;
 }
 
 StatusCode storage_dispose(StorageHandle handle) {

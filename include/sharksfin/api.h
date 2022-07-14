@@ -177,6 +177,28 @@ StatusCode storage_create(
  * The successfully created storage handles remain valid even after the transaction handle is disposed.
  * If the transaction associated with `handle` aborts, created storage handle gets invalid and should not be used any more.
  * Any changes made to the storage, and registered its metadata are discard on transaction abort.
+ * @param handle the target database
+ * @param key the storage key
+ * @param options the options to customize storage setting
+ * @param result [OUT] the output target of storage handle, and it is available only if StatusCode::OK was returned
+ * @return StatusCode::OK if the target storage was successfully created
+ * @return StatusCode::ALREADY_EXISTS if the target storage already exists on the target database
+ * @return otherwise if error was occurred
+ * @deprecated kept for compatibility. Use storage_create(TransactionHandle, Slice, StorageOptions const&, StorageHandle*) instead.
+ */
+StatusCode storage_create(
+    DatabaseHandle handle,
+    Slice key,
+    StorageOptions const& options,
+    StorageHandle *result);
+
+/**
+ * @brief creates a new storage space onto the target database with storage options
+ * The specified slice can be disposed after this operation.
+ * The created handle must be disposed by storage_dispose().
+ * The successfully created storage handles remain valid even after the transaction handle is disposed.
+ * If the transaction associated with `handle` aborts, created storage handle gets invalid and should not be used any more.
+ * Any changes made to the storage, and registered its metadata are discard on transaction abort.
  * @param handle transaction handle on the target database to create the storage
  * @param key the storage key
  * @param options the options to customize storage setting

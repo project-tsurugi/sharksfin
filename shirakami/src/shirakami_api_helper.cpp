@@ -133,10 +133,10 @@ Status list_storage(std::vector<::shirakami::Storage>& out) {
     return rc;
 }
 
-Status create_storage(::shirakami::Storage& storage) {
-    log_entry << "register_storage()";
-    auto rc = details::sanitize_rc(::shirakami::create_storage(storage));
-    log_exit << "register_storage() rc: " << rc << " storage:" << storage;
+Status create_storage(::shirakami::Storage& storage, ::shirakami::Storage storage_id) {
+    log_entry << "create_storage() storage_id:" << storage_id;
+    auto rc = details::sanitize_rc(::shirakami::create_storage(storage, storage_id));
+    log_exit << "create_storage() rc: " << rc << " storage:" << storage;
     return rc;
 }
 

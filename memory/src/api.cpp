@@ -126,6 +126,21 @@ StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *resul
 }
 
 StatusCode storage_create(
+    DatabaseHandle handle,
+    Slice key,
+    StorageOptions const& options,
+    StorageHandle *result) {
+    (void) options; //TODO
+    auto database = unwrap(handle);
+    auto storage = database->create_storage(key);
+    if (!storage) {
+        return StatusCode::ALREADY_EXISTS;
+    }
+    *result = wrap(storage.get()); // borrow
+    return StatusCode::OK;
+}
+
+StatusCode storage_create(
     TransactionHandle handle,
     Slice key,
     StorageOptions const& options,
@@ -134,7 +149,7 @@ StatusCode storage_create(
     (void) key;
     (void) options;
     (void) result;
-    return StatusCode::OK;
+    return StatusCode::ERR_NOT_IMPLEMENTED;  //TODO
 }
 
 StatusCode storage_get(DatabaseHandle handle, Slice key, StorageHandle *result) {
@@ -154,7 +169,7 @@ StatusCode storage_get(
     (void) handle;
     (void) key;
     (void) result;
-    return StatusCode::OK;
+    return StatusCode::ERR_NOT_IMPLEMENTED;  //TODO
 }
 
 StatusCode storage_delete(StorageHandle handle) {
@@ -169,7 +184,7 @@ StatusCode storage_delete(
     StorageHandle handle) {
     (void) tx;
     (void) handle;
-    return StatusCode::OK;
+    return StatusCode::ERR_NOT_IMPLEMENTED;  //TODO
 }
 
 StatusCode storage_dispose([[maybe_unused]] StorageHandle handle) {

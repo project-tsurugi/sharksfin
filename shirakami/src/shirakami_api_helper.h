@@ -76,7 +76,7 @@ void fin(bool force_shut_down_cpr = true);
 
 Status list_storage(std::vector<::shirakami::Storage>& out);
 
-Status create_storage(::shirakami::Storage& storage);
+Status create_storage(::shirakami::Storage& storage, ::shirakami::Storage storage_id = ::shirakami::storage_id_undefined);
 
 Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
 
