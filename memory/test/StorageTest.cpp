@@ -131,4 +131,16 @@ TEST_F(StorageTest, next) {
     }
 }
 
+TEST_F(StorageTest, options) {
+    Database db;
+    {
+        auto st = db.create_storage("S0");
+        ASSERT_EQ(StorageOptions::undefined, st->storage_id());
+    }
+    {
+        auto st = db.create_storage("S1", StorageOptions{100});
+        ASSERT_EQ(100, st->storage_id());
+    }
+}
+
 }  // namespace sharksfin::memory

@@ -51,10 +51,11 @@ public:
     /**
      * @brief creates a new storage space.
      * @param key the storage key
+     * @param options the storage options
      * @return the created storage
      * @return otherwise if the storage space with the key already exists
      */
-    std::shared_ptr<Storage> create_storage(Slice key);
+    std::shared_ptr<Storage> create_storage(Slice key, StorageOptions const& options = {});
 
     /**
      * @brief returns a storage space.

@@ -39,13 +39,13 @@ void Database::shutdown() {
     }
 }
 
-std::shared_ptr<Storage> Database::create_storage(Slice key) {
+std::shared_ptr<Storage> Database::create_storage(Slice key, StorageOptions const& options) {
     check_alive();
     std::unique_lock lock { storages_mutex_ };
     if (auto it = storages_.find(key); it != storages_.end()) {
         return {};
     }
-    auto storage = std::make_shared<Storage>(this, key);
+    auto storage = std::make_shared<Storage>(this, key, options);
     storages_.emplace(key, storage);
     return storage;
 }

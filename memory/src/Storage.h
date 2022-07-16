@@ -31,7 +31,11 @@ public:
      * @brief creates a new instance.
      * @param key the storage key
      */
-    explicit Storage(Database* owner, Slice key) : owner_(owner), key_(key) {}
+    Storage(Database* owner, Slice key, StorageOptions const& options = {}) :
+        owner_(owner),
+        key_(key),
+        options_(options)
+    {}
 
     /**
      * @brief returns the owner.
@@ -147,9 +151,14 @@ public:
         return { key, {} };
     }
 
+    StorageOptions::storage_id_type  storage_id() const noexcept {
+        return options_.storage_id();
+    }
+
 private:
     Database* owner_;
     Buffer key_;
+    StorageOptions options_{};
     std::map<Buffer, Buffer> entries_ {};
     Buffer::allocator_type allocator_ {};
 };

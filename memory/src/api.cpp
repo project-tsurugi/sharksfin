@@ -116,13 +116,7 @@ StatusCode database_set_logging_callback(
 }
 
 StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *result) {
-    auto database = unwrap(handle);
-    auto storage = database->create_storage(key);
-    if (!storage) {
-        return StatusCode::ALREADY_EXISTS;
-    }
-    *result = wrap(storage.get()); // borrow
-    return StatusCode::OK;
+    return storage_create(handle, key, {}, result);
 }
 
 StatusCode storage_create(
@@ -130,9 +124,8 @@ StatusCode storage_create(
     Slice key,
     StorageOptions const& options,
     StorageHandle *result) {
-    (void) options; //TODO
     auto database = unwrap(handle);
-    auto storage = database->create_storage(key);
+    auto storage = database->create_storage(key, options);
     if (!storage) {
         return StatusCode::ALREADY_EXISTS;
     }
