@@ -21,9 +21,6 @@
 #include "Error.h"
 #include "binary_printer.h"
 
-#define log_entry DVLOG(log_trace) << std::boolalpha << "--> "  //NOLINT
-#define log_exit DVLOG(log_trace) << std::boolalpha << "<-- "  //NOLINT
-
 namespace sharksfin::shirakami {
 
 using Status = ::shirakami::Status;

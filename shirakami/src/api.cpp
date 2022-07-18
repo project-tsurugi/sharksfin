@@ -77,7 +77,9 @@ StatusCode database_set_logging_callback(
     (void) handle;
     shirakami::utils::database_set_logging_callback(
         [cb = std::move(callback)](std::size_t worker, ::shirakami::log_record* begin, ::shirakami::log_record* end) {
+            log_entry << "logging callback worker:" << worker << " entries:" << (end-begin);
             cb(worker, reinterpret_cast<LogRecord*>(begin), reinterpret_cast<LogRecord*>(end));  //NOLINT
+            log_exit << "logging callback";
         }
     );
     return StatusCode::OK;
