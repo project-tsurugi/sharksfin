@@ -262,10 +262,15 @@ Storage& Database::default_storage() const noexcept {
         case DatabaseOptions::OpenMode::RESTORE: mode = open_mode::RESTORE; break;
         case DatabaseOptions::OpenMode::CREATE_OR_RESTORE: mode = open_mode::CREATE_OR_RESTORE; break;
     }
+    ::shirakami::database_options ret{mode};
     if (auto loc = options.attribute(KEY_LOCATION); loc) {
-        return ::shirakami::database_options{mode, *loc};
+        std::filesystem::path p{*loc};
+        ret.set_log_directory_path(p);
     }
-    return ::shirakami::database_options{mode};
+    if (auto sz = options.attribute(KEY_LOGGING_MAX_PARALLELISM); sz) {
+        ret.set_logger_thread_num(std::stoul(*sz));
+    }
+    return ret;
 }
 
 Database::Database() {
