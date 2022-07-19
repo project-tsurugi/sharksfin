@@ -175,7 +175,7 @@ TEST_F(ShirakamiLogCallbackApiTest, multiple_records) {
     wait_epochs(4); // wait for log flush
     EXPECT_EQ(database_close(db), StatusCode::OK);
     EXPECT_TRUE(called);
-    ASSERT_EQ(4, records.size()); // delete rec doesn't come TODO investigate
+    ASSERT_EQ(4, records.size()); // no delete rec comes due to restriction by shirakami/limestone TODO
     {
         auto& rec = records[0];
         EXPECT_EQ("a", rec.key_);
