@@ -81,8 +81,7 @@ TEST_F(ShirakamiApiTest, simple) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
-// shirakami WAL is disabled for now
-TEST_F(ShirakamiApiTest, DISABLED_database_restore) {
+TEST_F(ShirakamiApiTest, database_restore) {
     {
         DatabaseOptions options;
         options.attribute(KEY_LOCATION, path());
@@ -139,6 +138,7 @@ TEST_F(ShirakamiApiTest, DISABLED_database_restore) {
     }
 }
 
+// shirakami doesn't detect database is not found, rather it try to start new db
 TEST_F(ShirakamiApiTest, DISABLED_database_not_found) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());

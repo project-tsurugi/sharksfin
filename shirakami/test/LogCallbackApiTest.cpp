@@ -86,7 +86,7 @@ TEST_F(ShirakamiLogCallbackApiTest, simple) {
     ASSERT_EQ(1, records.size());
     EXPECT_EQ("a", records[0].key_);
     EXPECT_EQ("A", records[0].value_);
-    EXPECT_EQ(LogOperation::UPDATE, records[0].operation_);  // upsert is handled as update for now TODO
+    EXPECT_EQ(LogOperation::UPSERT, records[0].operation_);
     EXPECT_EQ(100, records[0].storage_id_);
     std::cout << "major version: " << records[0].major_version_ << std::endl;
     std::cout << "major version: " << records[0].minor_version_ << std::endl;

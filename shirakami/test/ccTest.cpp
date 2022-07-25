@@ -203,8 +203,7 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
     EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
-// delete requires some time to become effective
-TEST_F(ShirakamiCCTest, DISABLED_scan_and_delete) {
+TEST_F(ShirakamiCCTest, scan_and_delete) {
     // verify concurrent scan and delete works correctly with retry when needed
     const static std::size_t COUNT = 30;
     std::unique_ptr<Database> db{};
