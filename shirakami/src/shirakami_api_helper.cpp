@@ -306,9 +306,9 @@ Status tx_check(::shirakami::TxStateHandle handle, ::shirakami::TxState& out) {
     return rc;
 }
 
-Status database_set_logging_callback(::shirakami::log_event_callback callback) {
+Status database_set_logging_callback(::shirakami::log_event_callback const& callback) {
     log_entry << "database_set_logging_callback()";
-    auto rc = details::sanitize_rc(::shirakami::database_set_logging_callback(std::move(callback)));
+    auto rc = details::sanitize_rc(::shirakami::database_set_logging_callback(callback));
     log_exit << "database_set_logging_callback() rc:" << rc;
     return rc;
 }

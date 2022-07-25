@@ -117,7 +117,7 @@ Status release_tx_state_handle(::shirakami::TxStateHandle handle);
 
 Status tx_check(::shirakami::TxStateHandle handle, ::shirakami::TxState& out);
 
-Status database_set_logging_callback(::shirakami::log_event_callback callback);
+Status database_set_logging_callback(::shirakami::log_event_callback const& callback);
 
 }  // namespace utils
 }  // namespace sharksfin::shirakami
