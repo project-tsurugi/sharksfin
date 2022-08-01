@@ -25,6 +25,7 @@
 #include "sharksfin/Slice.h"
 #include "Buffer.h"
 #include "SequenceMap.h"
+#include "ReentrantLock.h"
 
 namespace sharksfin::memory {
 
@@ -41,7 +42,7 @@ public:
     /**
      * @brief the transaction mutex type.
      */
-    using transaction_mutex_type = std::shared_mutex;
+    using transaction_mutex_type = ReentrantLock;
 
     /**
      * @brief shutdown this database.
