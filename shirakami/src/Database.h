@@ -197,8 +197,6 @@ private:
 
     bool waits_for_commit_ { true };
     bool active_{ true };
-
-    void init_default_storage();
 };
 
 }  // namespace sharksfin::shirakami

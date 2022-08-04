@@ -26,9 +26,6 @@
 
 namespace sharksfin::shirakami {
 
-using ::shirakami::Status;
-using ::shirakami::Tuple;
-
 StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
     *result = std::make_unique<Database>(options);
     return StatusCode::OK;
@@ -45,10 +42,6 @@ StatusCode Database::close() {
     active_ = false;
     return StatusCode::OK;
 }
-
-// prefix for storage name entries
-static constexpr Slice TABLE_ENTRY_PREFIX = { "\0" };
-static constexpr std::size_t system_table_index = 0;
 
 StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result) {
     return create_storage(key, {}, result);
@@ -69,7 +62,7 @@ StatusCode Database::create_storage(Slice key, StorageOptions const& options, st
     ::shirakami::storage_option opts{};
     opts.set_id(options.storage_id());
     ::shirakami::Storage handle{};
-    if (auto rc = resolve(utils::create_storage(key.to_string_view(), handle, std::move(opts))); rc != StatusCode::OK) {
+    if (auto rc = resolve(utils::create_storage(key.to_string_view(), handle, opts)); rc != StatusCode::OK) {
         ABORT();
     }
     return get_storage(key, result);
