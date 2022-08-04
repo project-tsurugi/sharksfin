@@ -50,23 +50,6 @@ StatusCode Database::close() {
 static constexpr Slice TABLE_ENTRY_PREFIX = { "\0" };
 static constexpr std::size_t system_table_index = 0;
 
-void Database::init_default_storage() {
-    std::vector<::shirakami::Storage> storages{};
-    if(auto rc = utils::list_storage(storages);
-        rc != Status::WARN_NOT_FOUND && rc != Status::OK) {
-        ABORT();
-    }
-    ::shirakami::Storage handle{};
-    if (! storages.empty()) {
-        handle = storages[system_table_index];
-    } else {
-        if(auto rc = utils::create_storage(handle); rc != Status::OK) {
-            ABORT();
-        }
-    }
-    default_storage_ = std::make_unique<Storage>(this, "", handle);
-}
-
 StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result) {
     return create_storage(key, {}, result);
 }
@@ -138,10 +121,6 @@ Database::~Database() {
     }
 }
 
-Storage& Database::default_storage() const noexcept {
-    return *default_storage_;
-}
-
 ::shirakami::database_options from(DatabaseOptions const& options) {
     using open_mode = ::shirakami::database_options::open_mode;
     open_mode mode{};
@@ -162,12 +141,10 @@ Storage& Database::default_storage() const noexcept {
 
 Database::Database() {
     utils::init(from({}));
-    init_default_storage();
 }
 
 Database::Database(DatabaseOptions const& options) {
     utils::init(from(options));
-    init_default_storage();
 }
 
 }  // namespace sharksfin::shirakami

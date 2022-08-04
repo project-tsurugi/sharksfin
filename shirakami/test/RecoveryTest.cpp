@@ -89,56 +89,53 @@ void do_recover(std::string location) {
     {
         TransactionHolder tx{db};
         {
-            auto st = db->default_storage();
+            std::unique_ptr<Storage> st{};
+            ASSERT_EQ(StatusCode::OK, db->get_storage("S0", st));
             std::string buf{};
-            EXPECT_EQ(st.get(tx, "a", buf), StatusCode::OK);
+            EXPECT_EQ(st->get(tx, "a", buf), StatusCode::OK);
             EXPECT_EQ("A", buf);
-            EXPECT_EQ(st.get(tx, "b", buf), StatusCode::OK);
+            EXPECT_EQ(st->get(tx, "b", buf), StatusCode::OK);
             EXPECT_EQ("B", buf);
             ASSERT_EQ(tx->commit(false), StatusCode::OK);
         }
     }
 }
 
-TEST_F(ShirakamiRecoveryTest, recovery_default_storage) {
+TEST_F(ShirakamiRecoveryTest, recovery_storage) {
     auto location = path();
     {
         DatabaseHolder db{location};
         {
             TransactionHolder tx{db};
-            auto st = db->default_storage();
-            ASSERT_EQ(st.put(tx, "a", "A"), StatusCode::OK);
-            ASSERT_EQ(st.put(tx, "b", "B"), StatusCode::OK);
-            ASSERT_EQ(st.put(tx, "Z",  "z"), StatusCode::OK);
+            std::unique_ptr<Storage> st{};
+            ASSERT_EQ(StatusCode::OK, db->create_storage("S0", st));
+            ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
+            ASSERT_EQ(st->put(tx, "b", "B"), StatusCode::OK);
+            ASSERT_EQ(st->put(tx, "Z",  "z"), StatusCode::OK);
             ASSERT_EQ(tx->commit(false), StatusCode::OK);
         }
     }
-
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(100ms);
     do_recover(location);
 }
 
-TEST_F(ShirakamiRecoveryTest, recovery_default_storage_twice) {
+TEST_F(ShirakamiRecoveryTest, recovery_storage_twice) {
     auto location = path();
     {
         DatabaseHolder db{location};
         {
             TransactionHolder tx{db};
-            auto st = db->default_storage();
-            ASSERT_EQ(st.put(tx, "a", "A"), StatusCode::OK);
-            ASSERT_EQ(st.put(tx, "b", "B"), StatusCode::OK);
-            ASSERT_EQ(st.put(tx, "Z",  "z"), StatusCode::OK);
+            std::unique_ptr<Storage> st{};
+            ASSERT_EQ(StatusCode::OK, db->create_storage("S0", st));
+            ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
+            ASSERT_EQ(st->put(tx, "b", "B"), StatusCode::OK);
+            ASSERT_EQ(st->put(tx, "Z",  "z"), StatusCode::OK);
             ASSERT_EQ(tx->commit(false), StatusCode::OK);
         }
     }
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(100ms);
     {
         SCOPED_TRACE("1st");
         do_recover(location);
     }
-    std::this_thread::sleep_for(100ms);
     {
         SCOPED_TRACE("2nd");
         do_recover(location);

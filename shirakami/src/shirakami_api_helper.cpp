@@ -123,20 +123,6 @@ void fin(bool force_shut_down_cpr) {
     log_exit << "fin()";
 }
 
-Status list_storage(std::vector<::shirakami::Storage>& out) {
-    log_entry << "list_storage()";
-    auto rc = details::sanitize_rc(::shirakami::list_storage(out));
-    log_exit << "list_storage() rc:" << rc << " count:" << out.size();
-    return rc;
-}
-
-Status create_storage(::shirakami::Storage& storage, ::shirakami::Storage storage_id) {
-    log_entry << "create_storage() storage_id:" << storage_id;
-    auto rc = details::sanitize_rc(::shirakami::create_storage(storage, storage_id));
-    log_exit << "create_storage() rc: " << rc << " storage:" << storage;
-    return rc;
-}
-
 Status create_storage(std::string_view key, ::shirakami::Storage& storage, ::shirakami::storage_option options) {
     log_entry << "create_storage() key:" << binstring(key) << " storage_id:" << options.get_id();
     auto rc = details::sanitize_rc(::shirakami::create_storage(key, storage, std::move(options)));

@@ -184,13 +184,6 @@ public:
      */
     StatusCode create_transaction(std::unique_ptr<Transaction>& out, TransactionOptions const& options = {});
 
-    /**
-     * @brief accessor to the default storage where system
-     * information (e.g. tables list) is stored
-     * @return the default storage
-     */
-    Storage& default_storage() const noexcept;
-
 private:
     std::mutex mutex_for_storage_metadata_{};
     StorageCache storage_cache_{};
