@@ -81,6 +81,10 @@ Status list_storage(std::vector<::shirakami::Storage>& out);
 
 Status create_storage(::shirakami::Storage& storage, ::shirakami::Storage storage_id = ::shirakami::storage_id_undefined);
 
+Status create_storage(std::string_view key, ::shirakami::Storage& storage, ::shirakami::storage_option options = {});
+
+Status get_storage(std::string_view key, ::shirakami::Storage& storage);
+
 Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
 
 Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);

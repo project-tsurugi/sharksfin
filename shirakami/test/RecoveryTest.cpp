@@ -52,9 +52,6 @@ TEST_F(ShirakamiRecoveryTest, basic) {
         DatabaseHolder db{location};
         {
             TransactionHolder tx{db};
-            std::unordered_map<std::string, ::shirakami::Storage> map{};
-            ASSERT_EQ(StatusCode::OK, db->list_storages(map));
-            ASSERT_EQ(2, map.size());
             {
                 std::unique_ptr<Storage> st{};
                 ASSERT_EQ(db->create_storage("S0", st), StatusCode::ALREADY_EXISTS);

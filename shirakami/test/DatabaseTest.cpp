@@ -38,15 +38,10 @@ TEST_F(ShirakamiDatabaseTest, create_storage) {
         EXPECT_TRUE(st);
         st.reset();
         EXPECT_FALSE(st);
-        std::unordered_map<std::string, ::shirakami::Storage> map{};
-        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
-        ASSERT_EQ(1, map.size());
         ASSERT_EQ(db->create_storage("S0", st), StatusCode::ALREADY_EXISTS);
         EXPECT_FALSE(st);
         ASSERT_EQ(db->create_storage("S1", st), StatusCode::OK);
         EXPECT_TRUE(st);
-        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
-        ASSERT_EQ(2, map.size());
     }
 }
 
@@ -74,39 +69,15 @@ TEST_F(ShirakamiDatabaseTest, delete_storage) {
         EXPECT_TRUE(st0);
         ASSERT_EQ(db->create_storage("S1", st1), StatusCode::OK);
         EXPECT_TRUE(st1);
-        std::unordered_map<std::string, ::shirakami::Storage> map{};
-        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
-        ASSERT_EQ(2, map.size());
         ASSERT_EQ(db->delete_storage(*st0), StatusCode::OK);
-        wait_epochs();
-        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
-        ASSERT_EQ(1, map.size());
         st0.reset();
         ASSERT_EQ(db->get_storage("S0", st0), StatusCode::NOT_FOUND);
         EXPECT_FALSE(st0);
         ASSERT_EQ(db->delete_storage(*st1), StatusCode::OK);
-        wait_epochs();
-        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
-        ASSERT_EQ(0, map.size());
+        st1.reset();
+        ASSERT_EQ(db->get_storage("S1", st1), StatusCode::NOT_FOUND);
+        EXPECT_FALSE(st1);
     }
 }
 
-TEST_F(ShirakamiDatabaseTest, clean_storages) {
-    DatabaseHolder db{path()};
-    {
-        std::unique_ptr<Storage> st0{};
-        std::unique_ptr<Storage> st1{};
-        ASSERT_EQ(db->create_storage("S0", st0), StatusCode::OK);
-        EXPECT_TRUE(st0);
-        ASSERT_EQ(db->create_storage("S1", st1), StatusCode::OK);
-        EXPECT_TRUE(st1);
-        std::unordered_map<std::string, ::shirakami::Storage> map{};
-        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
-        ASSERT_EQ(2, map.size());
-        ASSERT_EQ(db->clean(), StatusCode::OK);
-        wait_epochs();
-        ASSERT_EQ(StatusCode::OK, db->list_storages(map));
-        ASSERT_EQ(0, map.size());
-    }
-}
 }  // namespace

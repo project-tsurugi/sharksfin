@@ -50,16 +50,6 @@ StatusCode Database::close() {
 static constexpr Slice TABLE_ENTRY_PREFIX = { "\0" };
 static constexpr std::size_t system_table_index = 0;
 
-static void qualify_meta(Slice key, std::string& buffer) {
-    TABLE_ENTRY_PREFIX.assign_to(buffer);
-    key.append_to(buffer);
-}
-
-static Slice subkey(Slice key) {
-    auto len = TABLE_ENTRY_PREFIX.size();
-    return Slice(key.data()+len, key.size()-len);  //NOLINT
-}
-
 void Database::init_default_storage() {
     std::vector<::shirakami::Storage> storages{};
     if(auto rc = utils::list_storage(storages);
@@ -77,26 +67,6 @@ void Database::init_default_storage() {
     default_storage_ = std::make_unique<Storage>(this, "", handle);
 }
 
-StatusCode Database::clean() {
-    if (! active_) ABORT();
-    std::vector<Tuple const*> tuples{};
-    std::unordered_map<std::string, ::shirakami::Storage> map{};
-    if (auto res = list_storages(map); res != StatusCode::OK) {
-        ABORT();
-    }
-    for(auto const& [n, s] : map) {
-        Storage stg{this, n, s};
-        delete_storage(stg);
-    }
-    return StatusCode::OK;
-}
-
-static void ensure_end_of_transaction(Transaction& tx, bool to_abort = false) {
-    if (auto rc = to_abort ? tx.abort() : tx.commit(false); rc != StatusCode::OK) {
-        ABORT();
-    }
-}
-
 StatusCode Database::create_storage(Slice key, std::unique_ptr<Storage>& result) {
     return create_storage(key, {}, result);
 }
@@ -112,27 +82,13 @@ StatusCode Database::create_storage(Slice key, StorageOptions const& options, st
     if (get_storage(key, stg) == StatusCode::OK) {
         return StatusCode::ALREADY_EXISTS;
     }
-    std::string k{};
-    std::string v{};
-    qualify_meta(key, k);
-
-    auto storage_id = options.storage_id();
     static_assert(StorageOptions::undefined == ::shirakami::storage_id_undefined); // both defs must be compatible
-
+    ::shirakami::storage_option opts{};
+    opts.set_id(options.storage_id());
     ::shirakami::Storage handle{};
-    if (auto rc = resolve(utils::create_storage(handle, storage_id)); rc != StatusCode::OK) {
+    if (auto rc = resolve(utils::create_storage(key.to_string_view(), handle, std::move(opts))); rc != StatusCode::OK) {
         ABORT();
     }
-    v.resize(sizeof(handle));
-    std::memcpy(v.data(), &handle, sizeof(handle));
-    std::unique_ptr<Transaction> tx{};
-    if(auto res = create_transaction(tx); res != StatusCode::OK) {
-        return res;
-    }
-    if (auto rc = resolve(utils::upsert(*tx, default_storage_->handle(), k, v)); rc != StatusCode::OK) {
-        ABORT();
-    }
-    ensure_end_of_transaction(*tx);
     return get_storage(key, result);
 }
 
@@ -142,28 +98,15 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
         result = std::make_unique<Storage>(this, key, *handle);
         return StatusCode::OK;
     }
-    std::string k{};
-    qualify_meta(key, k);
-    std::string v{};
-    std::unique_ptr<Transaction> tx{};
-    if(auto res = create_transaction(tx); res != StatusCode::OK) {
-        return res;
-    }
-    auto res = utils::search_key(*tx, default_storage_->handle(), k, v);
-    StatusCode rc = resolve(res);
-    if (rc != StatusCode::OK) {
-        if (rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
-            tx->abort();
+    ::shirakami::Storage handle{};
+    if (auto rc = resolve(utils::get_storage(key.to_string_view(), handle)); rc != StatusCode::OK) {
+        if(rc == StatusCode::NOT_FOUND) {
             return rc;
         }
         ABORT();
     }
-    ::shirakami::Storage handle{};
-    assert(sizeof(handle) == v.size());  //NOLINT
-    std::memcpy(&handle, v.data(), v.size());
     storage_cache_.add(key, handle);
     result = std::make_unique<Storage>(this, key, handle);
-    tx->abort();
     return StatusCode::OK;
 }
 
@@ -178,68 +121,12 @@ StatusCode Database::delete_storage(Storage &storage) {
         ABORT();
     }
     storage_cache_.remove(storage.name());
-    std::string k{};
-    qualify_meta(storage.name(), k);
-    std::unique_ptr<Transaction> tx{};
-    if(auto res = create_transaction(tx); res != StatusCode::OK) {
-        return res;
-    }
-    if (auto rc2 = resolve(utils::delete_record(tx->native_handle(), default_storage_->handle(), k));
-        rc2 != StatusCode::OK && rc2 != StatusCode::NOT_FOUND) {
-        ABORT();
-    }
-    ensure_end_of_transaction(*tx);
     return rc;
 }
 
 StatusCode Database::create_transaction(std::unique_ptr<Transaction>& out, TransactionOptions const& options) {
     if (! active_) ABORT();
     return Transaction::construct(out, this, options);
-}
-
-StatusCode Database::list_storages(std::unordered_map<std::string, ::shirakami::Storage>& out) noexcept {
-    if (! active_) ABORT();
-    out.clear();
-    std::unique_ptr<Transaction> tx{};
-    if(auto res = create_transaction(tx); res != StatusCode::OK) {
-        return res;
-    }
-    {    // iterator should be closed before commit
-        auto iter = default_storage_->scan(tx.get(),
-            "", EndPointKind::UNBOUND,
-            "", EndPointKind::UNBOUND);
-        ::shirakami::Storage handle{};
-        StatusCode res{};
-        while((res = iter->next()) == StatusCode::OK) {
-            Slice v{};
-            if((res = iter->value(v)) != StatusCode::OK) {
-                break;
-            }
-            assert(v.size() == sizeof(handle)); //NOLINT
-            std::memcpy(&handle, v.data(), v.size());
-            Slice k{};
-            if((res = iter->key(k)) != StatusCode::OK) {
-                break;
-            }
-            out.emplace(
-                subkey(k).to_string_view(),
-                handle
-            );
-        }
-        if (res != StatusCode::NOT_FOUND) {
-            if (res == StatusCode::ERR_ABORTED_RETRYABLE) {
-                tx->deactivate();
-                return StatusCode::ERR_ABORTED_RETRYABLE;
-            }
-            ABORT();
-        }
-    }
-    auto res2 = tx->commit(false);
-    if (res2 != StatusCode::OK) {
-        VLOG(log_error) << "commit failed";
-        return res2;
-    }
-    return StatusCode::OK;
 }
 
 Database::~Database() {

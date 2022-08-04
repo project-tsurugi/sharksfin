@@ -137,6 +137,20 @@ Status create_storage(::shirakami::Storage& storage, ::shirakami::Storage storag
     return rc;
 }
 
+Status create_storage(std::string_view key, ::shirakami::Storage& storage, ::shirakami::storage_option options) {
+    log_entry << "create_storage() key:" << binstring(key) << " storage_id:" << options.get_id();
+    auto rc = details::sanitize_rc(::shirakami::create_storage(key, storage, std::move(options)));
+    log_exit << "create_storage() rc: " << rc << " storage:" << storage;
+    return rc;
+}
+
+Status get_storage(std::string_view key, ::shirakami::Storage& storage) {
+    log_entry << "get_storage() key:" << binstring(key);
+    auto rc = details::sanitize_rc(::shirakami::get_storage(key, storage));
+    log_exit << "get_storage() rc: " << rc << " storage:" << storage;
+    return rc;
+}
+
 Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry <<
         "insert() token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);

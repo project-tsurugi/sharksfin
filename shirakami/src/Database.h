@@ -185,24 +185,11 @@ public:
     StatusCode create_transaction(std::unique_ptr<Transaction>& out, TransactionOptions const& options = {});
 
     /**
-     * @brief clean up all storage in this database
-     */
-    StatusCode clean();
-
-    /**
      * @brief accessor to the default storage where system
      * information (e.g. tables list) is stored
      * @return the default storage
      */
     Storage& default_storage() const noexcept;
-
-    /**
-     * @brief list storage name to native handle mapping
-     * @param the map to receive the output. The result is valid only when StatusCode::OK is returned.
-     * @returns StatusCode::OK if successful
-     * @returns any errors happened while listing/scanning storages
-     */
-    StatusCode list_storages(std::unordered_map<std::string, ::shirakami::Storage>& out) noexcept;
 
 private:
     std::mutex mutex_for_storage_metadata_{};
