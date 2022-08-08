@@ -15,7 +15,7 @@ git submodule update --init --recursive
 ### Dockerfile
 
 ```dockerfile
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 RUN apt update -y && apt install -y git build-essential cmake ninja-build libboost-filesystem-dev doxygen libnuma-dev
 ```
@@ -23,13 +23,13 @@ RUN apt update -y && apt install -y git build-essential cmake ninja-build libboo
 ## How to setup shirakami 
 
 If you want to run sharksfin with shirakami, install it before building the api code. Follow the procedure below.
+(see [instruction](https://github.com/project-tsurugi/shirakami/blob/master/README.md) for details)
 
 ```sh
 cd sharksfin/third_party/shirakami
-./bootstrap.sh
 mkdir build
 cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=<installation directory> ..
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<installation directory> ..
 ninja
 ninja install
 ```
