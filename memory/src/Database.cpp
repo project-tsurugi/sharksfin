@@ -73,11 +73,15 @@ std::unique_ptr<TransactionContext> Database::create_transaction(bool readonly) 
     check_alive();
     auto id = transaction_id_sequence_.fetch_add(1U);
     if (enable_transaction_lock()) {
+        if (readonly) {
+            std::shared_lock lock { transaction_mutex_, std::defer_lock };
+            return std::make_unique<TransactionContext>(this, id, std::move(lock));
+        }
         std::unique_lock lock { transaction_mutex_, std::defer_lock };
-        return std::make_unique<TransactionContext>(this, id, std::move(lock), readonly);
+        return std::make_unique<TransactionContext>(this, id, std::move(lock));
     }
     std::unique_lock<transaction_mutex_type> lock;
-    return std::make_unique<TransactionContext>(this, id, std::move(lock), readonly);
+    return std::make_unique<TransactionContext>(this, id, std::move(lock));
 }
 
 }  // namespace sharksfin::memory
