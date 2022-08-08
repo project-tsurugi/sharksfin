@@ -31,7 +31,8 @@ public:
 
     /**
      * @brief creates a new instance.
-     * @param capacity the reader capacity
+     * @param capacity the shared lock capacity. The number of shared locks must be less than the capacity.
+     * Acquiring shared locks equal to capacity causes undefined behavior.
      */
     explicit constexpr RwMutex(std::uint32_t capacity = 1000U) noexcept :
         capacity_ { capacity + 1 }
@@ -77,6 +78,10 @@ public:
                 return false;
             }
             if (resource_.compare_exchange_weak(current, current + 1, std::memory_order::memory_order_release)) {
+                if(capacity_ <= current) {
+                    // # of shared locks reached the limit. Capacity should be expanded.
+                    std::abort();
+                }
                 return true;
             }
         }
