@@ -26,51 +26,51 @@ using namespace std::chrono_literals;
 class ReentrantLockTest : public testing::Test {};
 
 TEST_F(ReentrantLockTest, simple) {
-    ReentrantLock lock{};
-    lock.acquire();
-    ASSERT_TRUE(lock.release());
-    lock.acquire();
-    ASSERT_TRUE(lock.release());
-    ASSERT_FALSE(lock.release());
+    ReentrantLock lk{};
+    lk.lock();
+    ASSERT_TRUE(lk.unlock());
+    lk.lock();
+    ASSERT_TRUE(lk.unlock());
+    ASSERT_FALSE(lk.unlock());
 }
 
 TEST_F(ReentrantLockTest, acquire_can_be_nested) {
-    ReentrantLock lock{};
-    lock.acquire();
-    lock.acquire();
-    ASSERT_TRUE(lock.release());
-    ASSERT_TRUE(lock.release());
-    ASSERT_FALSE(lock.release());
+    ReentrantLock lk{};
+    lk.lock();
+    lk.lock();
+    ASSERT_TRUE(lk.unlock());
+    ASSERT_TRUE(lk.unlock());
+    ASSERT_FALSE(lk.unlock());
 }
 
 TEST_F(ReentrantLockTest, mutual_exclusion) {
-    ReentrantLock lock{};
-    lock.acquire();
+    ReentrantLock lk{};
+    lk.lock();
     std::atomic_bool run{false};
     auto f = std::async(std::launch::async, [&]() {
-        lock.acquire();
+        lk.lock();
         run = true;
     });
     std::this_thread::sleep_for(1ms);
     ASSERT_FALSE(run);
-    lock.release();
+    lk.unlock();
     f.get();
     ASSERT_TRUE(run);
-    ASSERT_TRUE(lock.release());
-    ASSERT_FALSE(lock.release());
+    ASSERT_TRUE(lk.unlock());
+    ASSERT_FALSE(lk.unlock());
 }
 
 TEST_F(ReentrantLockTest, mutual_exclusion_with_try_lock) {
-    ReentrantLock lock{};
-    lock.acquire();
+    ReentrantLock lk{};
+    lk.lock();
     std::atomic_bool acquired{};
     auto f = std::async(std::launch::async, [&]() {
-        acquired = lock.try_acquire();
+        acquired = lk.try_lock();
     });
     f.get();
     ASSERT_FALSE(acquired);
-    ASSERT_TRUE(lock.try_acquire());
-    ASSERT_TRUE(lock.release());
-    ASSERT_TRUE(lock.release());
+    ASSERT_TRUE(lk.try_lock());
+    ASSERT_TRUE(lk.unlock());
+    ASSERT_TRUE(lk.unlock());
 }
 }  // namespace sharksfin::memory

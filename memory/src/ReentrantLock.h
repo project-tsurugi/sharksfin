@@ -24,7 +24,7 @@ class ReentrantLock {
 public:
     ReentrantLock() = default;
 
-    void acquire() {
+    void lock() {
         std::unique_lock<std::mutex> lock(mutex_);
         if (owner_ == std::this_thread::get_id()) {
             owner_ = std::thread::id{};
@@ -36,7 +36,7 @@ public:
         owner_ = std::this_thread::get_id();
     }
 
-    bool try_acquire() {
+    bool try_lock() {
         std::unique_lock<std::mutex> lock(mutex_);
         if (owner_ == std::thread::id{}) {
             owner_ = std::this_thread::get_id();
@@ -50,7 +50,7 @@ public:
         return false;
     }
 
-    bool release() {
+    bool unlock() {
         std::lock_guard<std::mutex> lock(mutex_);
         if (owner_ != std::thread::id{}) {
             --count_;
