@@ -1367,4 +1367,43 @@ TEST_F(ApiTest, implementation_id) {
     EXPECT_EQ("memory", s.to_string_view());
 }
 
+TEST_F(ApiTest, inactive_tx) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    HandleHolder<TransactionControlHandle> tch{};
+    TransactionOptions txopts{};
+    ASSERT_EQ(StatusCode::OK, transaction_begin(db, txopts, &tch.get()));
+    TransactionHandle tx{};
+    ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch.get(), &tx));
+    ASSERT_EQ(StatusCode::OK, transaction_abort(tch.get()));
+
+    StorageHandle st{};
+    StorageOptions stopts{};
+
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, storage_create(tx, "s", stopts, &st));
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, storage_get(tx, "s", &st));
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, storage_delete(tx, st));
+
+    ASSERT_EQ(StatusCode::OK, storage_create(db, "s", &st));
+    HandleHolder closer{st};
+
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, content_check_exist(tx, st, "k"));
+    Slice v{};
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, content_get(tx, st, "k", &v));
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, content_put(tx, st, "k", "v"));
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, content_delete(tx, st, "k"));
+
+    IteratorHandle iter;
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, content_scan(tx, st, "", EndPointKind::UNBOUND, "", EndPointKind::UNBOUND, &iter));
+
+    SequenceId seqid{};
+    EXPECT_EQ(StatusCode::OK, sequence_create(db, &seqid));
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, sequence_put(tx, seqid, 100, 100));
+
+    ASSERT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin

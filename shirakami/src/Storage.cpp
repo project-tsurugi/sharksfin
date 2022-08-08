@@ -25,21 +25,21 @@
 namespace sharksfin::shirakami {
 
 StatusCode Storage::check(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
-    assert(tx->active());  //NOLINT
+    if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     std::string value{};
     auto res = utils::exist_key(*tx, handle_, key.to_string_view());
     return resolve(res);
 }
 
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NOLINT(readability-make-member-function-const)
-    assert(tx->active());  //NOLINT
+    if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     std::string value{};
     auto res = utils::search_key(*tx, handle_, key.to_string_view(), buffer);
     return resolve(res);
 }
 
 StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {//NOLINT(readability-make-member-function-const)
-    assert(tx->active());  //NOLINT
+    if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     switch(operation) {
         case PutOperation::CREATE:
             return resolve(utils::insert(*tx, handle_, key.to_string_view(), value.to_string_view()));
@@ -52,7 +52,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
 }
 
 StatusCode Storage::remove(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
-    assert(tx->active());  //NOLINT
+    if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto rc = resolve(utils::delete_record(tx->native_handle(), handle_, key.to_string_view()));
     if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND && rc != StatusCode::ERR_WRITE_WITHOUT_WP) {
         ABORT();

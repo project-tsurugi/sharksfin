@@ -112,6 +112,8 @@ StatusCode storage_create(
     Slice key,
     StorageOptions const& options,
     StorageHandle *result) {
+    auto tx = unwrap(handle);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     (void) handle;
     (void) key;
     (void) options;
@@ -137,7 +139,8 @@ StatusCode storage_get(
     TransactionHandle handle,
     Slice key,
     StorageHandle *result) {
-    (void) handle;
+    auto tx = unwrap(handle);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     (void) key;
     (void) result;
     return StatusCode::ERR_NOT_IMPLEMENTED;
@@ -152,7 +155,8 @@ StatusCode storage_delete(StorageHandle handle) {
 StatusCode storage_delete(
     TransactionHandle tx,
     StorageHandle handle) {
-    (void) tx;
+    auto t = unwrap(tx);
+    if (! t->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     (void) handle;
     return StatusCode::ERR_NOT_IMPLEMENTED;
 }
@@ -304,6 +308,7 @@ StatusCode content_check_exist(
     StorageHandle storage,
     Slice key) {
     auto tx = unwrap(transaction);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto stg = unwrap(storage);
     auto db = tx->owner();
     if (!db) {
@@ -318,6 +323,7 @@ StatusCode content_get(
         Slice key,
         Slice* result) {
     auto tx = unwrap(transaction);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto stg = unwrap(storage);
     auto db = tx->owner();
     if (!db) {
@@ -338,6 +344,7 @@ StatusCode content_put(
         Slice value,
         PutOperation operation) {
     auto tx = unwrap(transaction);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     if (tx->readonly()) {
         return StatusCode::ERR_UNSUPPORTED;
     }
@@ -354,6 +361,7 @@ StatusCode content_delete(
         StorageHandle storage,
         Slice key) {
     auto tx = unwrap(transaction);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     if (tx->readonly()) {
         return StatusCode::ERR_UNSUPPORTED;
     }
@@ -399,6 +407,7 @@ StatusCode content_scan(
         Slice end_key, EndPointKind end_kind,
         IteratorHandle* result) {
     auto tx = unwrap(transaction);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto stg = unwrap(storage);
     auto db = tx->owner();
     if (!db) {
@@ -455,6 +464,7 @@ extern "C" StatusCode sequence_put(
     SequenceVersion version,
     SequenceValue value) {
     auto tx = unwrap(transaction);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     return shirakami::resolve(
         ::shirakami::update_sequence(tx->native_handle(), id, version, value));
 }

@@ -205,6 +205,7 @@ StatusCode storage_create(
  * @param result [OUT] the output target of storage handle, and it is available only if StatusCode::OK was returned
  * @return StatusCode::OK if the target storage was successfully created
  * @return StatusCode::ALREADY_EXISTS if the target storage already exists on the target database
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
  */
@@ -240,6 +241,7 @@ StatusCode storage_get(
  * @param result [OUT] the output target of storage handle, and it is available only if StatusCode::OK was returned
  * @return StatusCode::OK if the target storage space was successfully obtained
  * @return StatusCode::NOT_FOUND if the storage space does not exist
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
  */
@@ -265,6 +267,7 @@ StatusCode storage_delete(
  * @param tx transaction handle on the target database to delete the storage
  * @param handle the target of storage handle to delete
  * @return StatusCode::OK if the target storage space was successfully deleted
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
  */
@@ -429,6 +432,7 @@ StatusCode transaction_dispose(
  * @param key the content key
  * @return Status::OK if the target content exists
  * @return Status::NOT_FOUND if the target content does not exist
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_check_exist(
@@ -446,6 +450,7 @@ extern "C" StatusCode content_check_exist(
  * @param result [OUT] the slice of obtained content
  * @return Status::OK if the target content was obtained successfully
  * @return Status::NOT_FOUND if the target content does not exist
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_get(
@@ -482,6 +487,7 @@ enum class PutOperation : std::uint32_t {
  * @param value the content value
  * @param operation indicates the behavior with the existing/new entry. See PutOperation.
  * @return Status::OK if the target content was successfully put
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return warnings if the operation is not applicable to the entry. See PutOperation.
  * @return otherwise if error was occurred
  */
@@ -498,6 +504,7 @@ extern "C" StatusCode content_put(
  * @param storage the target storage
  * @param key the content key
  * @return Status::OK if the target content was successfully deleted (or not found)
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return Status::NOT_FOUND if the target content was not found (optional behavior)
  * @return otherwise if error was occurred
  */
@@ -516,6 +523,7 @@ extern "C" StatusCode content_delete(
  * @param prefix_key the content key prefix
  * @param result [OUT] an iterator handle over the key prefix range
  * @return Status::OK if the iterator was successfully prepared
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan_prefix(
@@ -538,6 +546,7 @@ extern "C" StatusCode content_scan_prefix(
  * @param end_exclusive whether or not ending position is exclusive
  * @param result [OUT] an iterator handle over the key range
  * @return Status::OK if the iterator was successfully prepared
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan_range(
@@ -591,6 +600,7 @@ enum class EndPointKind : std::uint32_t {
  * @param end_kind end-point kind of the ending position
  * @param result [OUT] an iterator handle over the key range
  * @return Status::OK if the iterator was successfully prepared
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan(
@@ -694,6 +704,7 @@ extern "C" StatusCode sequence_create(
  * @param version the version of the sequence value
  * @param value the new sequence value
  * @return StatusCode::OK if the put operation is successful
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if any error occurs
  * @warning multiple put calls to a sequence with same version number cause undefined behavior.
  */

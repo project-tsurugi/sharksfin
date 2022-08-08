@@ -138,6 +138,8 @@ StatusCode storage_create(
     Slice key,
     StorageOptions const& options,
     StorageHandle *result) {
+    auto tx = unwrap(handle);
+    if (! tx->is_alive()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     (void) handle;
     (void) key;
     (void) options;
@@ -159,7 +161,8 @@ StatusCode storage_get(
     TransactionHandle handle,
     Slice key,
     StorageHandle *result) {
-    (void) handle;
+    auto tx = unwrap(handle);
+    if (! tx->is_alive()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     (void) key;
     (void) result;
     return StatusCode::ERR_NOT_IMPLEMENTED;  //TODO
@@ -175,6 +178,8 @@ StatusCode storage_delete(StorageHandle handle) {
 StatusCode storage_delete(
     TransactionHandle tx,
     StorageHandle handle) {
+    auto t = unwrap(tx);
+    if (! t->is_alive()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     (void) tx;
     (void) handle;
     return StatusCode::ERR_NOT_IMPLEMENTED;  //TODO
@@ -285,7 +290,7 @@ StatusCode content_check_exist(
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
-        return StatusCode::ERR_INVALID_STATE;
+        return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     auto buffer = st->get(key);
     if (buffer) {
@@ -302,7 +307,7 @@ StatusCode content_get(
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
-        return StatusCode::ERR_INVALID_STATE;
+        return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     auto buffer = st->get(key);
     if (buffer) {
@@ -321,7 +326,7 @@ StatusCode content_put(
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
-        return StatusCode::ERR_INVALID_STATE;
+        return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     if (tx->readonly()) {
         return StatusCode::ERR_UNSUPPORTED;
@@ -354,7 +359,7 @@ StatusCode content_delete(
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
-        return StatusCode::ERR_INVALID_STATE;
+        return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     if (tx->readonly()) {
         return StatusCode::ERR_UNSUPPORTED;
@@ -373,7 +378,7 @@ StatusCode content_scan_prefix(
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
-        return StatusCode::ERR_INVALID_STATE;
+        return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     auto iterator = std::make_unique<memory::Iterator>(
             st,
@@ -392,7 +397,7 @@ StatusCode content_scan_range(
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
-        return StatusCode::ERR_INVALID_STATE;
+        return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     auto iterator = std::make_unique<memory::Iterator>(
         st,
@@ -414,7 +419,7 @@ StatusCode content_scan(
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
-        return StatusCode::ERR_INVALID_STATE;
+        return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     auto iterator = std::make_unique<memory::Iterator>(
             st,
@@ -471,6 +476,9 @@ extern "C" StatusCode sequence_put(
     SequenceVersion version,
     SequenceValue value) {
     auto tx = unwrap(transaction);
+    if (!tx->is_alive()) {
+        return StatusCode::ERR_INACTIVE_TRANSACTION;
+    }
     auto db = tx->owner();
     auto& seq = db->sequences();
     auto res = seq.put(id, version, value);
