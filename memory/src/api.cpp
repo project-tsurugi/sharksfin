@@ -244,6 +244,7 @@ StatusCode transaction_commit(
         TransactionControlHandle handle,
         [[maybe_unused]] bool async) { // async not supported
     auto tx = unwrap(handle);
+    if (! tx->is_alive()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     if (tx->release()) {
         return StatusCode::OK;
     }

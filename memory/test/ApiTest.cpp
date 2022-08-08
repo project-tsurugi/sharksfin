@@ -1379,6 +1379,7 @@ TEST_F(ApiTest, inactive_tx) {
     TransactionHandle tx{};
     ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch.get(), &tx));
     ASSERT_EQ(StatusCode::OK, transaction_abort(tch.get()));
+    EXPECT_EQ(StatusCode::ERR_INACTIVE_TRANSACTION, transaction_commit(tch.get()));
 
     StorageHandle st{};
     StorageOptions stopts{};

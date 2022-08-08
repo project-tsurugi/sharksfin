@@ -357,6 +357,7 @@ StatusCode transaction_borrow_handle(
  * @return StatusCode::OK for the successful commit.
  * Then the transaction handle associated with the given control handle
  * gets invalidated and it should not be used to call APIs any more.
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise, status code reporting the commit failure such as StatusCode::ERR_ABORTED.
  */
 StatusCode transaction_commit(

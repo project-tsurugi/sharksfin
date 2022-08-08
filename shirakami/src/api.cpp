@@ -267,6 +267,7 @@ StatusCode transaction_commit(
         TransactionControlHandle handle,
         bool async) {
     auto tx = unwrap(handle);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     return tx->commit(async);
 }
 
