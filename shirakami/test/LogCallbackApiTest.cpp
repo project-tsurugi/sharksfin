@@ -175,7 +175,7 @@ TEST_F(ShirakamiLogCallbackApiTest, multiple_records) {
     wait_epochs(4); // wait for log flush
     EXPECT_EQ(database_close(db), StatusCode::OK);
     EXPECT_TRUE(called);
-    ASSERT_EQ(4, records.size()); // no delete rec comes due to restriction by shirakami/limestone TODO
+    ASSERT_EQ(6, records.size());
     {
         auto& rec = records[0];
         EXPECT_EQ("a", rec.key_);
@@ -208,6 +208,24 @@ TEST_F(ShirakamiLogCallbackApiTest, multiple_records) {
         EXPECT_EQ("b", rec.key_);
         EXPECT_EQ("BB", rec.value_);
         EXPECT_EQ(LogOperation::UPDATE, rec.operation_);
+        EXPECT_EQ(100, rec.storage_id_);
+        std::cout << "major version: " << rec.major_version_ << std::endl;
+        std::cout << "major version: " << rec.minor_version_ << std::endl;
+    }
+    {
+        auto& rec = records[4];
+        EXPECT_EQ("a", rec.key_);
+        EXPECT_EQ("", rec.value_);
+        EXPECT_EQ(LogOperation::DELETE, rec.operation_);
+        EXPECT_EQ(100, rec.storage_id_);
+        std::cout << "major version: " << rec.major_version_ << std::endl;
+        std::cout << "major version: " << rec.minor_version_ << std::endl;
+    }
+    {
+        auto& rec = records[5];
+        EXPECT_EQ("b", rec.key_);
+        EXPECT_EQ("", rec.value_);
+        EXPECT_EQ(LogOperation::DELETE, rec.operation_);
         EXPECT_EQ(100, rec.storage_id_);
         std::cout << "major version: " << rec.major_version_ << std::endl;
         std::cout << "major version: " << rec.minor_version_ << std::endl;
