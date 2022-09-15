@@ -151,7 +151,7 @@ Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
         r != StatusCode::ERR_ABORTED_RETRYABLE &&
         r != StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE &&
         r != StatusCode::ERR_ILLEGAL_OPERATION && // write operation on readonly tx
-        r != StatusCode::ERR_WRITE_WITHOUT_WP
+        r != StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE
         ) {
         ABORT();
     }
@@ -168,7 +168,7 @@ Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
         r != StatusCode::NOT_FOUND &&
         r != StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE &&
         r != StatusCode::ERR_ILLEGAL_OPERATION && // write operation on readonly tx
-        r != StatusCode::ERR_WRITE_WITHOUT_WP
+        r != StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE
         ) {
         ABORT();
     }
@@ -187,7 +187,7 @@ Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     }
     if (r != StatusCode::OK &&
         r != StatusCode::ERR_ILLEGAL_OPERATION && // write operation on readonly tx
-        r != StatusCode::ERR_WRITE_WITHOUT_WP
+        r != StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE
         ) {
         ABORT();
     }

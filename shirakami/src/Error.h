@@ -69,8 +69,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_CONFLICT_ON_WRITE_PRESERVE: rc = StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE; break;
         case Status::ERR_CONFLICT_ON_WRITE_PRESERVE: rc = StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE; break;
         case Status::WARN_NOT_BEGIN: rc = StatusCode::ERR_INVALID_STATE; break;
-        case Status::WARN_WAITING_FOR_OTHER_TX: rc = StatusCode::ERR_WAITING_FOR_OTHER_TX; break;
-        case Status::WARN_WRITE_WITHOUT_WP: rc = StatusCode::ERR_WRITE_WITHOUT_WP; break;
+        case Status::WARN_WAITING_FOR_OTHER_TX: rc = StatusCode::ERR_WAITING_FOR_OTHER_TRANSACTION; break;
+        case Status::WARN_WRITE_WITHOUT_WP: rc = StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE; break;
 
         // shiarakmi internal errors - they should not be passed to sharksfin
         case Status::INTERNAL_BEGIN:

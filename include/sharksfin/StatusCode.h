@@ -117,12 +117,12 @@ enum class StatusCode : std::int64_t {
     /**
      * @brief the operation is blocked by other transaction
      */
-    ERR_WAITING_FOR_OTHER_TX = -13,
+    ERR_WAITING_FOR_OTHER_TRANSACTION = -13,
 
     /**
      * @brief long tx issued write operation without preservation
      */
-    ERR_WRITE_WITHOUT_WP = -14,
+    ERR_WRITE_WITHOUT_WRITE_PRESERVE = -14,
 
     /**
      * @brief transaction is inactive
@@ -154,8 +154,8 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_NOT_IMPLEMENTED: return "ERR_NOT_IMPLEMENTED";
         case StatusCode::ERR_ILLEGAL_OPERATION: return "ERR_ILLEGAL_OPERATION";
         case StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE: return "ERR_CONFLICT_ON_WRITE_PRESERVE";
-        case StatusCode::ERR_WAITING_FOR_OTHER_TX: return "ERR_WAITING_FOR_OTHER_TX";
-        case StatusCode::ERR_WRITE_WITHOUT_WP: return "ERR_WRITE_WITHOUT_WP";
+        case StatusCode::ERR_WAITING_FOR_OTHER_TRANSACTION: return "ERR_WAITING_FOR_OTHER_TRANSACTION";
+        case StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE: return "ERR_WRITE_WITHOUT_WRITE_PRESERVE";
         case StatusCode::ERR_INACTIVE_TRANSACTION: return "ERR_INACTIVE_TRANSACTION";
         default: return "UNDEFINED";
     }
