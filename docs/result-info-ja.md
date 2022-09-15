@@ -54,10 +54,9 @@ sharksfin/shirakamiは上記方針に基づいてプライマリ/セカンダリ
 - トランザクションの操作に対して直前で実行された操作に関する実行情報を戻す関数を定義
 
   ```
-  ResultInfo transaction_result_info(TransactionHandle handle);
+  std::shared_ptr<ResultInfo> transaction_result_info(TransactionHandle handle);
   ```
 
-  - アロケーションの問題を回避するために、コピーによって値を戻す
   - 対象となるAPIは明示・非明示的に対象のトランザクションを使用しているもの。各関数のdoc commentで上記関数が使用可能であることを明記する。
     - transaction_* (transaction_beginを除く)
     - content_*
