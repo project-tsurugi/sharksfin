@@ -28,6 +28,7 @@
 #include "TransactionOperation.h"
 #include "TransactionOptions.h"
 #include "TransactionState.h"
+#include "ResultInfo.h"
 #include "StorageOptions.h"
 #include "LogRecord.h"
 
@@ -505,6 +506,15 @@ StatusCode transaction_check(
  */
 StatusCode transaction_dispose(
     TransactionControlHandle handle);
+
+/**
+ * @brief retrieve
+ * @details the caller typically calls this function to periodically check the transaction state in order to
+ * verify the permission to issue the transactional operations.
+ * @param handle the target transaction handle
+ */
+std::shared_ptr<ResultInfo> transaction_result_info(
+    TransactionHandle handle);
 
 /**
  * @brief query if a content on the target key exists.
