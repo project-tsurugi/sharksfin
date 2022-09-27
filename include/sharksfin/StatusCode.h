@@ -129,6 +129,13 @@ enum class StatusCode : std::int64_t {
      * @details transaction is inactive since it's already committed or aborted. The request is failed.
      */
     ERR_INACTIVE_TRANSACTION = -15,
+
+    /**
+     * @brief requested operation is blocked by concurrent operation
+     * @details the request cannot be fulfilled due to the operation concurrently executed by other transaction.
+     * After the blocking transaction completes, re-trying the request may lead to different result.
+     */
+    ERR_BLOCKED_BY_CONCURRENT_OPERATION = -16,
 };
 
 /**
@@ -157,6 +164,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_WAITING_FOR_OTHER_TRANSACTION: return "ERR_WAITING_FOR_OTHER_TRANSACTION";
         case StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE: return "ERR_WRITE_WITHOUT_WRITE_PRESERVE";
         case StatusCode::ERR_INACTIVE_TRANSACTION: return "ERR_INACTIVE_TRANSACTION";
+        case StatusCode::ERR_BLOCKED_BY_CONCURRENT_OPERATION: return "ERR_BLOCKED_BY_CONCURRENT_OPERATION";
         default: return "UNDEFINED";
     }
 }
