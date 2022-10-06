@@ -44,6 +44,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::ERR_FAIL_INSERT: rc = StatusCode::ERR_ABORTED; break;
         case Status::ERR_FATAL: rc = StatusCode::ERR_UNKNOWN; break;
         case Status::ERR_FATAL_INDEX: rc = StatusCode::ERR_UNKNOWN; break;
+        case Status::ERR_INVALID_CONFIGURATION: rc = StatusCode::ERR_UNKNOWN ; break;
         case Status::ERR_READ_AREA_VIOLATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; break; //TODO
         case Status::ERR_NOT_IMPLEMENTED: rc = StatusCode::ERR_NOT_IMPLEMENTED; break;
         case Status::ERR_FAIL_WP: rc = StatusCode::ERR_ABORTED; break;

@@ -60,7 +60,7 @@ StatusCode Database::create_storage(Slice key, StorageOptions const& options, st
     }
     static_assert(StorageOptions::undefined == ::shirakami::storage_id_undefined); // both defs must be compatible
     ::shirakami::storage_option opts{};
-    opts.set_id(options.storage_id());
+    opts.id(options.storage_id());
     ::shirakami::Storage handle{};
     if (auto rc = resolve(utils::create_storage(key.to_string_view(), handle, opts)); rc != StatusCode::OK) {
         ABORT();
