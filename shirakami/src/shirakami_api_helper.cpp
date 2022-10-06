@@ -123,7 +123,7 @@ void fin(bool force_shut_down_cpr) {
     log_exit << "fin()";
 }
 
-Status create_storage(std::string_view key, ::shirakami::Storage& storage, ::shirakami::storage_option options) {
+Status create_storage(std::string_view key, ::shirakami::Storage& storage, ::shirakami::storage_option options) {  //NOLINT
     log_entry << "create_storage() key:" << binstring(key) << " storage_id:" << options.id();
     auto rc = details::sanitize_rc(::shirakami::create_storage(key, storage, options));
     log_exit << "create_storage() rc: " << rc << " storage:" << storage;
