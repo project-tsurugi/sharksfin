@@ -276,12 +276,91 @@ StatusCode storage_delete(
     StorageHandle handle);
 
 /**
+ * @brief list existing storages
+ * @param handle the target database whose storages are to be listed
+ * @param out [OUT] the output parameter to store the listed storage keys
+ * @return StatusCode::OK if the target storages are successfully listed
+ * @return otherwise if error was occurred
+ * @deprecated kept for compatibility. Use storage_list(TransactionHandle, std::vector<std::string>&) instead.
+ */
+StatusCode storage_list(
+    DatabaseHandle handle,
+    std::vector<std::string>& out
+);
+
+/**
+ * @brief list existing storages
+ * @param tx the transaction used to list the storage
+ * @param out [OUT] the output parameter to store the listed storage keys
+ * @return StatusCode::OK if the target storages are successfully listed
+ * @return otherwise if error was occurred
+ * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
+ */
+StatusCode storage_list(
+    TransactionHandle tx,
+    std::vector<std::string>& out
+);
+
+/**
  * @brief disposes storage handles.
  * @param handle the target of storage handle to dispose
  * @return operation status
  */
 StatusCode storage_dispose(
     StorageHandle handle);
+
+/**
+ * @brief get storage options
+ * @param handle the target storage handle to get the options
+ * @param out [OUT] the output parameter to store storage options
+ * @return operation status
+ * @deprecated kept for compatibility. Use storage_get_options(TransactionHandle, StorageHandle, StorageOptions&) instead.
+ */
+StatusCode storage_get_options(
+    StorageHandle handle,
+    StorageOptions& out
+);
+
+/**
+ * @brief get storage options
+ * @param tx the transaction used to get the storage options
+ * @param handle the target storage handle to get the options
+ * @param out [OUT] the output parameter to store storage options
+ * @return operation status
+ * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
+ */
+StatusCode storage_get_options(
+    TransactionHandle tx,
+    StorageHandle handle,
+    StorageOptions& out
+);
+
+/**
+ * @brief set storage options
+ * @param handle the target storage handle to set the options
+ * @param options the storage options to be set for the storage
+ * @return operation status
+ * @deprecated kept for compatibility.
+ * Use storage_set_options(TransactionHandle, StorageHandle, StorageOptions const&) instead.
+ */
+StatusCode storage_set_options(
+    StorageHandle handle,
+    StorageOptions const& options
+);
+
+/**
+ * @brief set storage options
+ * @param tx the transaction used to set the storage options
+ * @param handle the target storage handle to set the options
+ * @param options the storage options to be set for the storage
+ * @return operation status
+ * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
+ */
+StatusCode storage_set_options(
+    TransactionHandle tx,
+    StorageHandle handle,
+    StorageOptions const& options
+);
 
 /**
  * @brief executes the given callback function in a new transaction process.

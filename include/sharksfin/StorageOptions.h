@@ -65,8 +65,26 @@ public:
         storage_id_ = arg;
     }
 
+    /**
+     * @brief setter for the storage options payload
+     * @param arg the payload
+     * @return *this
+     */
+    StorageOptions& payload(std::string contents) {
+        payload_ = std::move(contents);
+        return *this;
+    }
+
+    /**
+     * @brief accessor for the payload
+     * @return the payload
+     */
+    std::string_view payload() const {
+        return payload_;
+    }
 private:
     storage_id_type storage_id_{ undefined };
+    std::string payload_{};
 };
 
 }  // namespace sharksfin
