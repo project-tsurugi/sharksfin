@@ -44,6 +44,7 @@ public:
     /**
      * @brief create new storage option
      * @param storage_id the storage id
+     * @param payload the payload of the storage option, that stores storage metadata in flexible format
      */
     explicit StorageOptions(storage_id_type storage_id, std::string payload = {}) :
         storage_id_(storage_id),
@@ -70,7 +71,7 @@ public:
 
     /**
      * @brief setter for the storage options payload
-     * @param arg the payload
+     * @param contents the payload
      * @return *this
      */
     StorageOptions& payload(std::string contents) {

@@ -76,12 +76,12 @@ std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
     return ret;
 }
 
-StatusCode Storage::set_options(StorageOptions const& options, Transaction* tx) {
+StatusCode Storage::set_options(StorageOptions const& options, Transaction* tx) {  //NOLINT
     (void) tx;
     return shirakami::resolve(shirakami::utils::storage_set_options(handle_, from(options)));
 }
 
-StatusCode Storage::get_options(StorageOptions& out, Transaction* tx) {
+StatusCode Storage::get_options(StorageOptions& out, Transaction* tx) {  //NOLINT
     (void) tx;
     ::shirakami::storage_option opt{};
     auto res = shirakami::resolve(shirakami::utils::storage_get_options(handle_, opt));
