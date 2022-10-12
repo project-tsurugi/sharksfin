@@ -33,7 +33,8 @@ TEST_F(ShirakamiRecoveryTest, basic) {
         DatabaseHolder db{location};
         {
             std::unique_ptr<Storage> st0{};
-            ASSERT_EQ(db->create_storage("S0", st0), StatusCode::OK);
+            StorageOptions stopts0{100, "payload0"};
+            ASSERT_EQ(db->create_storage("S0", stopts0, st0), StatusCode::OK);
             EXPECT_TRUE(st0);
             TransactionHolder tx{db};
             ASSERT_EQ(st0->put(tx, "a", "A"), StatusCode::OK);
@@ -41,7 +42,8 @@ TEST_F(ShirakamiRecoveryTest, basic) {
             ASSERT_EQ(tx->commit(false), StatusCode::OK);
             tx->reset();
             std::unique_ptr<Storage> st1{};
-            ASSERT_EQ(db->create_storage("S1", st1), StatusCode::OK);
+            StorageOptions stopts1{200, "payload1"};
+            ASSERT_EQ(db->create_storage("S1", stopts1, st1), StatusCode::OK);
             EXPECT_TRUE(st1);
             ASSERT_EQ(st1->put(tx, "x", "X"), StatusCode::OK);
             ASSERT_EQ(st1->put(tx, "y", "Y"), StatusCode::OK);
@@ -58,6 +60,10 @@ TEST_F(ShirakamiRecoveryTest, basic) {
                 EXPECT_FALSE(st);
                 ASSERT_EQ(db->get_storage("S0", st), StatusCode::OK);
                 EXPECT_TRUE(st);
+                StorageOptions stopts{};
+                ASSERT_EQ(st->get_options(stopts), StatusCode::OK);
+                EXPECT_EQ(stopts.storage_id(), 100);
+                EXPECT_EQ(stopts.payload(), "payload0");
                 std::string buf{};
                 ASSERT_EQ(st->get(tx, "a", buf), StatusCode::OK);
                 ASSERT_EQ("A", buf);
@@ -72,6 +78,10 @@ TEST_F(ShirakamiRecoveryTest, basic) {
                 EXPECT_FALSE(st);
                 ASSERT_EQ(db->get_storage("S1", st), StatusCode::OK);
                 EXPECT_TRUE(st);
+                StorageOptions stopts{};
+                ASSERT_EQ(st->get_options(stopts), StatusCode::OK);
+                EXPECT_EQ(stopts.storage_id(), 200);
+                EXPECT_EQ(stopts.payload(), "payload1");
                 std::string buf{};
                 ASSERT_EQ(st->get(tx, "x", buf), StatusCode::OK);
                 ASSERT_EQ("X", buf);
@@ -91,6 +101,10 @@ void do_recover(std::string location) {
         {
             std::unique_ptr<Storage> st{};
             ASSERT_EQ(StatusCode::OK, db->get_storage("S0", st));
+            StorageOptions stopts{};
+            ASSERT_EQ(st->get_options(stopts), StatusCode::OK);
+            EXPECT_EQ(stopts.storage_id(), 100);
+            EXPECT_EQ(stopts.payload(), "payload");
             std::string buf{};
             EXPECT_EQ(st->get(tx, "a", buf), StatusCode::OK);
             EXPECT_EQ("A", buf);
@@ -109,6 +123,8 @@ TEST_F(ShirakamiRecoveryTest, recovery_storage) {
             TransactionHolder tx{db};
             std::unique_ptr<Storage> st{};
             ASSERT_EQ(StatusCode::OK, db->create_storage("S0", st));
+            StorageOptions stopts{100, "payload"};
+            ASSERT_EQ(st->set_options(stopts), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "b", "B"), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "Z",  "z"), StatusCode::OK);
@@ -126,6 +142,8 @@ TEST_F(ShirakamiRecoveryTest, recovery_storage_twice) {
             TransactionHolder tx{db};
             std::unique_ptr<Storage> st{};
             ASSERT_EQ(StatusCode::OK, db->create_storage("S0", st));
+            StorageOptions stopts{100, "payload"};
+            ASSERT_EQ(st->set_options(stopts), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "b", "B"), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "Z",  "z"), StatusCode::OK);

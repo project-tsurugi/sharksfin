@@ -28,6 +28,7 @@ using Token = ::shirakami::Token;
 using ScanHandle = ::shirakami::ScanHandle;
 using scan_endpoint = ::shirakami::scan_endpoint;
 using database_options = ::shirakami::database_options;
+using storage_option = ::shirakami::storage_option;
 
 namespace utils {
 
@@ -134,6 +135,27 @@ Status get_storage(std::string_view key, ::shirakami::Storage& storage) {
     log_entry << "get_storage() key:" << binstring(key);
     auto rc = details::sanitize_rc(::shirakami::get_storage(key, storage));
     log_exit << "get_storage() rc: " << rc << " storage:" << storage;
+    return rc;
+}
+
+Status list_storage(std::vector<std::string>& out) {
+    log_entry << "list_storage()";
+    auto rc = details::sanitize_rc(::shirakami::list_storage(out));
+    log_exit << "list_storage() rc: " << rc << " storages:" << out.size();
+    return rc;
+}
+
+Status storage_get_options(::shirakami::Storage storage, storage_option& options) {
+    log_entry << "storage_get_options() storage:" << storage;
+    auto rc = details::sanitize_rc(::shirakami::storage_get_options(storage, options));
+    log_exit << "storage_get_options() rc: " << rc << " options.id:" << options.id() << " options.payload:" << options.payload();
+    return rc;
+}
+
+Status storage_set_options(::shirakami::Storage storage, storage_option const& options) {
+    log_entry << "storage_set_options() storage:" << storage << " options.id:" << options.id() << " options.payload:" << options.payload();
+    auto rc = details::sanitize_rc(::shirakami::storage_set_options(storage, options));
+    log_exit << "storage_set_options() rc: " << rc;
     return rc;
 }
 

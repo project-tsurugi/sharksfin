@@ -155,6 +155,10 @@ public:
         return options_.storage_id();
     }
 
+    StorageOptions& options() noexcept {
+        return options_;
+    }
+
 private:
     Database* owner_;
     Buffer key_;

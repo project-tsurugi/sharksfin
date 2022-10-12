@@ -1407,4 +1407,67 @@ TEST_F(ApiTest, inactive_tx) {
     ASSERT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ApiTest, storage_options) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    StorageHandle st{};
+    {
+        StorageOptions stopts{};
+        stopts.storage_id(100);
+        stopts.payload("data");
+        EXPECT_EQ(StatusCode::OK, storage_create(db, "s", stopts, &st));
+    }
+    HandleHolder closer{st};
+    {
+        StorageOptions stopts{};
+        EXPECT_EQ(StatusCode::OK, storage_get_options(st, stopts));
+        EXPECT_EQ(100, stopts.storage_id());
+        EXPECT_EQ("data", stopts.payload());
+    }
+    {
+        StorageOptions stopts{};
+        stopts.storage_id(1000);
+        stopts.payload("update");
+        EXPECT_EQ(StatusCode::OK, storage_set_options(st, stopts));
+    }
+    {
+        StorageOptions stopts{};
+        EXPECT_EQ(StatusCode::OK, storage_get_options(st, stopts));
+        EXPECT_EQ(1000, stopts.storage_id());
+        EXPECT_EQ("update", stopts.payload());
+    }
+
+    EXPECT_EQ(StatusCode::OK, storage_delete(st));
+    ASSERT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, list_storages) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    StorageHandle st0{};
+    EXPECT_EQ(StatusCode::OK, storage_create(db, "s0", {}, &st0));
+    HandleHolder closer0{st0};
+    StorageHandle st1{};
+    EXPECT_EQ(StatusCode::OK, storage_create(db, "s1", {}, &st1));
+    HandleHolder closer1{st1};
+    StorageHandle st2{};
+    EXPECT_EQ(StatusCode::OK, storage_create(db, "s2", {}, &st2));
+    HandleHolder closer2{st2};
+
+    std::vector<std::string> list{};
+    EXPECT_EQ(StatusCode::OK, storage_list(db, list));
+    ASSERT_EQ(3, list.size());
+    std::sort(list.begin(), list.end());
+    EXPECT_EQ("s0", list[0]);
+    EXPECT_EQ("s1", list[1]);
+    EXPECT_EQ("s2", list[2]);
+    ASSERT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin

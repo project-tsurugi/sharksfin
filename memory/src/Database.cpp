@@ -69,6 +69,17 @@ bool Database::delete_storage(Slice key) {
     return false;
 }
 
+std::vector<std::string> Database::list_storage() {
+    check_alive();
+    std::unique_lock lock { storages_mutex_ };
+    std::vector<std::string> ret{};
+    for(auto&& [b, _] : storages_) {
+        (void) _;
+        ret.emplace_back(b.to_slice().to_string());
+    }
+    return ret;
+}
+
 std::unique_ptr<TransactionContext> Database::create_transaction(bool readonly) {
     check_alive();
     auto id = transaction_id_sequence_.fetch_add(1U);

@@ -69,4 +69,26 @@ std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
             end_key, end_kind);
 }
 
+::shirakami::storage_option from(StorageOptions const& opt) {
+    auto ret = ::shirakami::storage_option{};
+    ret.id(opt.storage_id());
+    ret.payload(opt.payload());
+    return ret;
+}
+
+StatusCode Storage::set_options(StorageOptions const& options, Transaction* tx) {
+    (void) tx;
+    return shirakami::resolve(shirakami::utils::storage_set_options(handle_, from(options)));
+}
+
+StatusCode Storage::get_options(StorageOptions& out, Transaction* tx) {
+    (void) tx;
+    ::shirakami::storage_option opt{};
+    auto res = shirakami::resolve(shirakami::utils::storage_get_options(handle_, opt));
+    out.storage_id(opt.id());
+    out.payload(std::string{opt.payload()});
+    return res;
+}
+
+
 }  // namespace sharksfin::shirakami

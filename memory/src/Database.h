@@ -75,6 +75,12 @@ public:
     bool delete_storage(Slice key);
 
     /**
+     * @brief list storages on the database
+     * @return the storages list
+     */
+    std::vector<std::string> list_storage();
+
+    /**
      * @brief creates a new transaction context.
      * @param readonly specify whether the transaction is readonly
      * @return the created context

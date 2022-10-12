@@ -190,6 +190,64 @@ StatusCode storage_dispose([[maybe_unused]] StorageHandle handle) {
     return StatusCode::OK;
 }
 
+StatusCode storage_list(
+    DatabaseHandle handle,
+    std::vector<std::string>& out
+) {
+    auto database = unwrap(handle);
+    out = database->list_storage();
+    return StatusCode::OK;
+}
+
+StatusCode storage_list(
+    TransactionHandle tx,
+    std::vector<std::string>& out
+) {
+    auto t = unwrap(tx);
+    out = t->owner()->list_storage();
+    return StatusCode::OK;
+}
+
+StatusCode storage_get_options(
+    StorageHandle handle,
+    StorageOptions& out
+) {
+    auto st = unwrap(handle);
+    out = st->options();
+    return StatusCode::OK;
+}
+
+StatusCode storage_get_options(
+    TransactionHandle tx,
+    StorageHandle handle,
+    StorageOptions& out
+) {
+    (void) tx;
+    auto st = unwrap(handle);
+    out = st->options();
+    return StatusCode::OK;
+}
+
+StatusCode storage_set_options(
+    StorageHandle handle,
+    StorageOptions const& options
+) {
+    auto st = unwrap(handle);
+    st->options() = options;
+    return StatusCode::OK;
+}
+
+StatusCode storage_set_options(
+    TransactionHandle tx,
+    StorageHandle handle,
+    StorageOptions const& options
+) {
+    (void) tx;
+    auto st = unwrap(handle);
+    st->options() = options;
+    return StatusCode::OK;
+}
+
 StatusCode transaction_exec(
         DatabaseHandle handle,
         TransactionOptions const& options,

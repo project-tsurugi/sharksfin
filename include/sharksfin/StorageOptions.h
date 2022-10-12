@@ -43,10 +43,11 @@ public:
 
     /**
      * @brief create new storage option
-     * @param storage_id the storage id for the
+     * @param storage_id the storage id
      */
-    explicit StorageOptions(storage_id_type storage_id) :
-        storage_id_(storage_id)
+    explicit StorageOptions(storage_id_type storage_id, std::string payload = {}) :
+        storage_id_(storage_id),
+        payload_(std::move(payload))
     {}
 
     /**
@@ -60,9 +61,11 @@ public:
     /**
      * @brief setter for the storage id
      * @param arg the storage id
+     * @return *this
      */
-    void storage_id(storage_id_type arg) noexcept {
+    StorageOptions& storage_id(storage_id_type arg) noexcept {
         storage_id_ = arg;
+        return *this;
     }
 
     /**
@@ -82,6 +85,7 @@ public:
     std::string_view payload() const {
         return payload_;
     }
+
 private:
     storage_id_type storage_id_{ undefined };
     std::string payload_{};

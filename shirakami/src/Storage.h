@@ -121,6 +121,25 @@ public:
     inline ::shirakami::Storage handle() const {
         return handle_;
     }
+
+    /**
+     * @brief storage options setter
+     * @param options the options value to set
+     * @param tx transaction used to set the option.
+     * @return the operation status
+     * @attention tx parameter is not yet fully functional yet
+     */
+    StatusCode set_options(StorageOptions const& options, Transaction* tx = nullptr);
+
+    /**
+     * @brief storage options getter
+     * @param out [OUT] the output prameter to be filled
+     * @param tx transaction used to get the option.
+     * @return the operation status
+     * @attention tx parameter is not yet fully functional yet
+     */
+    StatusCode get_options(StorageOptions& out, Transaction* tx = nullptr);
+
 private:
     Database* owner_;
     std::string name_;

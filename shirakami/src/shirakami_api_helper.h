@@ -35,6 +35,7 @@ using Token = ::shirakami::Token;
 using ScanHandle = ::shirakami::ScanHandle;
 using scan_endpoint = ::shirakami::scan_endpoint;
 using transaction_options = ::shirakami::transaction_options;
+using storage_option = ::shirakami::storage_option;
 
 class Transaction;
 
@@ -80,6 +81,12 @@ void fin(bool force_shut_down_cpr = true);
 Status create_storage(std::string_view key, ::shirakami::Storage& storage, ::shirakami::storage_option options = {});
 
 Status get_storage(std::string_view key, ::shirakami::Storage& storage);
+
+Status list_storage(std::vector<std::string>& out);
+
+Status storage_get_options(::shirakami::Storage storage, storage_option& options);
+
+Status storage_set_options(::shirakami::Storage storage, storage_option const& options);
 
 Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
 

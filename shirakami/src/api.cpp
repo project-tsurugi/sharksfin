@@ -167,6 +167,60 @@ StatusCode storage_dispose(StorageHandle handle) {
     return StatusCode::OK;
 }
 
+StatusCode storage_list(
+    DatabaseHandle handle,
+    std::vector<std::string>& out
+) {
+    (void) handle;
+    return shirakami::resolve(shirakami::utils::list_storage(out));
+}
+
+StatusCode storage_list(
+    TransactionHandle tx,
+    std::vector<std::string>& out
+) {
+    (void) tx;
+    return shirakami::resolve(shirakami::utils::list_storage(out));
+}
+
+StatusCode storage_get_options(
+    StorageHandle handle,
+    StorageOptions& out
+) {
+    auto st = unwrap(handle);
+    return st->get_options(out);
+}
+
+StatusCode storage_get_options(
+    TransactionHandle tx,
+    StorageHandle handle,
+    StorageOptions& out
+) {
+    auto t = unwrap(tx);
+    if (! t->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
+    auto st = unwrap(handle);
+    return st->get_options(out);
+}
+
+StatusCode storage_set_options(
+    StorageHandle handle,
+    StorageOptions const& options
+) {
+    auto st = unwrap(handle);
+    return st->set_options(options);
+}
+
+StatusCode storage_set_options(
+    TransactionHandle tx,
+    StorageHandle handle,
+    StorageOptions const& options
+) {
+    auto t = unwrap(tx);
+    if (! t->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
+    auto st = unwrap(handle);
+    return st->set_options(options, t);
+}
+
 template<class T>
 static void add(std::atomic<T>& atomic, T duration) {
     static_assert(std::is_trivially_copyable_v<T>);
