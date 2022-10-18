@@ -1590,9 +1590,6 @@ TEST_F(ShirakamiApiTest, readonly_transaction) {
 }
 
 TEST_F(ShirakamiApiTest, sequence) {
-    if (BUILD_WP) {  //TODO
-        GTEST_SKIP() << "wp build does not yet support sequence";
-    }
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
@@ -1614,6 +1611,7 @@ TEST_F(ShirakamiApiTest, sequence) {
     ASSERT_EQ(StatusCode::OK, transaction_commit(tch.get(), true));
     ASSERT_EQ(StatusCode::OK, transaction_wait_commit(tch.get(), 2000*1000*1000));
 
+    wait_epochs(2); // wait commit becomes durable // TODO let transaction_wait_commit wait durability
     SequenceVersion ver{};
     SequenceValue val{};
     ASSERT_EQ(StatusCode::OK, sequence_get(db, id0, &ver, &val));

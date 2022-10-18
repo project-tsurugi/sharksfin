@@ -521,7 +521,7 @@ extern "C" StatusCode sequence_put(
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     return shirakami::resolve(
-        ::shirakami::update_sequence(tx->native_handle(), id, version, value));
+        shirakami::utils::update_sequence(tx->native_handle(), id, version, value));
 }
 
 extern "C" StatusCode sequence_get(
@@ -531,7 +531,7 @@ extern "C" StatusCode sequence_get(
     SequenceValue* value) {  //NOLINT
     (void)handle;
     return shirakami::resolve(
-        ::shirakami::read_sequence(id, version, value));
+        shirakami::utils::read_sequence(id, version, value));
 }
 
 extern "C" StatusCode sequence_delete(
@@ -539,7 +539,7 @@ extern "C" StatusCode sequence_delete(
     SequenceId id) {
     (void)handle;
     if (auto res = shirakami::resolve(
-            ::shirakami::delete_sequence(id)); res != StatusCode::OK) {
+            shirakami::utils::delete_sequence(id)); res != StatusCode::OK) {
         ABORT();
     }
     return StatusCode::OK;
