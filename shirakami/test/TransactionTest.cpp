@@ -152,6 +152,11 @@ TEST_F(ShirakamiTransactionTest, check_tx_status) {
         ASSERT_EQ(TransactionState::StateKind::STARTED, s.state_kind());
         ASSERT_EQ(tx->commit(false), StatusCode::OK);
         s = tx->check_state();
+        ASSERT_EQ(TransactionState::StateKind::WAITING_DURABLE, s.state_kind());
+        while(tx->check_state().state_kind() == TransactionState::StateKind::WAITING_DURABLE) {
+            std::this_thread::sleep_for(1ms);
+        }
+        s = tx->check_state();
         ASSERT_EQ(TransactionState::StateKind::DURABLE, s.state_kind());
     }
     EXPECT_EQ(db->close(), StatusCode::OK);
