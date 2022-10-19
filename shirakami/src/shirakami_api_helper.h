@@ -27,6 +27,11 @@
 
 #define log_entry DVLOG(log_trace) << std::boolalpha << "--> "  //NOLINT
 #define log_exit DVLOG(log_trace) << std::boolalpha << "<-- "  //NOLINT
+#define log_rc(rc, fname) do { /*NOLINT*/  \
+    if((rc) != Status::OK) { \
+        VLOG(log_trace) << "--- " << (fname) << " rc:" << (rc); \
+    } \
+} while(0);
 
 namespace sharksfin::shirakami {
 
