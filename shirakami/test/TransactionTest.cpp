@@ -57,8 +57,7 @@ TEST_F(ShirakamiTransactionTest, empty_tx_option) {
     EXPECT_EQ(db->close(), StatusCode::OK);
 }
 
-// shirakami not yet implement readonly tx
-TEST_F(ShirakamiTransactionTest, DISABLED_readonly) {
+TEST_F(ShirakamiTransactionTest, readonly) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());
@@ -79,6 +78,9 @@ TEST_F(ShirakamiTransactionTest, DISABLED_readonly) {
         ops.transaction_type(TransactionOptions::TransactionType::READ_ONLY);
         std::unique_ptr<Transaction> tx{};
         ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
+        while(tx->check_state().state_kind() == TransactionState::StateKind::WAITING_START) {
+            std::this_thread::sleep_for(1ms);
+        }
         ASSERT_EQ(st->get(tx.get(), "a", buf), StatusCode::OK);
         EXPECT_EQ(buf, "A");
         ASSERT_EQ(tx->commit(false), StatusCode::OK);

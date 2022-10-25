@@ -107,7 +107,7 @@ Status init(::shirakami::database_options options);
 
 Status close_scan(Token token, ScanHandle handle);
 
-Status commit(Token token, ::shirakami::commit_param* cp = nullptr);
+Status commit(Token token);
 
 Status abort(Token token);
 

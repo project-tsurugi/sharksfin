@@ -263,9 +263,9 @@ Status close_scan(Token token, ScanHandle handle) {
     return rc;
 }
 
-Status commit(Token token, ::shirakami::commit_param* cp) {
+Status commit(Token token) {
     log_entry << "commit() token:" << token;
-    auto rc = details::sanitize_rc(::shirakami::commit(token, cp));
+    auto rc = details::sanitize_rc(::shirakami::commit(token));
     log_rc(rc, "commit()");
     log_exit << "commit() rc:" << rc;
     return rc;

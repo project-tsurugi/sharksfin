@@ -149,7 +149,6 @@ private:
     std::string buffer_{};
     bool is_active_{true};
     TransactionOptions::TransactionType type_{};
-    std::unique_ptr<::shirakami::commit_param> commit_params_{};
     std::vector<Storage*> write_preserves_{};
     ::shirakami::TxStateHandle state_handle_{::shirakami::undefined_handle};
 

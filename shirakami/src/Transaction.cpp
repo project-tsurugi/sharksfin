@@ -88,44 +88,20 @@ Transaction::~Transaction() noexcept {
     release_tx_handle(state_handle_);
 }
 
-StatusCode Transaction::commit(bool async) {
+StatusCode Transaction::commit(bool) {
     if(!is_active_) {
         ABORT();
     }
-    commit_params_.reset();
-    if (async) {
-        commit_params_ = std::make_unique<::shirakami::commit_param>();
-        commit_params_->set_cp(::shirakami::commit_property::WAIT_FOR_COMMIT);
-    }
-    auto rc = resolve(utils::commit(session_->id(), commit_params_.get()));
+    auto rc = resolve(utils::commit(session_->id()));
     if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
         is_active_ = false;
-    }
-    if (rc != StatusCode::OK) {
-        commit_params_.reset();
     }
     return rc;
 }
 
-StatusCode Transaction::wait_for_commit(std::size_t timeout_ns) {
-    constexpr static std::size_t check_interval_ns = 2*1000*1000;
-    if (! commit_params_) {
-        return StatusCode::ERR_INVALID_STATE;
-    }
-    std::size_t left = timeout_ns;
-    auto commit_id = commit_params_->get_ctid();
-    while(true) {
-        if(utils::check_commit(session_->id(), commit_id)) {
-            return StatusCode::OK;
-        }
-        if (left == 0) {
-            return StatusCode::ERR_TIME_OUT;
-        }
-        using namespace std::chrono_literals;
-        auto dur = left < check_interval_ns ? left : check_interval_ns;
-        std::this_thread::sleep_for(dur * 1ns);
-        left -= dur;
-    }
+StatusCode Transaction::wait_for_commit(std::size_t) {
+    // deprecated
+    return StatusCode::OK;
 }
 
 StatusCode Transaction::abort() {
@@ -158,7 +134,6 @@ void Transaction::reset() {
     }
     release_tx_handle(state_handle_);
     is_active_ = true;
-    commit_params_.reset();
     declare_begin();
 }
 
