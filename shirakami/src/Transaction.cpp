@@ -99,7 +99,7 @@ StatusCode Transaction::commit(bool) {
     return rc;
 }
 
-StatusCode Transaction::wait_for_commit(std::size_t) {
+StatusCode Transaction::wait_for_commit(std::size_t) {  //NOLINT
     // deprecated
     return StatusCode::OK;
 }
