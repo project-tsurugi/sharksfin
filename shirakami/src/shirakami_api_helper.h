@@ -113,8 +113,6 @@ Status abort(Token token);
 
 Status tx_begin(transaction_options options);
 
-bool check_commit(Token token, std::uint64_t commit_id);
-
 Status create_sequence(::shirakami::SequenceId* id);
 
 Status update_sequence(Token token, ::shirakami::SequenceId id, ::shirakami::SequenceVersion version, ::shirakami::SequenceValue value);

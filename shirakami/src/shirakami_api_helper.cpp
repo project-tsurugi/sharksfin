@@ -279,13 +279,6 @@ Status abort(Token token) {
     return rc;
 }
 
-bool check_commit(Token token, std::uint64_t commit_id) {
-    log_entry << "check_commit() token:" << token << " commit_id:" << commit_id;
-    auto rc = ::shirakami::check_commit(token, commit_id);
-    log_exit << "check_commit() rc:" << rc;
-    return rc;
-}
-
 Status tx_begin(transaction_options options) {
     log_entry << "tx_begin() " << options;
     auto rc = details::sanitize_rc(::shirakami::tx_begin(std::move(options)));
