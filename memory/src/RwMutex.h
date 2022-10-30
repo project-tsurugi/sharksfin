@@ -20,6 +20,10 @@
 
 #include <atomic>
 #include <xmmintrin.h>
+#include <glog/logging.h>
+
+#include "logging.h"
+#include "log_utils.h"
 
 namespace sharksfin::memory {
 
@@ -42,9 +46,11 @@ public:
      * @brief take a exclusive lock.
      */
     void lock() noexcept {
+        log_entry << fn_name;
         while(! try_lock()) {
             _mm_pause();
         }
+        log_exit << fn_name;
     }
 
     /**
@@ -53,8 +59,11 @@ public:
      * @return false if another lock is already taken
      */
     [[nodiscard]] bool try_lock() noexcept {
+        log_entry << fn_name;
         std::uint32_t expected = 0;
-        return resource_.compare_exchange_strong(expected, capacity_);
+        auto rc = resource_.compare_exchange_strong(expected, capacity_);
+        log_exit << fn_name << " rc:" << rc;
+        return rc;
     }
 
     /**

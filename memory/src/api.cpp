@@ -27,17 +27,7 @@
 
 #include "api_helper.h"
 #include "binary_printer.h"
-
-#define fn_name __func__ /* NOLINT */
-#define log_entry DVLOG(log_trace) << std::boolalpha << "--> "  //NOLINT
-#define log_exit DVLOG(log_trace) << std::boolalpha << "<-- "  //NOLINT
-#define log_rc(rc, fname) do { /*NOLINT*/  \
-    if((rc) != StatusCode::OK) { \
-        VLOG(log_trace) << "--- " << (fname) << " rc:" << (rc); /*NOLINT*/ \
-    } \
-} while(0);
-
-#define binstring(arg) " " #arg "(len=" << (arg).size() << "):\"" << common::binary_printer((arg).to_string_view()) << "\"" //NOLINT
+#include "log_utils.h"
 
 namespace sharksfin {
 
