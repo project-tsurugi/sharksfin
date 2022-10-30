@@ -17,7 +17,7 @@
 
 #include <iomanip>
 
-namespace sharksfin::shirakami::utils {
+namespace sharksfin::common {
 
 /**
  * @brief debug support to print binary value array

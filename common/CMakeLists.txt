@@ -11,36 +11,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-file(GLOB SOURCES
-    "*.cpp"
-)
 
-add_library(memory
-    ${SOURCES}
-)
-
-set_target_properties(memory
-    PROPERTIES
-        LIBRARY_OUTPUT_NAME "sharksfin-memory"
-)
-
-target_include_directories(memory
-    PRIVATE .
-    PRIVATE ../../common/src
-)
-
-target_link_libraries(memory
-    PUBLIC api
-    PRIVATE common
-    PRIVATE glog::glog
-)
-
-set_compile_options(memory)
-install_custom(memory ${export_name})
-
-# for tests
-add_library(memory-impl INTERFACE)
-
-target_include_directories(memory-impl
-    INTERFACE .
-)
+add_subdirectory(src)

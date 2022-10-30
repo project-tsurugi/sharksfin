@@ -560,6 +560,30 @@ enum class PutOperation : std::uint32_t {
 };
 
 /**
+ * @brief returns the label of the given enum value.
+ * @param value the enum value
+ * @return the corresponded label
+ */
+inline constexpr std::string_view to_string_view(PutOperation value) {
+    switch (value) {
+        case PutOperation::CREATE_OR_UPDATE: return "CREATE_OR_UPDATE";
+        case PutOperation::CREATE: return "CREATE";
+        case PutOperation::UPDATE: return "UPDATE";
+    }
+    std::abort();
+}
+
+/**
+ * @brief appends enum label into the given stream.
+ * @param out the target stream
+ * @param value the source enum value
+ * @return the target stream
+ */
+inline std::ostream& operator<<(std::ostream& out, PutOperation value) {
+    return out << to_string_view(value);
+}
+
+/**
  * @brief puts a content onto the target key.
  * @param transaction the current transaction handle
  * @param storage the target storage
@@ -666,6 +690,32 @@ enum class EndPointKind : std::uint32_t {
      */
     PREFIXED_EXCLUSIVE,
 };
+
+/**
+ * @brief returns the label of the given enum value.
+ * @param value the enum value
+ * @return the corresponded label
+ */
+inline constexpr std::string_view to_string_view(EndPointKind value) {
+    switch (value) {
+        case EndPointKind::UNBOUND: return "UNBOUND";
+        case EndPointKind::INCLUSIVE: return "INCLUSIVE";
+        case EndPointKind::EXCLUSIVE: return "EXCLUSIVE";
+        case EndPointKind::PREFIXED_INCLUSIVE: return "PREFIXED_INCLUSIVE";
+        case EndPointKind::PREFIXED_EXCLUSIVE: return "PREFIXED_EXCLUSIVE";
+    }
+    std::abort();
+}
+
+/**
+ * @brief appends enum label into the given stream.
+ * @param out the target stream
+ * @param value the source enum value
+ * @return the target stream
+ */
+inline std::ostream& operator<<(std::ostream& out, EndPointKind value) {
+    return out << to_string_view(value);
+}
 
 /**
  * @brief obtains iterator between begin and end keys range.

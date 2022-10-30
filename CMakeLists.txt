@@ -104,6 +104,7 @@ install(
 if(BUILD_TESTS)
     add_subdirectory(test)
 endif()
+add_subdirectory(common)
 if(BUILD_MEMORY)
     add_subdirectory(memory)
 endif()

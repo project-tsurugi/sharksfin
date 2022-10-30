@@ -16,107 +16,71 @@
 #include "sharksfin/api.h"
 
 #include <string_view>
+#include <boost/current_function.hpp>
 
+#include "logging.h"
 #include "glog/logging.h"
 #include "Database.h"
 #include "Iterator.h"
 #include "Storage.h"
 #include "TransactionContext.h"
 
+#include "api_helper.h"
+#include "binary_printer.h"
+
+#define fn_name __func__ /* NOLINT */
+#define log_entry DVLOG(log_trace) << std::boolalpha << "--> "  //NOLINT
+#define log_exit DVLOG(log_trace) << std::boolalpha << "<-- "  //NOLINT
+#define log_rc(rc, fname) do { /*NOLINT*/  \
+    if((rc) != StatusCode::OK) { \
+        VLOG(log_trace) << "--- " << (fname) << " rc:" << (rc); /*NOLINT*/ \
+    } \
+} while(0);
+
+#define binstring(arg) " " #arg "(len=" << (arg).size() << "):\"" << common::binary_printer((arg).to_string_view()) << "\"" //NOLINT
+
 namespace sharksfin {
 
-static inline constexpr std::string_view KEY_TRANSACTION_LOCK { "lock" };  // NOLINT
-static inline constexpr bool DEFAULT_TRANSACTION_LOCK = true;
-
-static inline DatabaseHandle wrap(memory::Database* object) {
-    return reinterpret_cast<DatabaseHandle>(object);  // NOLINT
-}
-
-static inline StorageHandle wrap(memory::Storage* object) {
-    return reinterpret_cast<StorageHandle>(object);  // NOLINT
-}
-
-// TransactionContext* can be interpreted as TransactionControlHandle and TransactionHandle
-static inline TransactionControlHandle wrap_as_control_handle(memory::TransactionContext* object) {
-    return reinterpret_cast<TransactionControlHandle>(object);  // NOLINT
-}
-
-static inline TransactionHandle wrap(memory::TransactionContext* object) {
-    return reinterpret_cast<TransactionHandle>(object);  // NOLINT
-}
-
-static inline IteratorHandle wrap(memory::Iterator* object) {
-    return reinterpret_cast<IteratorHandle>(object);  // NOLINT
-}
-
-static inline memory::Database* unwrap(DatabaseHandle handle) {
-    return reinterpret_cast<memory::Database*>(handle);  // NOLINT
-}
-
-static inline memory::Storage* unwrap(StorageHandle handle) {
-    return reinterpret_cast<memory::Storage*>(handle);  // NOLINT
-}
-
-static inline memory::TransactionContext* unwrap(TransactionControlHandle handle) {
-    return reinterpret_cast<memory::TransactionContext*>(handle);  // NOLINT
-}
-
-static inline memory::TransactionContext* unwrap(TransactionHandle handle) {
-    return reinterpret_cast<memory::TransactionContext*>(handle);  // NOLINT
-}
-
-static inline memory::Iterator* unwrap(IteratorHandle handle) {
-    return reinterpret_cast<memory::Iterator*>(handle);  // NOLINT
-}
-
-static inline StatusCode parse_option(std::optional<std::string> const& option, bool& result) {
-    if (option.has_value()) {
-        auto&& v = option.value();
-        if (v.empty() || v == "0" || v == "false") {
-            result = false;
-        } else if (v == "1" || v == "true") {
-            result = true;
-        } else {
-            return StatusCode::ERR_INVALID_ARGUMENT;
-        }
-    }
-    return StatusCode::OK;
-}
-
-StatusCode database_open([[maybe_unused]] DatabaseOptions const& options, DatabaseHandle* result) {
-    bool transaction_lock = DEFAULT_TRANSACTION_LOCK;
-    if (auto s = parse_option(options.attribute(KEY_TRANSACTION_LOCK), transaction_lock); s != StatusCode::OK) {
-        return s;
-    }
-
-    auto db = std::make_unique<memory::Database>();
-    db->enable_transaction_lock(transaction_lock);
-    *result = wrap(db.release());
-    return StatusCode::OK;
+StatusCode database_open(DatabaseOptions const& options, DatabaseHandle* result) {
+    log_entry << fn_name;
+    auto rc = impl::database_open(options, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
 }
 
 StatusCode database_close(DatabaseHandle handle) {
-    auto db = unwrap(handle);
-    db->shutdown();
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::database_close(handle);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode database_dispose(DatabaseHandle handle) {
-    auto db = unwrap(handle);
-    delete db;  // NOLINT
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::database_dispose(handle);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode database_set_logging_callback(
     DatabaseHandle handle,
     LogEventCallback callback) {  //NOLINT(performance-unnecessary-value-param)
-    (void)handle;
-    (void)callback;
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::database_set_logging_callback(handle, std::move(callback));
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *result) {
-    return storage_create(handle, key, {}, result);
+    log_entry << fn_name << " handle:" << handle << binstring(key);
+    auto rc = impl::storage_create(handle, key, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    return rc;
 }
 
 StatusCode storage_create(
@@ -124,13 +88,11 @@ StatusCode storage_create(
     Slice key,
     StorageOptions const& options,
     StorageHandle *result) {
-    auto database = unwrap(handle);
-    auto storage = database->create_storage(key, options);
-    if (!storage) {
-        return StatusCode::ALREADY_EXISTS;
-    }
-    *result = wrap(storage.get()); // borrow
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle << binstring(key);
+    auto rc = impl::storage_create(handle, key, options, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    return rc;
 }
 
 StatusCode storage_create(
@@ -138,83 +100,89 @@ StatusCode storage_create(
     Slice key,
     StorageOptions const& options,
     StorageHandle *result) {
-    auto tx = unwrap(handle);
-    if (! tx->is_alive()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    (void) handle;
-    (void) key;
-    (void) options;
-    (void) result;
-    return StatusCode::ERR_NOT_IMPLEMENTED;  //TODO
+    log_entry << fn_name << " handle:" << handle << binstring(key);
+    auto rc = impl::storage_create(handle, key, options, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    return rc;
 }
 
 StatusCode storage_get(DatabaseHandle handle, Slice key, StorageHandle *result) {
-    auto database = unwrap(handle);
-    auto storage = database->get_storage(key);
-    if (!storage) {
-        return StatusCode::NOT_FOUND;
-    }
-    *result = wrap(storage.get()); // borrow
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle << binstring(key);
+    auto rc = impl::storage_get(handle, key, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    return rc;
 }
 
 StatusCode storage_get(
     TransactionHandle handle,
     Slice key,
     StorageHandle *result) {
-    auto tx = unwrap(handle);
-    if (! tx->is_alive()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    (void) key;
-    (void) result;
-    return StatusCode::ERR_NOT_IMPLEMENTED;  //TODO
+    log_entry << fn_name << " handle:" << handle << binstring(key);
+    auto rc = impl::storage_get(handle, key, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    return rc;
 }
 
 StatusCode storage_delete(StorageHandle handle) {
-    auto storage = unwrap(handle);
-    auto database = storage->owner();
-    database->delete_storage(storage->key());
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::storage_delete(handle);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode storage_delete(
     TransactionHandle tx,
     StorageHandle handle) {
-    auto t = unwrap(tx);
-    if (! t->is_alive()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    (void) tx;
-    (void) handle;
-    return StatusCode::ERR_NOT_IMPLEMENTED;  //TODO
+    log_entry << fn_name << " tx:" << tx << " handle:" << handle;
+    auto rc = impl::storage_delete(tx, handle);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
-StatusCode storage_dispose([[maybe_unused]] StorageHandle handle) {
-    // don't disposed borrowed object: the Database owns each Storage object
-    return StatusCode::OK;
+StatusCode storage_dispose(StorageHandle handle) {
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::storage_dispose(handle);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode storage_list(
     DatabaseHandle handle,
     std::vector<std::string>& out
 ) {
-    auto database = unwrap(handle);
-    out = database->list_storage();
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::storage_list(handle, out);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " #out:" << out.size();
+    return rc;
 }
 
 StatusCode storage_list(
     TransactionHandle tx,
     std::vector<std::string>& out
 ) {
-    auto t = unwrap(tx);
-    out = t->owner()->list_storage();
-    return StatusCode::OK;
+    log_entry << fn_name << " tx:" << tx;
+    auto rc = impl::storage_list(tx, out);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " #out:" << out.size();
+    return rc;
 }
 
 StatusCode storage_get_options(
     StorageHandle handle,
     StorageOptions& out
 ) {
-    auto st = unwrap(handle);
-    out = st->options();
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::storage_get_options(handle, out);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode storage_get_options(
@@ -222,19 +190,22 @@ StatusCode storage_get_options(
     StorageHandle handle,
     StorageOptions& out
 ) {
-    (void) tx;
-    auto st = unwrap(handle);
-    out = st->options();
-    return StatusCode::OK;
+    log_entry << fn_name << " tx:" << tx << " handle:" << handle;
+    auto rc = impl::storage_get_options(tx, handle, out);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode storage_set_options(
     StorageHandle handle,
     StorageOptions const& options
 ) {
-    auto st = unwrap(handle);
-    st->options() = options;
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::storage_set_options(handle, options);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode storage_set_options(
@@ -242,10 +213,11 @@ StatusCode storage_set_options(
     StorageHandle handle,
     StorageOptions const& options
 ) {
-    (void) tx;
-    auto st = unwrap(handle);
-    st->options() = options;
-    return StatusCode::OK;
+    log_entry << fn_name << " tx:" << tx << " handle:" << handle;
+    auto rc = impl::storage_set_options(tx, handle, options);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode transaction_exec(
@@ -253,109 +225,100 @@ StatusCode transaction_exec(
         TransactionOptions const& options,
         TransactionCallback callback,
         void *arguments) {
-    bool readonly =
-        options.transaction_type() == TransactionOptions::TransactionType::READ_ONLY;
-    auto database = unwrap(handle);
-    auto tx = database->create_transaction(readonly);
-    tx->acquire();
-    auto status = callback(wrap(tx.get()), arguments);
-    if (status == TransactionOperation::COMMIT) {
-        return StatusCode::OK;
-    }
-    // NOTE: may be broken because rollback operations are not supported
-    if (status == TransactionOperation::ROLLBACK) {
-        return StatusCode::USER_ROLLBACK;
-    }
-    return StatusCode::ERR_USER_ERROR;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_exec(handle, options, std::move(callback), arguments);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode transaction_borrow_owner(TransactionHandle handle, DatabaseHandle* result) {
-    auto transaction = unwrap(handle);
-    if (auto database = transaction->owner()) {
-        *result = wrap(database);
-        return StatusCode::OK;
-    }
-    return StatusCode::ERR_INVALID_STATE;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_borrow_owner(handle, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
 }
 
 StatusCode transaction_begin(
         DatabaseHandle handle,
         TransactionOptions const& options,
         TransactionControlHandle *result) {
-    bool readonly =
-        options.transaction_type() == TransactionOptions::TransactionType::READ_ONLY;
-    auto database = unwrap(handle);
-    auto tx = database->create_transaction(readonly);
-    tx->acquire();
-    *result = wrap_as_control_handle(tx.release());
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_begin(handle, options, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
 }
 
 StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result) {
-    *result = wrap(unwrap(handle));
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_borrow_handle(handle, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
 }
 
 StatusCode transaction_commit(
         TransactionControlHandle handle,
-        [[maybe_unused]] bool async) { // async not supported
-    auto tx = unwrap(handle);
-    if (! tx->is_alive()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    if (tx->release()) {
-        return StatusCode::OK;
-    }
-    // transaction is already finished
-    return StatusCode::ERR_INVALID_STATE;
+        bool async) {
+    log_entry << fn_name << " handle:" << handle << " async:" << async;
+    auto rc = impl::transaction_commit(handle, async);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode transaction_abort(
         TransactionControlHandle handle,
-        [[maybe_unused]] bool rollback) {
-    auto tx = unwrap(handle);
-    tx->release();
-    // No need to check the return value.
-    // Abort is allowed even for finished transactions.
-    return StatusCode::OK;
+        bool rollback) {
+    log_entry << fn_name << " handle:" << handle << " rollback:" << rollback;
+    auto rc = impl::transaction_abort(handle, rollback);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode transaction_wait_commit(
-        [[maybe_unused]] TransactionControlHandle handle,
-        [[maybe_unused]] std::size_t timeout_ns) {
-    // no-op - async commit is not supported
-    return StatusCode::OK;
+        TransactionControlHandle handle,
+        std::size_t timeout_ns) {
+    log_entry << fn_name << " handle:" << handle << " timeout_ns:" << timeout_ns;
+    auto rc = impl::transaction_wait_commit(handle, timeout_ns);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode transaction_dispose(
         TransactionControlHandle handle) {
-    auto tx = unwrap(handle);
-    delete tx;  // NOLINT
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_dispose(handle);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode transaction_check(
     TransactionControlHandle handle,
     TransactionState &result) {
-    (void)handle;
-    result = TransactionState{TransactionState::StateKind::STARTED};
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_check(handle, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    return rc;
 }
 
 StatusCode content_check_exist(
     TransactionHandle transaction,
     StorageHandle storage,
     Slice key) {
-    auto tx = unwrap(transaction);
-    auto st = unwrap(storage);
-    if (!tx->is_alive()) {
-        return StatusCode::ERR_INACTIVE_TRANSACTION;
-    }
-    auto buffer = st->get(key);
-    if (buffer) {
-        return StatusCode::OK;
-    }
-    return StatusCode::NOT_FOUND;
+    log_entry << fn_name << " transaction:" << transaction << " storage:" << storage << binstring(key);
+    auto rc = impl::content_check_exist(transaction, storage, key);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode content_get(
@@ -363,17 +326,11 @@ StatusCode content_get(
         StorageHandle storage,
         Slice key,
         Slice* result) {
-    auto tx = unwrap(transaction);
-    auto st = unwrap(storage);
-    if (!tx->is_alive()) {
-        return StatusCode::ERR_INACTIVE_TRANSACTION;
-    }
-    auto buffer = st->get(key);
-    if (buffer) {
-        *result = buffer->to_slice();
-        return StatusCode::OK;
-    }
-    return StatusCode::NOT_FOUND;
+    log_entry << fn_name << " transaction:" << transaction << " storage:" << storage << binstring(key);
+    auto rc = impl::content_get(transaction, storage, key, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode content_put(
@@ -382,51 +339,22 @@ StatusCode content_put(
         Slice key,
         Slice value,
         PutOperation operation) {
-    auto tx = unwrap(transaction);
-    auto st = unwrap(storage);
-    if (!tx->is_alive()) {
-        return StatusCode::ERR_INACTIVE_TRANSACTION;
-    }
-    if (tx->readonly()) {
-        return StatusCode::ERR_UNSUPPORTED;
-    }
-    switch (operation) {
-        case PutOperation::CREATE:
-            if (st->create(key, value)) {
-                return StatusCode::OK;
-            }
-            return StatusCode::ALREADY_EXISTS;
-        case PutOperation::UPDATE:
-            if (st->update(key, value)) {
-                return StatusCode::OK;
-            }
-            return StatusCode::NOT_FOUND;
-        case PutOperation::CREATE_OR_UPDATE:
-            if (st->create(key, value) || st->update(key, value)) {
-                return StatusCode::OK;
-            }
-            return StatusCode::ERR_INVALID_STATE;
-        default:
-            std::abort();
-    }
+    log_entry << fn_name << " transaction:" << transaction << " storage:" << storage << binstring(key) << binstring(value) << " operation:" << operation;
+    auto rc = impl::content_put(transaction, storage, key, value, operation);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode content_delete(
         TransactionHandle transaction,
         StorageHandle storage,
         Slice key) {
-    auto tx = unwrap(transaction);
-    auto st = unwrap(storage);
-    if (!tx->is_alive()) {
-        return StatusCode::ERR_INACTIVE_TRANSACTION;
-    }
-    if (tx->readonly()) {
-        return StatusCode::ERR_UNSUPPORTED;
-    }
-    if (st->remove(key)) {
-        return StatusCode::OK;
-    }
-    return StatusCode::NOT_FOUND;
+    log_entry << fn_name << " transaction:" << transaction << " storage:" << storage << binstring(key);
+    auto rc = impl::content_delete(transaction, storage, key);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode content_scan_prefix(
@@ -434,99 +362,91 @@ StatusCode content_scan_prefix(
         StorageHandle storage,
         Slice prefix_key,
         IteratorHandle* result) {
-    auto tx = unwrap(transaction);
-    auto st = unwrap(storage);
-    if (!tx->is_alive()) {
-        return StatusCode::ERR_INACTIVE_TRANSACTION;
-    }
-    auto iterator = std::make_unique<memory::Iterator>(
-            st,
-            prefix_key, EndPointKind::PREFIXED_INCLUSIVE,
-            prefix_key, EndPointKind::PREFIXED_INCLUSIVE);
-    *result = wrap(iterator.release());
-    return StatusCode::OK;
+    log_entry << fn_name << " transaction:" << transaction << " storage:" << storage << binstring(prefix_key);
+    auto rc = impl::content_scan_prefix(transaction, storage, prefix_key, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
 }
 
 StatusCode content_scan_range(
-        TransactionHandle transaction,
-        StorageHandle storage,
-        Slice begin_key, bool begin_exclusive,
-        Slice end_key, bool end_exclusive,
-        IteratorHandle* result) {
-    auto tx = unwrap(transaction);
-    auto st = unwrap(storage);
-    if (!tx->is_alive()) {
-        return StatusCode::ERR_INACTIVE_TRANSACTION;
-    }
-    auto iterator = std::make_unique<memory::Iterator>(
-        st,
-        begin_key,
-        begin_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE,
-        end_key,
-        end_key.empty() ? EndPointKind::UNBOUND
-                        : end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE);
-    *result = wrap(iterator.release());
-    return StatusCode::OK;
+    TransactionHandle transaction,
+    StorageHandle storage,
+    Slice begin_key, bool begin_exclusive,
+    Slice end_key, bool end_exclusive,
+    IteratorHandle* result) {
+    log_entry << fn_name << " transaction:" << transaction << " storage:" << storage <<
+        binstring(begin_key) << " begin_exclusive:" << begin_exclusive <<
+        binstring(end_key) << " end_exclusive:" << end_exclusive;
+    auto rc = impl::content_scan_range(transaction, storage,
+        begin_key, begin_exclusive,
+        end_key, end_exclusive,
+        result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
 }
 
 StatusCode content_scan(
-        TransactionHandle transaction,
-        StorageHandle storage,
-        Slice begin_key, EndPointKind begin_kind,
-        Slice end_key, EndPointKind end_kind,
-        IteratorHandle* result) {
-    auto tx = unwrap(transaction);
-    auto st = unwrap(storage);
-    if (!tx->is_alive()) {
-        return StatusCode::ERR_INACTIVE_TRANSACTION;
-    }
-    auto iterator = std::make_unique<memory::Iterator>(
-            st,
-            begin_key, begin_kind,
-            end_key, end_kind);
-    *result = wrap(iterator.release());
-    return StatusCode::OK;
+    TransactionHandle transaction,
+    StorageHandle storage,
+    Slice begin_key, EndPointKind begin_kind,
+    Slice end_key, EndPointKind end_kind,
+    IteratorHandle* result) {
+    log_entry << fn_name << " transaction:" << transaction << " storage:" << storage <<
+        binstring(begin_key) << " begin_kind:" << begin_kind <<
+        binstring(end_key) << " end_kind:" << end_kind;
+    auto rc = impl::content_scan(
+        transaction,
+        storage,
+        begin_key, begin_kind,
+        end_key, end_kind,
+        result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
 }
 
 StatusCode iterator_next(IteratorHandle handle) {
-    auto iterator = unwrap(handle);
-    if (iterator->next()) {
-        return StatusCode::OK;
-    }
-    return StatusCode::NOT_FOUND;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::iterator_next(handle);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 StatusCode iterator_get_key(IteratorHandle handle, Slice* result) {
-    auto iterator = unwrap(handle);
-    if (!iterator->is_valid()) {
-        return StatusCode::ERR_INVALID_STATE;
-    }
-    *result = iterator->key();
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::iterator_get_key(handle, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << binstring(*result);
+    return rc;
 }
 
 StatusCode iterator_get_value(IteratorHandle handle, Slice* result) {
-    auto iterator = unwrap(handle);
-    if (!iterator->is_valid()) {
-        return StatusCode::ERR_INVALID_STATE;
-    }
-    *result = iterator->payload();
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::iterator_get_value(handle, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << binstring(*result);
+    return rc;
 }
 
 StatusCode iterator_dispose(IteratorHandle handle) {
-    auto iterator = unwrap(handle);
-    delete iterator;  // NOLINT
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::iterator_dispose(handle);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 extern "C" StatusCode sequence_create(
     DatabaseHandle handle,
     SequenceId* id) {
-    auto db = unwrap(handle);
-    auto& seq = db->sequences();
-    *id = seq.create();
-    return StatusCode::OK;
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::sequence_create(handle, id);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " id:" << id;
+    return rc;
 }
 
 extern "C" StatusCode sequence_put(
@@ -534,14 +454,11 @@ extern "C" StatusCode sequence_put(
     SequenceId id,
     SequenceVersion version,
     SequenceValue value) {
-    auto tx = unwrap(transaction);
-    if (!tx->is_alive()) {
-        return StatusCode::ERR_INACTIVE_TRANSACTION;
-    }
-    auto db = tx->owner();
-    auto& seq = db->sequences();
-    auto res = seq.put(id, version, value);
-    return res ? StatusCode::OK : StatusCode::ERR_INVALID_ARGUMENT;
+    log_entry << fn_name << " transaction:" << transaction << " id:" << id << " version:" << version << " value:" << value;
+    auto rc = impl::sequence_put(transaction, id, version, value);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 extern "C" StatusCode sequence_get(
@@ -549,43 +466,40 @@ extern "C" StatusCode sequence_get(
     SequenceId id,
     SequenceVersion* version,
     SequenceValue* value) {
-    auto db = unwrap(handle);
-    auto& seq = db->sequences();
-    auto v = seq.get(id);
-    if (v) {
-        *version = v.version();
-        *value = v.value();
-        return StatusCode::OK;
-    }
-    return StatusCode::NOT_FOUND;
+    log_entry << fn_name << " handle:" << handle << " id:" << id;
+    auto rc = impl::sequence_get(handle, id, version, value);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " version:" << *version << " value:" << *value;
+    return rc;
 }
 
 extern "C" StatusCode sequence_delete(
     DatabaseHandle handle,
     SequenceId id) {
-    auto db = unwrap(handle);
-    auto& seq = db->sequences();
-    auto res = seq.remove(id);
-    if (res) {
-        return StatusCode::OK;
-    }
-    return StatusCode::NOT_FOUND;
+    log_entry << fn_name << " handle:" << handle << " id:" << id;
+    auto rc = impl::sequence_delete(handle, id);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 extern "C" StatusCode implementation_id(
     Slice* name) {
-    static constexpr char identifier[] = "memory";
-    if (name == nullptr) {
-        return StatusCode::ERR_INVALID_ARGUMENT;
-    }
-    *name = Slice(identifier);
-    return StatusCode::OK;
+    log_entry << fn_name;
+    auto rc = impl::implementation_id(name);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << binstring(*name);
+    return rc;
 }
 
 StatusCode implementation_get_datastore(
-    DatabaseHandle,
-    std::any*) {
-    return StatusCode::ERR_UNSUPPORTED;
+    DatabaseHandle handle,
+    std::any* result) {
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::implementation_get_datastore(handle, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
 }
 
 }  // namespace sharksfin

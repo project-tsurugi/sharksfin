@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 shark's fin project.
+ * Copyright 2018-2020 tsurugi project.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "gtest/gtest.h"
-#include "glog/logging.h"
-#include "sharksfin/Environment.h"
-#include "logging.h"
+#include "binary_printer.h"
 
-int main(int argc, char** argv) {
-    // first consume command line options for gtest
-    ::testing::InitGoogleTest(&argc, argv);
-    FLAGS_v = FLAGS_v < sharksfin::log_info ? sharksfin::log_info : FLAGS_v;
-    sharksfin::Environment env{};
-    env.initialize();
-    return RUN_ALL_TESTS();
+namespace sharksfin::common {
+
 }

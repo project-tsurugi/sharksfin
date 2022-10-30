@@ -21,6 +21,7 @@ target_include_directories(shirakami
 
 target_link_libraries(shirakami
         PUBLIC api
+        PRIVATE common
         PRIVATE glog::glog
         PRIVATE shirakami-shirakami
         )
