@@ -576,7 +576,7 @@ StatusCode sequence_delete(
 
 StatusCode implementation_id(
     Slice* name) {
-    static constexpr char identifier[] = "memory";
+    static constexpr std::string_view identifier = "memory";
     if (name == nullptr) {
         return StatusCode::ERR_INVALID_ARGUMENT;
     }

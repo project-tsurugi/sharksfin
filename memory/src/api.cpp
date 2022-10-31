@@ -216,7 +216,7 @@ StatusCode transaction_exec(
         TransactionCallback callback,
         void *arguments) {
     log_entry << fn_name << " handle:" << handle;
-    auto rc = impl::transaction_exec(handle, options, std::move(callback), arguments);
+    auto rc = impl::transaction_exec(handle, options, callback, arguments);
     log_rc(rc, fn_name);
     log_exit << fn_name << " rc:" << rc;
     return rc;

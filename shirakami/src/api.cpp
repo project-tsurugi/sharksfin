@@ -547,7 +547,7 @@ extern "C" StatusCode sequence_delete(
 
 extern "C" StatusCode implementation_id(
     Slice* name) {
-    static constexpr char identifier[] = "shirakami";
+    static constexpr std::string_view identifier = "shirakami";
     if (name == nullptr) {
         return StatusCode::ERR_INVALID_ARGUMENT;
     }
