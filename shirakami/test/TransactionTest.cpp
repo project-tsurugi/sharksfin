@@ -163,4 +163,27 @@ TEST_F(ShirakamiTransactionTest, check_tx_status) {
     }
     EXPECT_EQ(db->close(), StatusCode::OK);
 }
+
+TEST_F(ShirakamiTransactionTest, create_too_many_transactions) {
+    std::unique_ptr<Database> db{};
+    DatabaseOptions options{};
+    options.attribute(KEY_LOCATION, path());
+    Database::open(options, &db);
+    std::unique_ptr<Storage> st{};
+
+    static constexpr std::size_t trial = 1024;
+    bool resource_limit{false};
+    std::vector<std::unique_ptr<Transaction>> transactions{};
+    transactions.reserve(trial);
+    for(std::size_t i=0; i < trial; ++i) {
+        std::unique_ptr<Transaction> tx{};
+        if(auto rc = db->create_transaction(tx); rc == StatusCode::OK) {
+            transactions.emplace_back(std::move(tx));
+        } else if(rc == StatusCode::ERR_RESOURCE_LIMIT_REACHED) {
+            resource_limit = true;
+            break;
+        }
+    }
+    ASSERT_TRUE(resource_limit);
+}
 }  // namespace

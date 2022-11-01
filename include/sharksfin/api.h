@@ -397,6 +397,7 @@ StatusCode transaction_borrow_owner(
  * Any thread is allowed to pass the returned handle to call sharksfin APIs, but at most one call per transaction control handle
  * should be made at a time. API calls with same handle should not be made simultaneously from different threads.
  * @return the operation status
+ * @return StatusCode::ERR_RESOURCE_LIMIT_REACHED if the number of transaction reached implementation defined limit
  */
 StatusCode transaction_begin(
         DatabaseHandle handle,

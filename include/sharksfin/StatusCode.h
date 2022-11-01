@@ -136,6 +136,11 @@ enum class StatusCode : std::int64_t {
      * After the blocking transaction completes, re-trying the request may lead to different result.
      */
     ERR_BLOCKED_BY_CONCURRENT_OPERATION = -16,
+
+    /**
+     * @brief reached resource limit and request could not be accomplished
+     */
+    ERR_RESOURCE_LIMIT_REACHED = -17,
 };
 
 /**
@@ -165,6 +170,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE: return "ERR_WRITE_WITHOUT_WRITE_PRESERVE";
         case StatusCode::ERR_INACTIVE_TRANSACTION: return "ERR_INACTIVE_TRANSACTION";
         case StatusCode::ERR_BLOCKED_BY_CONCURRENT_OPERATION: return "ERR_BLOCKED_BY_CONCURRENT_OPERATION";
+        case StatusCode::ERR_RESOURCE_LIMIT_REACHED: return "ERR_RESOURCE_LIMIT_REACHED";
         default: return "UNDEFINED";
     }
 }

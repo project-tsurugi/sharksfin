@@ -36,7 +36,12 @@ StatusCode Transaction::construct(
     Database* owner,
     TransactionOptions const& opts
 ) {
-    tx = std::unique_ptr<Transaction>(new Transaction(owner, opts));
+    auto t = std::unique_ptr<Transaction>(new Transaction(owner, opts)); // ctor is not public
+    if(t->session_ == nullptr) {
+        t->is_active_ = false;
+        return StatusCode::ERR_RESOURCE_LIMIT_REACHED;
+    }
+    tx = std::move(t);
     return tx->declare_begin();
 }
 
@@ -46,7 +51,7 @@ Transaction::Transaction(
     std::vector<Storage*> write_preserves
 ) :
     owner_(owner),
-    session_(std::make_unique<Session>()),
+    session_(Session::create_session()),
     type_(type),
     write_preserves_(std::move(write_preserves))
 {

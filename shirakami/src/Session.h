@@ -18,6 +18,9 @@
 
 #include <cstdlib>
 
+#include <glog/logging.h>
+
+#include "logging.h"
 #include "glog/logging.h"
 #include "shirakami/scheme.h"
 #include "shirakami/interface.h"
@@ -31,28 +34,43 @@ namespace sharksfin::shirakami {
  */
 class Session {
 public:
-    Session() {
-        if (auto res = utils::enter(id_); res != Status::OK) {
-            ABORT_MSG("enter should always be successful");
-        }
-    };
+    Session() = default;
     Session(Session const& other) = default;
     Session(Session&& other) = default;
     Session& operator=(Session const& other) = default;
     Session& operator=(Session&& other) = default;
     explicit Session(Token id) noexcept : id_(id) {}
     ~Session() noexcept {
+        if(! enter_success_) return;
         if (auto res = utils::leave(id_); res != Status::OK) {
-            ABORT_MSG("leave should always be successful");
+            VLOG(log_error) << "shirakami::leave() failed: " << res;
         }
     };
     ::shirakami::Token id() {
         return id_;
     }
+
+    /**
+     * @brief create new session object
+     * @return new session object
+     * @return nullptr if error occurs and session cannot be created (e.g. resource limit)
+     */
+    static std::unique_ptr<Session> create_session() {
+        auto ret = std::make_unique<Session>();
+        if (auto res = utils::enter(ret->id_); res != Status::OK) {
+            VLOG(log_error) << "shirakami::enter() failed: " << res;
+            return {};
+        }
+        ret->enter_success_ = true;
+        return ret;
+    }
+
 private:
     ::shirakami::Token id_{};
+    bool enter_success_{false};
 };
 
 } // namespace
+
 
 #endif //SHARKSFIN_SHIRAKAMI_SESSION_H_
