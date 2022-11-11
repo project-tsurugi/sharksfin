@@ -51,15 +51,9 @@ public:
 
         /**
          * @brief commit of the transaction needs to wait
-         * @details the transaction is not ready for commit request and will reject it
+         * @details the commit request is submitted but not yet committed
          */
         WAITING_CC_COMMIT,
-
-        /**
-         * @brief transaction is ready to commit
-         * @details the transaction is ready for commit request
-         */
-        COMMITTABLE,
 
         /**
          * @brief transaction has been aborted
@@ -142,7 +136,6 @@ inline constexpr std::string_view to_string_view(TransactionState::StateKind val
         case StateKind::WAITING_START: return "WAITING_START";
         case StateKind::STARTED: return "STARTED";
         case StateKind::WAITING_CC_COMMIT: return "WAITING_CC_COMMIT";
-        case StateKind::COMMITTABLE: return "COMMITTABLE";
         case StateKind::ABORTED: return "ABORTED";
         case StateKind::WAITING_DURABLE: return "WAITING_DURABLE";
         case StateKind::DURABLE: return "DURABLE";

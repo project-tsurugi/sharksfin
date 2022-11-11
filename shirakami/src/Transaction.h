@@ -173,7 +173,6 @@ private:
             case k::WAITING_START: return TransactionState{Kind::WAITING_START};
             case k::STARTED: return TransactionState{Kind::STARTED};
             case k::WAITING_CC_COMMIT: return TransactionState{Kind::WAITING_CC_COMMIT};
-            case k::COMMITTABLE: return TransactionState{Kind::COMMITTABLE};
             case k::ABORTED: return TransactionState{Kind::ABORTED};
             case k::WAITING_DURABLE: return TransactionState{Kind::WAITING_DURABLE};
             case k::DURABLE: return TransactionState{Kind::DURABLE};
