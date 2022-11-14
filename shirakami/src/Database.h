@@ -55,12 +55,7 @@ public:
     /**
      * @brief constructs a new object.
      */
-    Database();
-
-    /**
-     * @brief constructs a new object.
-     */
-    Database(DatabaseOptions const& options);;
+    Database() = default;
 
     /**
      * @brief destruct the object

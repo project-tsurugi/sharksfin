@@ -26,8 +26,30 @@
 
 namespace sharksfin::shirakami {
 
+::shirakami::database_options from(DatabaseOptions const& options) {
+    using open_mode = ::shirakami::database_options::open_mode;
+    open_mode mode{};
+    switch(options.open_mode()) {
+        case DatabaseOptions::OpenMode::RESTORE: mode = open_mode::RESTORE; break;
+        case DatabaseOptions::OpenMode::CREATE_OR_RESTORE: mode = open_mode::CREATE_OR_RESTORE; break;
+    }
+    ::shirakami::database_options ret{mode};
+    if (auto loc = options.attribute(KEY_LOCATION); loc) {
+        std::filesystem::path p{*loc};
+        ret.set_log_directory_path(p);
+    }
+    if (auto sz = options.attribute(KEY_LOGGING_MAX_PARALLELISM); sz) {
+        ret.set_logger_thread_num(std::stoul(*sz));
+    }
+    return ret;
+}
+
 StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
-    *result = std::make_unique<Database>(options);
+    if(auto res = utils::init(from(options)); res != Status::OK) {
+        LOG(ERROR) << "Shirakami Initialization failed with status code:" << res;
+        return StatusCode::ERR_IO_ERROR;
+    }
+    *result = std::make_unique<Database>();
     return StatusCode::OK;
 }
 
@@ -117,32 +139,6 @@ Database::~Database() {
         LOG(WARNING) << "Database closed implicitly";
         close();
     }
-}
-
-::shirakami::database_options from(DatabaseOptions const& options) {
-    using open_mode = ::shirakami::database_options::open_mode;
-    open_mode mode{};
-    switch(options.open_mode()) {
-        case DatabaseOptions::OpenMode::RESTORE: mode = open_mode::RESTORE; break;
-        case DatabaseOptions::OpenMode::CREATE_OR_RESTORE: mode = open_mode::CREATE_OR_RESTORE; break;
-    }
-    ::shirakami::database_options ret{mode};
-    if (auto loc = options.attribute(KEY_LOCATION); loc) {
-        std::filesystem::path p{*loc};
-        ret.set_log_directory_path(p);
-    }
-    if (auto sz = options.attribute(KEY_LOGGING_MAX_PARALLELISM); sz) {
-        ret.set_logger_thread_num(std::stoul(*sz));
-    }
-    return ret;
-}
-
-Database::Database() {
-    utils::init(from({}));
-}
-
-Database::Database(DatabaseOptions const& options) {
-    utils::init(from(options));
 }
 
 }  // namespace sharksfin::shirakami
