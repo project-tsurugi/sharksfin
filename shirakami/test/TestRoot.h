@@ -58,7 +58,7 @@ class TransactionHolder {
 public:
     TransactionHolder(Database* db) {
         if(auto res = db->create_transaction(tx_); res != StatusCode::OK) {
-            std::abort();
+            ABORT();
         }
     }
     ~TransactionHolder() {

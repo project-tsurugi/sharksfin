@@ -25,6 +25,20 @@ namespace sharksfin::shirakami {
 
 using Status = ::shirakami::Status;
 
+[[noreturn]] inline void abort_with_lineno(const char *msg, const char *file, int line) {
+    std::stringstream buf{};
+    buf << msg;
+    buf << " file:";
+    buf << file;
+    buf << " line:";
+    buf << line;
+    LOG(ERROR) << buf.str(); // use LOG because DBMS is crashing
+    std::abort();
+}
+
+#define ABORT_MSG(msg) sharksfin::shirakami::abort_with_lineno(msg, __FILE__, __LINE__)  //NOLINT
+#define ABORT() sharksfin::shirakami::abort_with_lineno("", __FILE__, __LINE__)  //NOLINT
+
 /**
  * @brief map shirakami error stack to sharksfin StatusCode
  * @param result the shirakami error
@@ -78,24 +92,10 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::INTERNAL_WARN_NOT_DELETED:
         case Status::INTERNAL_WARN_NOT_FOUND:
         case Status::INTERNAL_WARN_PREMATURE:
-            std::abort();
+            ABORT();
     }
     return rc;
 }
-
-[[noreturn]] inline void abort_with_lineno(const char *msg, const char *file, int line) {
-    std::stringstream buf{};
-    buf << msg;
-    buf << " file:";
-    buf << file;
-    buf << " line:";
-    buf << line;
-    LOG(ERROR) << buf.str(); // use LOG because DBMS is crashing
-    std::abort();
-}
-
-#define ABORT_MSG(msg) sharksfin::shirakami::abort_with_lineno(msg, __FILE__, __LINE__)  //NOLINT
-#define ABORT() sharksfin::shirakami::abort_with_lineno("", __FILE__, __LINE__)  //NOLINT
 
 }  // namespace sharksfin::shirakami
 

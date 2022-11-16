@@ -64,7 +64,7 @@ public:
     Slice key() {
         Slice ret{};
         if(auto res = key(ret); res != StatusCode::OK) {
-            std::abort();
+            ABORT();
         }
         return ret;
     }
@@ -72,7 +72,7 @@ public:
     Slice value() {
         Slice ret{};
         if(auto res = value(ret); res != StatusCode::OK) {
-            std::abort();
+            ABORT();
         }
         return ret;
     }

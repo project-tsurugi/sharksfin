@@ -408,9 +408,8 @@ StatusCode content_put(
                 return StatusCode::OK;
             }
             return StatusCode::ERR_INVALID_STATE;
-        default:
-            std::abort();
     }
+    std::abort();
 }
 
 StatusCode content_delete(

@@ -79,7 +79,7 @@ Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
 void release_tx_handle(::shirakami::TxStateHandle& state_handle) {
     if(state_handle != ::shirakami::undefined_handle) {
         if(auto res = utils::release_tx_state_handle(state_handle); res != ::shirakami::Status::OK) {
-            std::abort();
+            ABORT();
         }
         state_handle = ::shirakami::undefined_handle;
     }
@@ -161,12 +161,12 @@ bool Transaction::is_long() const noexcept {
 TransactionState Transaction::check_state() {
     if(state_handle_ == ::shirakami::undefined_handle) {
         if(auto res = utils::acquire_tx_state_handle(session_->id(), state_handle_); res != ::shirakami::Status::OK) {
-            std::abort();
+            ABORT();
         }
     }
     ::shirakami::TxState state{};
     if(auto res = utils::tx_check(state_handle_, state); res != ::shirakami::Status::OK) {
-        std::abort();
+        ABORT();
     }
     return from_state(state);
 }
