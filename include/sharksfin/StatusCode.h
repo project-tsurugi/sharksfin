@@ -48,6 +48,11 @@ enum class StatusCode : std::int64_t {
     USER_ROLLBACK = 3,
 
     /**
+     * @brief the operation is waiting for other transaction
+     */
+    WAITING_FOR_OTHER_TRANSACTION = 4,
+
+    /**
      * @brief unknown errors.
      */
     ERR_UNKNOWN = -1,
@@ -115,11 +120,6 @@ enum class StatusCode : std::int64_t {
     ERR_CONFLICT_ON_WRITE_PRESERVE = -12,
 
     /**
-     * @brief the operation is blocked by other transaction
-     */
-    ERR_WAITING_FOR_OTHER_TRANSACTION = -13,
-
-    /**
      * @brief long tx issued write operation without preservation
      */
     ERR_WRITE_WITHOUT_WRITE_PRESERVE = -14,
@@ -154,6 +154,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::NOT_FOUND: return "NOT_FOUND";
         case StatusCode::ALREADY_EXISTS: return "ALREADY_EXISTS";
         case StatusCode::USER_ROLLBACK: return "USER_ROLLBACK";
+        case StatusCode::WAITING_FOR_OTHER_TRANSACTION: return "WAITING_FOR_OTHER_TRANSACTION";
         case StatusCode::ERR_UNKNOWN: return "ERR_UNKNOWN";
         case StatusCode::ERR_IO_ERROR: return "ERR_IO_ERROR";
         case StatusCode::ERR_INVALID_ARGUMENT: return "ERR_INVALID_ARGUMENT";
@@ -166,7 +167,6 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_NOT_IMPLEMENTED: return "ERR_NOT_IMPLEMENTED";
         case StatusCode::ERR_ILLEGAL_OPERATION: return "ERR_ILLEGAL_OPERATION";
         case StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE: return "ERR_CONFLICT_ON_WRITE_PRESERVE";
-        case StatusCode::ERR_WAITING_FOR_OTHER_TRANSACTION: return "ERR_WAITING_FOR_OTHER_TRANSACTION";
         case StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE: return "ERR_WRITE_WITHOUT_WRITE_PRESERVE";
         case StatusCode::ERR_INACTIVE_TRANSACTION: return "ERR_INACTIVE_TRANSACTION";
         case StatusCode::ERR_BLOCKED_BY_CONCURRENT_OPERATION: return "ERR_BLOCKED_BY_CONCURRENT_OPERATION";
