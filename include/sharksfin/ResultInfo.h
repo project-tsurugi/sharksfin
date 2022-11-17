@@ -16,17 +16,13 @@
 #ifndef SHARKSFIN_RESULT_INFO_H_
 #define SHARKSFIN_RESULT_INFO_H_
 
-#include <cstddef>
-#include <vector>
-#include <iostream>
-#include <limits>
+#include <string>
 #include <string_view>
-#include "WritePreserve.h"
 
 namespace sharksfin {
 
 /**
- * @brief represents storage options.
+ * @brief represents function call result details
  */
 class ResultInfo final {
 public:
@@ -44,10 +40,10 @@ public:
     {}
 
     /**
-     * @brief accessor for the storage id
-     * @return the storage id
+     * @brief accessor for the result description text
+     * @return the result description
      */
-    [[nodiscard]] std::string_view result() const noexcept {
+    [[nodiscard]] std::string_view description() const noexcept {
         return result_;
     }
 

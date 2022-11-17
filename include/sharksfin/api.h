@@ -508,13 +508,12 @@ StatusCode transaction_dispose(
     TransactionControlHandle handle);
 
 /**
- * @brief retrieve
- * @details the caller typically calls this function to periodically check the transaction state in order to
- * verify the permission to issue the transactional operations.
+ * @brief retrieve transaction result info
+ * @details returns recent request result details for the transaction
  * @param handle the target transaction handle
  */
 std::shared_ptr<ResultInfo> transaction_result_info(
-    TransactionHandle handle);
+    TransactionControlHandle handle);
 
 /**
  * @brief query if a content on the target key exists.

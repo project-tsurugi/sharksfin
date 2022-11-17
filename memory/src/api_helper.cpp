@@ -336,6 +336,14 @@ StatusCode transaction_dispose(
     return StatusCode::OK;
 }
 
+std::shared_ptr<ResultInfo> transaction_result_info(
+    TransactionControlHandle handle) {
+    auto tx = unwrap(handle);
+    (void) tx;
+    // sharksfin memory provide no additional info
+    return {};
+}
+
 StatusCode transaction_check(
     TransactionControlHandle handle,
     TransactionState &result) {

@@ -385,4 +385,18 @@ TEST_F(ShirakamiStorageTest, scan_range_exclusive) {
     }
 }
 
+TEST_F(ShirakamiStorageTest, result_info) {
+    DatabaseHolder db{path()};
+    {
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
+        ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
+        ASSERT_EQ(tx->abort(), StatusCode::OK);
+        auto ri = tx->result_info();
+        ASSERT_TRUE(ri);
+        std::cerr << ri->description();
+    }
+}
+
 }  // namespace

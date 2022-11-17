@@ -192,4 +192,29 @@ StatusCode Transaction::declare_begin() {
     return resolve(res);
 }
 
+inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info const& value) {
+    out << value.get_reason_code();
+    auto desc = value.get_additional_information();
+    if(! desc.empty()) {
+        out << " ";
+        out << desc;
+    }
+    return out;
+}
+
+std::shared_ptr<ResultInfo> Transaction::result_info() {
+    auto ri = utils::transaction_result_info(session_->id());
+    std::stringstream ss{};
+    ss << "shirakami result: ";
+    if(ri) {
+        ss << *ri;
+    } else {
+        ss << "<empty>";
+    }
+    ss << std::endl;
+    // TODO add commit result info
+    result_info_ = std::make_shared<ResultInfo>(ss.str());
+    return result_info_;
+}
+
 }  // namespace sharksfin::shirakami

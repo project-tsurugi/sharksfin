@@ -350,6 +350,12 @@ StatusCode transaction_dispose(
     return StatusCode::OK;
 }
 
+std::shared_ptr<ResultInfo> transaction_result_info(
+    TransactionControlHandle handle) {
+    auto tx = unwrap(handle);
+    return tx->result_info();
+}
+
 StatusCode transaction_check(
     TransactionControlHandle handle,
     TransactionState &result) {

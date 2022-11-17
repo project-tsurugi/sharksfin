@@ -129,6 +129,9 @@ StatusCode transaction_wait_commit(
 StatusCode transaction_dispose(
         TransactionControlHandle handle);
 
+std::shared_ptr<ResultInfo> transaction_result_info(
+    TransactionControlHandle handle);
+
 StatusCode transaction_check(
     TransactionControlHandle handle,
     TransactionState &result);

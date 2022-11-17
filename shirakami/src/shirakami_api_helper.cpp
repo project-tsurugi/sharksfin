@@ -357,5 +357,12 @@ Status database_set_logging_callback(::shirakami::log_event_callback const& call
     log_exit << "database_set_logging_callback() rc:" << rc;
     return rc;
 }
+
+std::shared_ptr<::shirakami::result_info> transaction_result_info(Token token) {
+    log_entry << "transaction_result_info()";
+    auto ret = ::shirakami::transaction_result_info(token);
+    log_exit << "transaction_result_info() ret:" << (ret ? to_string_view(ret->get_reason_code()) : "nullptr");
+    return ret;
+}
 }  // namespace utils
 }  // namespace sharksfin::shirakami

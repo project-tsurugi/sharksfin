@@ -23,6 +23,7 @@
 #include "shirakami/transaction_state.h"
 
 #include "sharksfin/api.h"
+#include "sharksfin/ResultInfo.h"
 #include "sharksfin/StatusCode.h"
 #include "Database.h"
 #include "Session.h"
@@ -143,6 +144,12 @@ public:
      */
     TransactionState check_state();
 
+    /**
+     * @brief return the most recent request result info
+     * @return result info
+     */
+    std::shared_ptr<ResultInfo> result_info();
+
 private:
     Database* owner_{};
     std::unique_ptr<Session> session_{};
@@ -151,6 +158,7 @@ private:
     TransactionOptions::TransactionType type_{};
     std::vector<Storage*> write_preserves_{};
     ::shirakami::TxStateHandle state_handle_{::shirakami::undefined_handle};
+    std::shared_ptr<ResultInfo> result_info_{};
 
     Transaction(
         Database* owner,
