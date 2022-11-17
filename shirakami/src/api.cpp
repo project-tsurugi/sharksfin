@@ -350,10 +350,10 @@ StatusCode transaction_dispose(
     return StatusCode::OK;
 }
 
-std::shared_ptr<ResultInfo> transaction_result_info(
+std::shared_ptr<CallResult> transaction_inspect_recent_call(
     TransactionControlHandle handle) {
     auto tx = unwrap(handle);
-    return tx->result_info();
+    return tx->recent_call_result();
 }
 
 StatusCode transaction_check(

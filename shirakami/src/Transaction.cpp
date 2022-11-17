@@ -202,7 +202,7 @@ inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info cons
     return out;
 }
 
-std::shared_ptr<ResultInfo> Transaction::result_info() {
+std::shared_ptr<CallResult> Transaction::recent_call_result() {
     auto ri = utils::transaction_result_info(session_->id());
     std::stringstream ss{};
     ss << "shirakami result: ";
@@ -213,7 +213,7 @@ std::shared_ptr<ResultInfo> Transaction::result_info() {
     }
     ss << std::endl;
     // TODO add commit result info
-    result_info_ = std::make_shared<ResultInfo>(ss.str());
+    result_info_ = std::make_shared<CallResult>(ss.str());
     return result_info_;
 }
 

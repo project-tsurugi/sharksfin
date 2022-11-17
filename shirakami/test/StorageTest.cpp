@@ -385,7 +385,7 @@ TEST_F(ShirakamiStorageTest, scan_range_exclusive) {
     }
 }
 
-TEST_F(ShirakamiStorageTest, result_info) {
+TEST_F(ShirakamiStorageTest, recent_call_result) {
     DatabaseHolder db{path()};
     {
         std::unique_ptr<Storage> st{};
@@ -393,7 +393,7 @@ TEST_F(ShirakamiStorageTest, result_info) {
         TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(tx->abort(), StatusCode::OK);
-        auto ri = tx->result_info();
+        auto ri = tx->recent_call_result();
         ASSERT_TRUE(ri);
         std::cerr << ri->description();
     }

@@ -290,10 +290,10 @@ StatusCode transaction_dispose(
     return rc;
 }
 
-std::shared_ptr<ResultInfo> transaction_result_info(
+std::shared_ptr<CallResult> transaction_inspect_recent_call(
     TransactionControlHandle handle) {
     log_entry << fn_name << " handle:" << handle;
-    auto info = impl::transaction_result_info(handle);
+    auto info = impl::transaction_inspect_recent_call(handle);
     log_exit << fn_name;
     return info;
 }

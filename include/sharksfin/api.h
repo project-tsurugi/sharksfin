@@ -28,7 +28,7 @@
 #include "TransactionOperation.h"
 #include "TransactionOptions.h"
 #include "TransactionState.h"
-#include "ResultInfo.h"
+#include "CallResult.h"
 #include "StorageOptions.h"
 #include "LogRecord.h"
 
@@ -508,11 +508,11 @@ StatusCode transaction_dispose(
     TransactionControlHandle handle);
 
 /**
- * @brief retrieve transaction result info
+ * @brief retrieve transaction api function result
  * @details returns recent request result details for the transaction
  * @param handle the target transaction handle
  */
-std::shared_ptr<ResultInfo> transaction_result_info(
+std::shared_ptr<CallResult> transaction_inspect_recent_call(
     TransactionControlHandle handle);
 
 /**

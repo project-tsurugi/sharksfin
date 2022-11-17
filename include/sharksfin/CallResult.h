@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_RESULT_INFO_H_
-#define SHARKSFIN_RESULT_INFO_H_
+#ifndef SHARKSFIN_CALL_RESULT_H_
+#define SHARKSFIN_CALL_RESULT_H_
 
 #include <string>
 #include <string_view>
@@ -24,18 +24,18 @@ namespace sharksfin {
 /**
  * @brief represents function call result details
  */
-class ResultInfo final {
+class CallResult final {
 public:
     /**
      * @brief create empty object
      */
-    ResultInfo() = default;
+    CallResult() = default;
 
     /**
      * @brief create new object
      * @param result the result description
      */
-    explicit ResultInfo(std::string_view result) :
+    explicit CallResult(std::string_view result) :
         result_(result)
     {}
 
@@ -53,4 +53,4 @@ private:
 
 }  // namespace sharksfin
 
-#endif  // SHARKSFIN_RESULT_INFO_H_
+#endif  // SHARKSFIN_CALL_RESULT_H_

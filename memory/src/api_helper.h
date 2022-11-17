@@ -129,7 +129,7 @@ StatusCode transaction_wait_commit(
 StatusCode transaction_dispose(
         TransactionControlHandle handle);
 
-std::shared_ptr<ResultInfo> transaction_result_info(
+std::shared_ptr<CallResult> transaction_inspect_recent_call(
     TransactionControlHandle handle);
 
 StatusCode transaction_check(
