@@ -271,6 +271,14 @@ Status commit(Token token) {
     return rc;
 }
 
+Status check_commit(Token token) {
+    log_entry << "check_commit() token:" << token;
+    auto rc = details::sanitize_rc(::shirakami::check_commit(token));
+    log_rc(rc, "check_commit()");
+    log_exit << "check_commit() rc:" << rc;
+    return rc;
+}
+
 Status abort(Token token) {
     log_entry << "abort() token:" << token;
     auto rc = details::sanitize_rc(::shirakami::abort(token));

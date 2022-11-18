@@ -63,7 +63,7 @@ public:
     }
     ~TransactionHolder() {
         if (tx_->active()) {
-            tx_->commit(false);
+            tx_->commit();
         }
     }
     Transaction* operator->() {

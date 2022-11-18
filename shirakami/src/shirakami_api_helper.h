@@ -109,6 +109,8 @@ Status close_scan(Token token, ScanHandle handle);
 
 Status commit(Token token);
 
+Status check_commit(Token token);
+
 Status abort(Token token);
 
 Status tx_begin(transaction_options options);

@@ -93,14 +93,40 @@ Transaction::~Transaction() noexcept {
     release_tx_handle(state_handle_);
 }
 
-StatusCode Transaction::commit(bool) {
+StatusCode resolve_commit_code(::shirakami::Status st) {
+    // Commit errors are grouped into two categories 1. request submission error, and 2. commit execution error
+    // Category 1 errors are returned by Transaction::commit(), while 2 are recent_call_result().
+    // This is because commit result can be delayed (i.e. WAIT_FOR_OTHER_TRANSACTION), and then only the channel to
+    // retrieve the result is recent_call_result().
+
+    // WARN_ status are category 1 usage errors - return as they are
+    if(static_cast<std::int32_t>(st) <= 0) {
+        return resolve(st);
+    }
+    // ERR_ status are category 2 abort reason code - summarize as serialization error
+    return StatusCode::ERR_ABORTED_RETRYABLE;
+}
+
+StatusCode Transaction::commit() {
     if(!is_active_) {
         ABORT();
     }
-    auto rc = resolve(utils::commit(session_->id()));
-    if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+    if(is_long()) {
+        check_state(); // to initialize state handle
+    }
+    auto res = utils::commit(session_->id());
+    auto rc = resolve_commit_code(res);
+    if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE || rc == StatusCode::WAITING_FOR_OTHER_TRANSACTION) {
         is_active_ = false;
     }
+    if (rc != StatusCode::WAITING_FOR_OTHER_TRANSACTION) {
+        last_call_status_ = res;
+        last_call_status_set_ = true;
+    } else {
+        // last commit() call result will be available via check_commit()
+        last_call_status_set_ = false;
+    }
+    last_call_supported_ = true;
     return rc;
 }
 
@@ -111,13 +137,18 @@ StatusCode Transaction::wait_for_commit(std::size_t) {  //NOLINT
 
 StatusCode Transaction::abort() {
     if(!is_active_) {
+        // transaction doesn't begin, or commit request has been submitted already
         return StatusCode::OK;
     }
-    auto rc = resolve(utils::abort(session_->id()));
+    auto res = utils::abort(session_->id());
+    auto rc = resolve(res);
     if (rc != StatusCode::OK) {
-        ABORT_MSG("abort should always be successful");
+        ABORT();
     }
     is_active_ = false;
+    last_call_status_ = res;
+    last_call_status_set_ = true;
+    last_call_supported_ = true;
     return rc;
 }
 
@@ -193,7 +224,9 @@ StatusCode Transaction::declare_begin() {
 }
 
 inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info const& value) {
-    out << value.get_reason_code();
+    if(value.get_reason_code() != ::shirakami::reason_code::UNKNOWN) {
+        out << " reason=" << value.get_reason_code();
+    }
     auto desc = value.get_additional_information();
     if(! desc.empty()) {
         out << " ";
@@ -203,16 +236,18 @@ inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info cons
 }
 
 std::shared_ptr<CallResult> Transaction::recent_call_result() {
+    if(! last_call_supported_) return {}; // unless supported function is called, nothing returns
+
+    if(! last_call_status_set_) {
+        last_call_status_ = utils::check_commit(session_->id());
+    }
     auto ri = utils::transaction_result_info(session_->id());
     std::stringstream ss{};
-    ss << "shirakami result: ";
+    ss << "shirakami response Status=" << last_call_status_;
     if(ri) {
         ss << *ri;
-    } else {
-        ss << "<empty>";
     }
     ss << std::endl;
-    // TODO add commit result info
     result_info_ = std::make_shared<CallResult>(ss.str());
     return result_info_;
 }

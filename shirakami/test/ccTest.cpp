@@ -48,7 +48,7 @@ TEST_F(ShirakamiCCTest, simple) {
         ASSERT_EQ(st->put(tx.get(), "a1", "A1", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->put(tx.get(), "d", "D", PutOperation::CREATE), StatusCode::OK);
         // now only committed record can be read
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
     }
     {
         // read committed, remove and abort
@@ -95,14 +95,14 @@ TEST_F(ShirakamiCCTest, simple) {
             ASSERT_EQ(st->remove(tx.get(), "a1"), StatusCode::OK);
             ASSERT_EQ(st->remove(tx.get(), "d"), StatusCode::OK);
         }
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
     }
     {
         // verify the record is already removed
         std::unique_ptr<Transaction> tx2{};
         ASSERT_EQ(StatusCode::OK, db->create_transaction(tx2));
         ASSERT_EQ(st->remove(tx2.get(), "a1"), StatusCode::NOT_FOUND);
-        ASSERT_EQ(tx2->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx2->commit(), StatusCode::OK);
     }
     wait_epochs();
     {
@@ -110,7 +110,7 @@ TEST_F(ShirakamiCCTest, simple) {
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->put(tx.get(), "a/", "A/", PutOperation::CREATE), StatusCode::OK);
         // now only committed record can be read
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
     }
     {
         tx->reset();
@@ -127,7 +127,7 @@ TEST_F(ShirakamiCCTest, simple) {
             EXPECT_EQ(iter->value().to_string_view(), "A/");
             ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
         }
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
     }
     EXPECT_EQ(db->close(), StatusCode::OK);
 }
@@ -147,7 +147,7 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
         // prepare data
         ASSERT_EQ(st->put(tx.get(), "aA", "A", PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->put(tx.get(), "az", "A", PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
     }
     std::size_t retry_error_count = 0;
     auto r1 = std::async(std::launch::async, [&] {
@@ -175,11 +175,11 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
             if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                 ++retry_error_count;
             } else {
-                tx2->commit(false);
+                tx2->commit();
             }
             tx2->reset();
         }
-        EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+        EXPECT_EQ(tx2->commit(), StatusCode::OK);
         return row_count;
     });
     auto r2 = std::async(std::launch::async, [&] {
@@ -191,10 +191,10 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
             EXPECT_EQ(st->put(tx3.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx3.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx3.get(), "aZ"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
-            EXPECT_EQ(tx3->commit(false), StatusCode::OK);
+            EXPECT_EQ(tx3->commit(), StatusCode::OK);
             tx3->reset();
         }
-        tx3->commit(false);
+        tx3->commit();
         return true;
     });
     r1.get();
@@ -219,10 +219,10 @@ TEST_F(ShirakamiCCTest, scan_and_delete) {
             EXPECT_EQ(st->put(tx.get(), "aX"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx.get(), "aZ"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
-            EXPECT_EQ(tx->commit(false), StatusCode::OK);
+            EXPECT_EQ(tx->commit(), StatusCode::OK);
             tx->reset();
         }
-        EXPECT_EQ(tx->commit(false), StatusCode::OK);
+        EXPECT_EQ(tx->commit(), StatusCode::OK);
     }
     auto r1 = std::async(std::launch::async, [&] {
         std::unique_ptr<Transaction> tx2{};
@@ -250,11 +250,11 @@ TEST_F(ShirakamiCCTest, scan_and_delete) {
             if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                 ++retry_error_count;
             } else {
-                tx2->commit(false);
+                tx2->commit();
             }
             tx2->reset();
         }
-        EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+        EXPECT_EQ(tx2->commit(), StatusCode::OK);
         std::cout << "ERR_ABORT_RETRYABLE returned " << retry_error_count << " times with row count: " << row_count << std::endl;
         return row_count;
     });
@@ -267,10 +267,10 @@ TEST_F(ShirakamiCCTest, scan_and_delete) {
             EXPECT_EQ(st->remove(tx3.get(), "aX"s+std::to_string(i)), StatusCode::OK);
             EXPECT_EQ(st->remove(tx3.get(), "aY"s+std::to_string(i)), StatusCode::OK);
             EXPECT_EQ(st->remove(tx3.get(), "aZ"s+std::to_string(i)), StatusCode::OK);
-            EXPECT_EQ(tx3->commit(false), StatusCode::OK);
+            EXPECT_EQ(tx3->commit(), StatusCode::OK);
             tx3->reset();
         }
-        EXPECT_EQ(tx3->commit(false), StatusCode::OK);
+        EXPECT_EQ(tx3->commit(), StatusCode::OK);
         return true;
     });
     EXPECT_GE(r1.get(), 2);
@@ -292,7 +292,7 @@ TEST_F(ShirakamiCCTest, get_concurrently) {
         std::unique_ptr<Transaction> tx{};
         ASSERT_EQ(StatusCode::OK, db->create_transaction(tx));
         ASSERT_EQ(st->put(tx.get(), "aX0", "A", PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
     }
     auto r2 = std::async(std::launch::async, [&] {
         std::unique_ptr<Transaction> tx3{};
@@ -304,10 +304,10 @@ TEST_F(ShirakamiCCTest, get_concurrently) {
             EXPECT_EQ(st->put(tx3.get(), "aY"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             EXPECT_EQ(st->put(tx3.get(), "aZ"s+std::to_string(i), "A"+std::to_string(i), PutOperation::CREATE), StatusCode::OK);
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            EXPECT_EQ(tx3->commit(false), StatusCode::OK);
+            EXPECT_EQ(tx3->commit(), StatusCode::OK);
             tx3->reset();
         }
-        EXPECT_EQ(tx3->commit(false), StatusCode::OK);
+        EXPECT_EQ(tx3->commit(), StatusCode::OK);
         return true;
     });
     auto r1 = std::async(std::launch::async, [&] {
@@ -325,13 +325,13 @@ TEST_F(ShirakamiCCTest, get_concurrently) {
                 tx2->reset();
                 continue;
             }
-            EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+            EXPECT_EQ(tx2->commit(), StatusCode::OK);
             if (rc == StatusCode::OK) {
                 ++row_count;
             }
             tx2->reset();
         }
-        EXPECT_EQ(tx2->commit(false), StatusCode::OK);
+        EXPECT_EQ(tx2->commit(), StatusCode::OK);
         return row_count;
     });
     EXPECT_GE(r1.get(), 1);

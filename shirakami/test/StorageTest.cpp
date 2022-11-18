@@ -37,7 +37,7 @@ TEST_F(ShirakamiStorageTest, simple) {
         db->create_storage("S", st);
         TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, TESTING);
@@ -64,7 +64,7 @@ TEST_F(ShirakamiStorageTest, get) {
         TransactionHolder tx{db};
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::NOT_FOUND);
         ASSERT_EQ(st->put(tx, "K", "testing", PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "testing");
@@ -97,13 +97,13 @@ TEST_F(ShirakamiStorageTest, put) {
         db->create_storage("S", st);
         TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "a");
 
         ASSERT_EQ(st->put(tx, "K", "b"), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "b");
@@ -133,28 +133,28 @@ TEST_F(ShirakamiStorageTest, put_operations) {
         db->create_storage("S", st);
         TransactionHolder tx{db};
         ASSERT_EQ(st->put(tx, "K", "a"), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "a");
 
         ASSERT_EQ(st->put(tx, "K", "b1", PutOperation::CREATE), StatusCode::ALREADY_EXISTS);
         ASSERT_EQ(st->put(tx, "K", "b2", PutOperation::UPDATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "b2");
         ASSERT_EQ(st->put(tx, "L", "c1", PutOperation::UPDATE), StatusCode::NOT_FOUND);
         ASSERT_EQ(st->put(tx, "L", "c2", PutOperation::CREATE), StatusCode::OK);
 
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_EQ(st->get(tx, "L", buf), StatusCode::OK);
         EXPECT_EQ(buf, "c2");
 
         ASSERT_EQ(st->put(tx, "K", "d1", PutOperation::CREATE_OR_UPDATE), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "M", "d2", PutOperation::CREATE_OR_UPDATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "d1");
@@ -202,12 +202,12 @@ TEST_F(ShirakamiStorageTest, remove) {
         ASSERT_EQ(st->put(tx, "K", "testing"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "testing");
-        ASSERT_EQ(tx->commit(true), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         ASSERT_EQ(StatusCode::OK, tx->wait_for_commit(2000*1000*1000));
         tx->reset();
 
         ASSERT_EQ(st->remove(tx, "K"), StatusCode::OK);
-        ASSERT_EQ(tx->commit(true), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         wait_epochs(2);
         ASSERT_EQ(StatusCode::OK, tx->wait_for_commit(2000*1000*1000));
         tx->reset();
@@ -224,7 +224,7 @@ TEST_F(ShirakamiStorageTest, remove_uncommitted) {
         ASSERT_EQ(st->put(tx, "K", "testing"), StatusCode::OK);
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "testing");
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
 
         ASSERT_EQ(st->remove(tx, "K"), StatusCode::OK);
@@ -240,7 +240,7 @@ TEST_F(ShirakamiStorageTest, prefix_conflict) {
         db->create_storage("b", s1);
         TransactionHolder tx{db};
         s1->put(tx, "a", "B");
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         auto it = test_iterator(s0->scan(tx,
                 "", EndPointKind::PREFIXED_INCLUSIVE,
@@ -262,7 +262,7 @@ TEST_F(ShirakamiStorageTest, scan_prefix) {
         ASSERT_EQ(st->put(tx, "a/a/c", "a-a-c"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "a/b", "a-b"), StatusCode::OK);
         ASSERT_EQ(st->put(tx, "b", "b"), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
 
         auto iter = test_iterator(st->scan(tx,
@@ -382,20 +382,6 @@ TEST_F(ShirakamiStorageTest, scan_range_exclusive) {
         EXPECT_EQ(iter->value().to_string_view(), "C");
 
         ASSERT_EQ(iter->next(), StatusCode::NOT_FOUND);
-    }
-}
-
-TEST_F(ShirakamiStorageTest, recent_call_result) {
-    DatabaseHolder db{path()};
-    {
-        std::unique_ptr<Storage> st{};
-        db->create_storage("S", st);
-        TransactionHolder tx{db};
-        ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->abort(), StatusCode::OK);
-        auto ri = tx->recent_call_result();
-        ASSERT_TRUE(ri);
-        std::cerr << ri->description();
     }
 }
 

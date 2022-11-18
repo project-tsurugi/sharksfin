@@ -39,7 +39,7 @@ TEST_F(ShirakamiRecoveryTest, basic) {
             TransactionHolder tx{db};
             ASSERT_EQ(st0->put(tx, "a", "A"), StatusCode::OK);
             ASSERT_EQ(st0->put(tx, "b", "B"), StatusCode::OK);
-            ASSERT_EQ(tx->commit(false), StatusCode::OK);
+            ASSERT_EQ(tx->commit(), StatusCode::OK);
             tx->reset();
             std::unique_ptr<Storage> st1{};
             StorageOptions stopts1{200, "payload1"};
@@ -47,7 +47,7 @@ TEST_F(ShirakamiRecoveryTest, basic) {
             EXPECT_TRUE(st1);
             ASSERT_EQ(st1->put(tx, "x", "X"), StatusCode::OK);
             ASSERT_EQ(st1->put(tx, "y", "Y"), StatusCode::OK);
-            ASSERT_EQ(tx->commit(false), StatusCode::OK);
+            ASSERT_EQ(tx->commit(), StatusCode::OK);
         }
     }
     {
@@ -69,7 +69,7 @@ TEST_F(ShirakamiRecoveryTest, basic) {
                 ASSERT_EQ("A", buf);
                 ASSERT_EQ(st->get(tx, "b", buf), StatusCode::OK);
                 ASSERT_EQ("B", buf);
-                ASSERT_EQ(tx->commit(false), StatusCode::OK);
+                ASSERT_EQ(tx->commit(), StatusCode::OK);
                 tx->reset();
             }
             {
@@ -87,7 +87,7 @@ TEST_F(ShirakamiRecoveryTest, basic) {
                 ASSERT_EQ("X", buf);
                 ASSERT_EQ(st->get(tx, "y", buf), StatusCode::OK);
                 ASSERT_EQ("Y", buf);
-                ASSERT_EQ(tx->commit(false), StatusCode::OK);
+                ASSERT_EQ(tx->commit(), StatusCode::OK);
                 tx->reset();
             }
         }
@@ -110,7 +110,7 @@ void do_recover(std::string location) {
             EXPECT_EQ("A", buf);
             EXPECT_EQ(st->get(tx, "b", buf), StatusCode::OK);
             EXPECT_EQ("B", buf);
-            ASSERT_EQ(tx->commit(false), StatusCode::OK);
+            ASSERT_EQ(tx->commit(), StatusCode::OK);
         }
     }
 }
@@ -128,7 +128,7 @@ TEST_F(ShirakamiRecoveryTest, recovery_storage) {
             ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "b", "B"), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "Z",  "z"), StatusCode::OK);
-            ASSERT_EQ(tx->commit(false), StatusCode::OK);
+            ASSERT_EQ(tx->commit(), StatusCode::OK);
         }
     }
     do_recover(location);
@@ -147,7 +147,7 @@ TEST_F(ShirakamiRecoveryTest, recovery_storage_twice) {
             ASSERT_EQ(st->put(tx, "a", "A"), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "b", "B"), StatusCode::OK);
             ASSERT_EQ(st->put(tx, "Z",  "z"), StatusCode::OK);
-            ASSERT_EQ(tx->commit(false), StatusCode::OK);
+            ASSERT_EQ(tx->commit(), StatusCode::OK);
         }
     }
     {

@@ -60,7 +60,7 @@ public:
         return tx_.get();
     }
     void commit_reset() {
-        tx_->commit(false);
+        tx_->commit();
         tx_->reset();
     }
 private:

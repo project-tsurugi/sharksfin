@@ -20,6 +20,7 @@
 #include <chrono>
 #include "glog/logging.h"
 #include "shirakami/interface.h"
+#include "shirakami/scheme.h"
 #include "shirakami/transaction_state.h"
 
 #include "sharksfin/api.h"
@@ -69,12 +70,11 @@ public:
     /**
      * @brief commit the transaction.
      * @pre transaction is active (i.e. not committed or aborted yet)
-     * @param async whether the commit is in asynchronous mode or not. Use wait_for_commit() if it's asynchronous
      * @return StatusCode::ERR_ABORTED_RETRYABLE when OCC validation fails
      * @return StatusCode::OK when success
      * @return other status
      */
-    StatusCode commit(bool async);
+    StatusCode commit();
 
     /**
      * @brief wait the commit of this transaction.
@@ -147,6 +147,7 @@ public:
     /**
      * @brief return the most recent request result info
      * @return result info
+     * @warning currently this function supports commit()/abort() call only
      */
     std::shared_ptr<CallResult> recent_call_result();
 
@@ -159,6 +160,9 @@ private:
     std::vector<Storage*> write_preserves_{};
     ::shirakami::TxStateHandle state_handle_{::shirakami::undefined_handle};
     std::shared_ptr<CallResult> result_info_{};
+    ::shirakami::Status last_call_status_{};
+    bool last_call_status_set_{false};
+    bool last_call_supported_{false};
 
     Transaction(
         Database* owner,

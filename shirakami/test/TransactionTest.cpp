@@ -49,7 +49,7 @@ TEST_F(ShirakamiTransactionTest, empty_tx_option) {
         std::unique_ptr<Transaction> tx{};
         ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_EQ(st->get(tx.get(), "a", buf), StatusCode::OK);
         EXPECT_EQ(buf, "A");
@@ -70,7 +70,7 @@ TEST_F(ShirakamiTransactionTest, readonly) {
         std::unique_ptr<Transaction> tx{};
         ASSERT_EQ(StatusCode::OK, db->create_transaction(tx, ops));
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
     }
     wait_epochs(10);
     {
@@ -83,10 +83,10 @@ TEST_F(ShirakamiTransactionTest, readonly) {
         }
         ASSERT_EQ(st->get(tx.get(), "a", buf), StatusCode::OK);
         EXPECT_EQ(buf, "A");
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_NE(st->put(tx.get(), "b", "B", PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
     }
     EXPECT_EQ(db->close(), StatusCode::OK);
@@ -115,14 +115,14 @@ TEST_F(ShirakamiTransactionTest, long_tx) {
             std::this_thread::sleep_for(1ms);
         }
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         while(tx->check_state().state_kind() == TransactionState::StateKind::WAITING_START) {
             std::this_thread::sleep_for(1ms);
         }
         ASSERT_EQ(st->get(tx.get(), "a", buf), StatusCode::OK);
         EXPECT_EQ(buf, "A");
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
     }
     EXPECT_EQ(db->close(), StatusCode::OK);
 }
@@ -152,7 +152,7 @@ TEST_F(ShirakamiTransactionTest, check_tx_status) {
         ASSERT_EQ(st->put(tx.get(), "a", "A", PutOperation::CREATE), StatusCode::OK);
         auto s = tx->check_state();
         ASSERT_EQ(TransactionState::StateKind::STARTED, s.state_kind());
-        ASSERT_EQ(tx->commit(false), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
         s = tx->check_state();
         ASSERT_EQ(TransactionState::StateKind::WAITING_DURABLE, s.state_kind());
         while(tx->check_state().state_kind() == TransactionState::StateKind::WAITING_DURABLE) {
@@ -185,5 +185,74 @@ TEST_F(ShirakamiTransactionTest, create_too_many_transactions) {
         }
     }
     ASSERT_TRUE(resource_limit);
+}
+
+TEST_F(ShirakamiTransactionTest, recent_call_result_occ) {
+    DatabaseHolder db{path()};
+    {
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
+        ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::OK);
+        auto ri = tx->recent_call_result();
+        ASSERT_TRUE(ri);
+        std::cerr << ri->description();
+    }
+}
+
+TEST_F(ShirakamiTransactionTest, recent_call_result_abort) {
+    DatabaseHolder db{path()};
+    {
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", st);
+        TransactionHolder tx{db};
+        ASSERT_EQ(st->put(tx, "K", TESTING, PutOperation::CREATE), StatusCode::OK);
+        ASSERT_EQ(tx->abort(), StatusCode::OK);
+        auto ri = tx->recent_call_result();
+        ASSERT_TRUE(ri);
+        std::cerr << ri->description();
+    }
+}
+
+TEST_F(ShirakamiTransactionTest, recent_call_result_ltx) {
+    DatabaseHolder db{path()};
+    {
+        std::unique_ptr<Storage> st{};
+        db->create_storage("S", st);
+        TransactionOptions ops{
+            TransactionOptions::TransactionType::LONG,
+            {
+                wrap(st.get()),
+            }
+        };
+        std::unique_ptr<Transaction> tx0{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx0, ops));
+        while(tx0->check_state().state_kind() == TransactionState::StateKind::WAITING_START) {
+            std::this_thread::sleep_for(1ms);
+        }
+        std::unique_ptr<Transaction> tx1{};
+        ASSERT_EQ(StatusCode::OK, db->create_transaction(tx1, ops));
+        while(tx1->check_state().state_kind() == TransactionState::StateKind::WAITING_START) {
+            std::this_thread::sleep_for(1ms);
+        }
+        ASSERT_EQ(st->put(tx0.get(), "K", TESTING, PutOperation::CREATE), StatusCode::OK);
+        ASSERT_EQ(st->put(tx1.get(), "K", TESTING, PutOperation::CREATE), StatusCode::OK);
+        ASSERT_EQ(tx1->commit(), StatusCode::WAITING_FOR_OTHER_TRANSACTION);
+        {
+            auto ri = tx1->recent_call_result();
+            std::cerr << ri->description();
+            ASSERT_TRUE(ri);
+        }
+        ASSERT_EQ(tx0->commit(), StatusCode::OK);
+        while(tx1->check_state().state_kind() == TransactionState::StateKind::WAITING_CC_COMMIT) {
+            std::this_thread::sleep_for(1ms);
+        }
+        {
+            auto ri = tx1->recent_call_result();
+            std::cerr << ri->description();
+            ASSERT_TRUE(ri);
+        }
+    }
 }
 }  // namespace

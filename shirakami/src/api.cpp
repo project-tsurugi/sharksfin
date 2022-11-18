@@ -261,7 +261,7 @@ StatusCode transaction_exec(
         }
         switch (status) {
             case TransactionOperation::COMMIT: {
-                auto rc = tx->commit(false);
+                auto rc = tx->commit();
                 if(rc != StatusCode::OK) {
                     if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                         // retry
@@ -320,9 +320,10 @@ StatusCode transaction_borrow_handle(
 StatusCode transaction_commit(
         TransactionControlHandle handle,
         bool async) {
+    (void) async;
     auto tx = unwrap(handle);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    return tx->commit(async);
+    return tx->commit();
 }
 
 StatusCode transaction_abort(
