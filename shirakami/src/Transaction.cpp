@@ -247,7 +247,6 @@ std::shared_ptr<CallResult> Transaction::recent_call_result() {
     if(ri) {
         ss << *ri;
     }
-    ss << std::endl;
     result_info_ = std::make_shared<CallResult>(ss.str());
     return result_info_;
 }
