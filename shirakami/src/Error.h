@@ -93,7 +93,8 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::INTERNAL_WARN_NOT_DELETED:
         case Status::INTERNAL_WARN_NOT_FOUND:
         case Status::INTERNAL_WARN_PREMATURE:
-            ABORT();
+            LOG(ERROR) << "Unexpected internal error:" << result;
+            rc = StatusCode::ERR_UNKNOWN;
     }
     return rc;
 }
