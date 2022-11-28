@@ -79,7 +79,8 @@ Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
 void release_tx_handle(::shirakami::TxStateHandle& state_handle) {
     if(state_handle != ::shirakami::undefined_handle) {
         if(auto res = utils::release_tx_state_handle(state_handle); res != ::shirakami::Status::OK) {
-            ABORT();
+            // internal error, fix if this actually happens
+            LOG(ERROR) << "releasing transaction state handle failed:" << res;
         }
         state_handle = ::shirakami::undefined_handle;
     }

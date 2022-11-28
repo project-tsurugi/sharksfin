@@ -41,7 +41,8 @@ Iterator::~Iterator() {
             // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on shirakami
             // we can safely ignore this error since the handle is already released on shirakami side
         } else if (rc != Status::OK) {
-            ABORT();
+            // internal error, fix if this actually happens
+            LOG(ERROR) << "closing scan failed:" << rc;
         }
     }
 }
