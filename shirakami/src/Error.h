@@ -20,6 +20,7 @@
 #include "sharksfin/StatusCode.h"
 #include "shirakami/scheme.h"
 #include "logging.h"
+#include "exception.h"
 
 namespace sharksfin::shirakami {
 
@@ -33,7 +34,7 @@ using Status = ::shirakami::Status;
     buf << " line:";
     buf << line;
     LOG(ERROR) << buf.str(); // use LOG because DBMS is crashing
-    std::abort();
+    throw_exception(std::logic_error{buf.str()});
 }
 
 #define ABORT_MSG(msg) sharksfin::shirakami::abort_with_lineno(msg, __FILE__, __LINE__)  //NOLINT

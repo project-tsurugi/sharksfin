@@ -15,6 +15,10 @@ set_target_properties(shirakami
         LIBRARY_OUTPUT_NAME "sharksfin-shirakami"
         )
 
+target_compile_definitions(shirakami
+        PUBLIC BOOST_STACKTRACE_USE_BACKTRACE
+        )
+
 target_include_directories(shirakami
         PRIVATE .
         )
@@ -24,6 +28,9 @@ target_link_libraries(shirakami
         PRIVATE common
         PRIVATE glog::glog
         PRIVATE shirakami-shirakami
+        PUBLIC Boost::boost
+        PUBLIC Boost::stacktrace_backtrace
+        PUBLIC ${CMAKE_DL_LIBS}
         )
 
 set_compile_options(shirakami)

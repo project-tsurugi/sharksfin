@@ -45,8 +45,11 @@ endif()
 
 find_package(Doxygen)
 find_package(Threads REQUIRED)
-find_package(Boost
-    COMPONENTS filesystem)
+find_package(Boost 1.65
+        COMPONENTS filesystem
+        COMPONENTS stacktrace_backtrace
+        REQUIRED
+        )
 find_package(glog)
 find_package(numa)
 find_package(shirakami)
