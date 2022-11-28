@@ -144,7 +144,9 @@ StatusCode Transaction::abort() {
     auto res = utils::abort(session_->id());
     auto rc = resolve(res);
     if (rc != StatusCode::OK) {
-        ABORT();
+        // internal error, fix if this actually happens
+        LOG(ERROR) << "aborting transaction failed:" << res;
+        return StatusCode::ERR_UNKNOWN;
     }
     is_active_ = false;
     last_call_status_ = res;
