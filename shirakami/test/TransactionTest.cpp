@@ -197,7 +197,7 @@ TEST_F(ShirakamiTransactionTest, recent_call_result_occ) {
         ASSERT_EQ(tx->commit(), StatusCode::OK);
         auto ri = tx->recent_call_result();
         ASSERT_TRUE(ri);
-        std::cerr << ri->description();
+        std::cerr << ri->description() << std::endl;
     }
 }
 
@@ -211,7 +211,7 @@ TEST_F(ShirakamiTransactionTest, recent_call_result_abort) {
         ASSERT_EQ(tx->abort(), StatusCode::OK);
         auto ri = tx->recent_call_result();
         ASSERT_TRUE(ri);
-        std::cerr << ri->description();
+        std::cerr << ri->description() << std::endl;
     }
 }
 
@@ -241,7 +241,7 @@ TEST_F(ShirakamiTransactionTest, recent_call_result_ltx) {
         ASSERT_EQ(tx1->commit(), StatusCode::WAITING_FOR_OTHER_TRANSACTION);
         {
             auto ri = tx1->recent_call_result();
-            std::cerr << ri->description();
+            std::cerr << ri->description() << std::endl;
             ASSERT_TRUE(ri);
         }
         ASSERT_EQ(tx0->commit(), StatusCode::OK);
@@ -250,7 +250,7 @@ TEST_F(ShirakamiTransactionTest, recent_call_result_ltx) {
         }
         {
             auto ri = tx1->recent_call_result();
-            std::cerr << ri->description();
+            std::cerr << ri->description() << std::endl;
             ASSERT_TRUE(ri);
         }
     }

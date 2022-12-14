@@ -25,15 +25,17 @@
 
 #include "Error.h"
 
-#define log_entry DVLOG(log_trace) << std::boolalpha << "--> "  //NOLINT
-#define log_exit DVLOG(log_trace) << std::boolalpha << "<-- "  //NOLINT
+#define log_entry DVLOG(log_trace) << std::boolalpha << sharksfin::shirakami::log_location_prefix << "--> "  //NOLINT
+#define log_exit DVLOG(log_trace) << std::boolalpha << sharksfin::shirakami::log_location_prefix << "<-- "  //NOLINT
 #define log_rc(rc, fname) do { /*NOLINT*/  \
     if((rc) != Status::OK) { \
-        VLOG(log_trace) << "--- " << (fname) << " rc:" << (rc); \
+        VLOG(log_trace) << sharksfin::shirakami::log_location_prefix << "--- " << (fname) << " rc:" << (rc); \
     } \
 } while(0);
 
 namespace sharksfin::shirakami {
+
+constexpr static std::string_view log_location_prefix = "/:sharksfin:shirakami ";
 
 using Status = ::shirakami::Status;
 using Token = ::shirakami::Token;
