@@ -19,6 +19,9 @@
 #include <string>
 #include <string_view>
 
+#include "ErrorLocator.h"
+#include "ErrorCode.h"
+
 namespace sharksfin {
 
 /**
@@ -33,11 +36,26 @@ public:
 
     /**
      * @brief create new object
+     * @param code error code of the result
      * @param result the result description
      */
-    explicit CallResult(std::string_view result) :
+    CallResult(
+        ErrorCode code,
+        std::shared_ptr<ErrorLocator> locator,
+        std::string_view result
+    ) :
+        code_(code),
+        location_(std::move(locator)),
         result_(result)
     {}
+
+    /**
+     * @brief accessor for the result error code
+     * @return the result error code
+     */
+    [[nodiscard]] ErrorCode code() const noexcept {
+        return code_;
+    }
 
     /**
      * @brief accessor for the result description text
@@ -47,8 +65,20 @@ public:
         return result_;
     }
 
+    /**
+     * @brief accessor for the error locator
+     * @return the error locator. The locator type must match the one defined for ErrorCode value returned by code().
+     * @return nullptr if no locator is defined for the error code, or implementation doesn't provide one.
+     */
+    [[nodiscard]] std::shared_ptr<ErrorLocator> const& location() const noexcept {
+        return location_;
+    }
+
 private:
+    ErrorCode code_{};
+    std::shared_ptr<ErrorLocator> location_{};
     std::string result_{};
+
 };
 
 }  // namespace sharksfin

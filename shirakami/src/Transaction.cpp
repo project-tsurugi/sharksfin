@@ -233,6 +233,32 @@ inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info cons
     return out;
 }
 
+std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_ptr<::shirakami::result_info> const& ri) {
+    using reason_code = ::shirakami::reason_code;
+    ErrorCode rc{ErrorCode::OK};
+    ErrorLocatorKind kind{ErrorLocatorKind::unknown};
+    bool impl_provides_locator = true; // whether implementation provides locator as ErrorCode expects
+    switch(ri->get_reason_code()) {
+        case reason_code::UNKNOWN: rc = ErrorCode::ERROR; break;
+        case reason_code::KVS_DELETE: rc = ErrorCode::KVS_KEY_NOT_FOUND; kind = ErrorLocatorKind::storage_key; break;
+        case reason_code::KVS_INSERT: rc = ErrorCode::KVS_KEY_ALREADY_EXISTS; kind = ErrorLocatorKind::storage_key; break;
+        case reason_code::KVS_UPDATE: rc = ErrorCode::KVS_KEY_NOT_FOUND; kind = ErrorLocatorKind::storage_key; break;
+        case reason_code::CC_LTX_PHANTOM_AVOIDANCE: rc = ErrorCode::CC_LTX_WRITE_ERROR; kind = ErrorLocatorKind::storage_key; break;
+        case reason_code::CC_LTX_READ_AREA_VIOLATION: rc = ErrorCode::CC_LTX_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
+        case reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION: rc = ErrorCode::CC_LTX_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
+        case reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION: rc = ErrorCode::CC_LTX_WRITE_ERROR; kind = ErrorLocatorKind::storage_key; break;
+        case reason_code::CC_OCC_WP_VERIFY: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
+        case reason_code::CC_OCC_READ_VERIFY: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; break;
+        case reason_code::CC_OCC_PHANTOM_AVOIDANCE: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
+        case reason_code::USER_ABORT: rc = ErrorCode::OK; break;
+    }
+    return {
+        (kind == ErrorLocatorKind::unknown || !impl_provides_locator) ? nullptr :
+            std::make_shared<StorageKeyErrorLocator>(ri->get_key(), ri->get_storage_name()),
+        rc
+    };
+}
+
 std::shared_ptr<CallResult> Transaction::recent_call_result() {
     if(! last_call_supported_) return {}; // unless supported function is called, nothing returns
 
@@ -245,7 +271,11 @@ std::shared_ptr<CallResult> Transaction::recent_call_result() {
     if(ri) {
         ss << *ri;
     }
-    result_info_ = std::make_shared<CallResult>(ss.str());
+    auto [locator, ec] = create_locator(ri);
+    result_info_ = std::make_shared<CallResult>(
+        ec,
+        std::move(locator),
+        ss.str());
     return result_info_;
 }
 
