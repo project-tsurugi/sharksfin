@@ -115,6 +115,8 @@ Status abort(Token token);
 
 Status tx_begin(transaction_options options);
 
+Status get_tx_id(Token token, std::string& tx_id);
+
 Status create_sequence(::shirakami::SequenceId* id);
 
 Status update_sequence(Token token, ::shirakami::SequenceId id, ::shirakami::SequenceVersion version, ::shirakami::SequenceValue value);

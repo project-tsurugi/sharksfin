@@ -110,6 +110,10 @@ StatusCode transaction_begin(
         TransactionOptions const& options,
         TransactionControlHandle *result);
 
+StatusCode transaction_get_info(
+        TransactionControlHandle handle,
+        std::shared_ptr<TransactionInfo>& result);
+
 StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result);

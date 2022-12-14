@@ -28,6 +28,7 @@
 #include "TransactionOperation.h"
 #include "TransactionOptions.h"
 #include "TransactionState.h"
+#include "TransactionInfo.h"
 #include "CallResult.h"
 #include "StorageOptions.h"
 #include "LogRecord.h"
@@ -404,6 +405,15 @@ StatusCode transaction_begin(
         DatabaseHandle handle,
         TransactionOptions const& options,
         TransactionControlHandle *result);
+
+/**
+ * @brief retrieve the info. object for the transaction
+ * @param handle the target transaction
+ * @param result [OUT] the output transaction info object, which is available only if StatusCode::OK was returned
+ * @return the operation status
+ * @return otherwise if error occurs
+ */
+StatusCode transaction_get_info(TransactionControlHandle handle, std::shared_ptr<TransactionInfo>& result);
 
 /**
  * @brief borrows the transaction handle associated with the control handle

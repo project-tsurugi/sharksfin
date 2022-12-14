@@ -1763,4 +1763,41 @@ TEST_F(ShirakamiApiTest, list_storages) {
     EXPECT_EQ("s2", list[2]);
     ASSERT_EQ(database_close(db), StatusCode::OK);
 }
+
+TEST_F(ShirakamiApiTest, transaction_info) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static bool run(DatabaseHandle db, S& s) {
+            HandleHolder<TransactionControlHandle> tch{};
+            if (auto c = transaction_begin(db, {}, &tch.get()); c != StatusCode::OK) {
+                return false;
+            }
+            std::shared_ptr<TransactionInfo> info{};
+            if (auto c = transaction_get_info(tch.get(), info); c != StatusCode::OK) {
+                return false;
+            }
+            if(info) {
+                s.id = info->id();
+            }
+            if (transaction_commit(tch.get(), true) != StatusCode::OK) {
+                return false;
+            }
+            return true;
+        }
+        StorageHandle st;
+        std::string id{};
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+    EXPECT_TRUE(S::run(db, s));
+    EXPECT_FALSE(s.id.empty());
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin

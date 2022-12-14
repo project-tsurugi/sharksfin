@@ -310,6 +310,19 @@ StatusCode transaction_begin(
     return StatusCode::OK;
 }
 
+StatusCode transaction_get_info(
+    TransactionControlHandle handle,
+    std::shared_ptr<TransactionInfo>& result) {
+    auto tx = unwrap(handle);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
+    result = tx->info();
+    if(! result) {
+        // should not occur
+        return StatusCode::ERR_UNKNOWN;
+    }
+    return StatusCode::OK;
+}
+
 StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result) {

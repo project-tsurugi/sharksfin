@@ -295,6 +295,14 @@ Status tx_begin(transaction_options options) {
     return rc;
 }
 
+Status get_tx_id(Token token, std::string& tx_id) {
+    log_entry << "get_tx_id() token:" << token;
+    auto rc = details::sanitize_rc(::shirakami::get_tx_id(token, tx_id));
+    log_rc(rc, "get_tx_id()");
+    log_exit << "get_tx_id() rc:" << rc << " tx_id:" << tx_id;
+    return rc;
+}
+
 Status create_sequence(::shirakami::SequenceId* id) {
     log_entry << "create_sequence() id:" << id;
     auto rc = details::sanitize_rc(::shirakami::create_sequence(id));

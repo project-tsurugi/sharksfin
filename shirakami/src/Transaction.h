@@ -151,6 +151,12 @@ public:
      */
     std::shared_ptr<CallResult> recent_call_result();
 
+    /**
+     * @brief return transaction info object
+     * @return transaction info
+     */
+    std::shared_ptr<TransactionInfo> info();
+
 private:
     Database* owner_{};
     std::unique_ptr<Session> session_{};
@@ -163,6 +169,7 @@ private:
     ::shirakami::Status last_call_status_{};
     bool last_call_status_set_{false};
     bool last_call_supported_{false};
+    std::shared_ptr<TransactionInfo> info_{};
 
     Transaction(
         Database* owner,

@@ -293,6 +293,15 @@ StatusCode transaction_begin(
     return StatusCode::OK;
 }
 
+StatusCode transaction_get_info(
+    TransactionControlHandle handle,
+    std::shared_ptr<TransactionInfo>& result) {
+    auto tx = unwrap(handle);
+    if (! tx->is_alive()) return StatusCode::ERR_INACTIVE_TRANSACTION;
+    result = std::make_shared<TransactionInfo>(std::to_string(tx->id()));
+    return StatusCode::OK;
+}
+
 StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result) {

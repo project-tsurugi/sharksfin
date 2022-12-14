@@ -241,6 +241,16 @@ StatusCode transaction_begin(
     return rc;
 }
 
+StatusCode transaction_get_info(
+    TransactionControlHandle handle,
+    std::shared_ptr<TransactionInfo>& result) {
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_get_info(handle, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << result->id();
+    return rc;
+}
+
 StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result) {

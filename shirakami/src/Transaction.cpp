@@ -249,4 +249,17 @@ std::shared_ptr<CallResult> Transaction::recent_call_result() {
     return result_info_;
 }
 
+std::shared_ptr<TransactionInfo> Transaction::info() {
+    if (info_) {
+        return info_;
+    }
+    std::string tx_id{};
+    if(auto res = utils::get_tx_id(session_->id(), tx_id); res != ::shirakami::Status::OK) {
+        VLOG(log_error) << "Failed to retrieve shirakami transaction id.";
+        return {};
+    }
+    info_ = std::make_shared<TransactionInfo>(tx_id);
+    return info_;
+}
+
 }  // namespace sharksfin::shirakami
