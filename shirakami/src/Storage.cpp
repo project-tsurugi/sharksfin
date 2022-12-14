@@ -53,11 +53,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
 
 StatusCode Storage::remove(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    auto rc = resolve(utils::delete_record(tx->native_handle(), handle_, key.to_string_view()));
-    if (rc != StatusCode::OK && rc != StatusCode::NOT_FOUND && rc != StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE) {
-        ABORT();
-    }
-    return rc;
+    return resolve(utils::delete_record(tx->native_handle(), handle_, key.to_string_view()));
 }
 
 std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
