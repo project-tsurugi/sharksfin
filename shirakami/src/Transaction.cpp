@@ -244,7 +244,7 @@ std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_p
         case reason_code::KVS_INSERT: rc = ErrorCode::KVS_KEY_ALREADY_EXISTS; kind = ErrorLocatorKind::storage_key; break;
         case reason_code::KVS_UPDATE: rc = ErrorCode::KVS_KEY_NOT_FOUND; kind = ErrorLocatorKind::storage_key; break;
         case reason_code::CC_LTX_PHANTOM_AVOIDANCE: rc = ErrorCode::CC_LTX_WRITE_ERROR; kind = ErrorLocatorKind::storage_key; break;
-        case reason_code::CC_LTX_READ_AREA_VIOLATION: rc = ErrorCode::CC_LTX_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
+        case reason_code::CC_LTX_READ_AREA_VIOLATION: rc = ErrorCode::CC_LTX_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;  //NOLINT(bugprone-branch-clone)
         case reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION: rc = ErrorCode::CC_LTX_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
         case reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION: rc = ErrorCode::CC_LTX_WRITE_ERROR; kind = ErrorLocatorKind::storage_key; break;
         case reason_code::CC_OCC_WP_VERIFY: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;

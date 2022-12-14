@@ -23,6 +23,9 @@
 
 namespace sharksfin {
 
+/**
+ * @brief kinds for error locator
+ */
 enum class ErrorLocatorKind {
     unknown,
     storage_key,
@@ -85,7 +88,7 @@ public:
     /**
      * @brief create empty object
      */
-    ~StorageKeyErrorLocator() = default;
+    ~StorageKeyErrorLocator() override = default;
 
     /**
      * @brief return locator kind
@@ -96,7 +99,8 @@ public:
 
     /**
      * @brief create new object
-     * @param result the result description
+     * @param key the key data which caused the error
+     * @param storage_name the storage name where the key exists that caused the error
      */
     StorageKeyErrorLocator(
         std::string_view key,
@@ -127,11 +131,6 @@ private:
     std::string storage_name_{};
 
 };
-
-template <class T>
-T& unwrap(ErrorLocator& locator) {
-    return dynamic_cast<T&>(locator);
-}
 
 }  // namespace sharksfin
 

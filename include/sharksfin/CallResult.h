@@ -37,6 +37,7 @@ public:
     /**
      * @brief create new object
      * @param code error code of the result
+     * @param locator error location
      * @param result the result description
      */
     CallResult(
