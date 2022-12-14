@@ -230,11 +230,6 @@ inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info cons
     if(value.get_reason_code() != ::shirakami::reason_code::UNKNOWN) {
         out << " reason=" << value.get_reason_code();
     }
-    auto desc = value.get_additional_information();
-    if(! desc.empty()) {
-        out << " ";
-        out << desc;
-    }
     return out;
 }
 
