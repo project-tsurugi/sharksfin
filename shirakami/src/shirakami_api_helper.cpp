@@ -177,7 +177,7 @@ Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     auto rc = details::sanitize_rc(::shirakami::insert(tx.native_handle(), storage, key, val));
     log_rc(rc, "insert()");
     log_exit << "insert() rc:" << rc;
-    if (rc == Status::ERR_PHANTOM) {
+    if (rc == Status::ERR_CC) {
         tx.deactivate();
     }
     auto r = resolve(rc);
@@ -218,7 +218,7 @@ Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     log_rc(rc, "upsert()");
     log_exit << "upsert() rc:" << rc;
     auto r = resolve(rc);
-    if (rc == Status::ERR_PHANTOM) {
+    if (rc == Status::ERR_CC) {
         tx.deactivate();
         return rc;
     }

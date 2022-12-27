@@ -56,19 +56,17 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_INVALID_ARGS: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
         case Status::WARN_NOT_INIT: rc = StatusCode::ERR_INVALID_STATE; break;
         case Status::WARN_PREMATURE: rc = StatusCode::ERR_INVALID_STATE; break;
-        case Status::ERR_FAIL_INSERT: rc = StatusCode::ERR_ABORTED; break;
+
+        case Status::ERR_CC: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::ERR_FATAL: rc = StatusCode::ERR_UNKNOWN; break;
         case Status::ERR_FATAL_INDEX: rc = StatusCode::ERR_UNKNOWN; break;
         case Status::ERR_INVALID_CONFIGURATION: rc = StatusCode::ERR_UNKNOWN ; break;
+        case Status::ERR_KVS: rc = StatusCode::ERR_ABORTED; break; //TODO
         case Status::ERR_READ_AREA_VIOLATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; break; //TODO
         case Status::ERR_NOT_IMPLEMENTED: rc = StatusCode::ERR_NOT_IMPLEMENTED; break;
-        case Status::ERR_FAIL_WP: rc = StatusCode::ERR_ABORTED; break;
-        case Status::ERR_VALIDATION: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
-        case Status::ERR_PHANTOM: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_ALREADY_DELETE: rc = StatusCode::NOT_FOUND; break;
         case Status::WARN_CANCEL_PREVIOUS_INSERT: rc = StatusCode::OK; break;
         case Status::WARN_CANCEL_PREVIOUS_UPSERT: rc = StatusCode::OK; break;
-        case Status::ERR_WRITE_TO_DELETED_RECORD: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_CONCURRENT_INSERT: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_CONCURRENT_UPDATE: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_ILLEGAL_OPERATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; break;
@@ -82,7 +80,6 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_STORAGE_NOT_FOUND: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
         case Status::ERR_SESSION_LIMIT: rc = StatusCode::ERR_INVALID_STATE; break;
         case Status::WARN_CONFLICT_ON_WRITE_PRESERVE: rc = StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE; break;
-        case Status::ERR_CONFLICT_ON_WRITE_PRESERVE: rc = StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE; break;
         case Status::WARN_NOT_BEGIN: rc = StatusCode::OK; break;
         case Status::WARN_WAITING_FOR_OTHER_TX: rc = StatusCode::WAITING_FOR_OTHER_TRANSACTION; break;
         case Status::WARN_WRITE_WITHOUT_WP: rc = StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE; break;

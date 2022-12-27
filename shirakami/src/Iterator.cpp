@@ -72,7 +72,7 @@ bool Iterator::is_valid() const {
 
 // common status code handling for scan functions
 StatusCode Iterator::resolve_scan_errors(Status res) {
-    if (res == Status::ERR_PHANTOM) {
+    if (res == Status::ERR_CC) {
         tx_->deactivate();
         is_valid_ = false;
         return StatusCode::ERR_ABORTED_RETRYABLE;
