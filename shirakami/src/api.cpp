@@ -25,6 +25,7 @@
 #include "handle_utils.h"
 #include "logging.h"
 #include "shirakami_api_helper.h"
+#include "logging_helper.h"
 
 namespace sharksfin {
 
