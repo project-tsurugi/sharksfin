@@ -44,7 +44,7 @@ using storage_option = ::shirakami::storage_option;
 
 class Transaction;
 
-namespace utils {
+namespace api {
 
 Status enter(Token& token);
 
@@ -135,7 +135,7 @@ Status database_set_logging_callback(::shirakami::log_event_callback const& call
 
 std::shared_ptr<::shirakami::result_info> transaction_result_info(Token token);
 
-}  // namespace utils
+}  // namespace api
 }  // namespace sharksfin::shirakami
 
 #endif  // SHARKSFIN_SHIRAKAMI_API_HELPER_H_

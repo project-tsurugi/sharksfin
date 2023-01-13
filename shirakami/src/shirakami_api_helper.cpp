@@ -31,7 +31,7 @@ using scan_endpoint = ::shirakami::scan_endpoint;
 using database_options = ::shirakami::database_options;
 using storage_option = ::shirakami::storage_option;
 
-namespace utils {
+namespace api {
 
 namespace details {
 
@@ -381,5 +381,5 @@ std::shared_ptr<::shirakami::result_info> transaction_result_info(Token token) {
     log_exit << "ret:" << (ret ? to_string_view(ret->get_reason_code()) : "nullptr");
     return ret;
 }
-}  // namespace utils
+}  // namespace api
 }  // namespace sharksfin::shirakami

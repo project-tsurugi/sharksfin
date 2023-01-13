@@ -45,7 +45,7 @@ namespace sharksfin::shirakami {
 }
 
 StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
-    if(auto res = utils::init(from(options)); res != Status::OK) {
+    if(auto res = api::init(from(options)); res != Status::OK) {
         LOG(ERROR) << "Shirakami Initialization failed with status code:" << res;
         return StatusCode::ERR_IO_ERROR;
     }
@@ -60,7 +60,7 @@ StatusCode Database::close() {
         std::cout << "transaction process time: " << transaction_process_time().load().count() << std::endl;
         std::cout << "transaction wait time: "  << transaction_wait_time().load().count() << std::endl;
     }
-    utils::fin(false);
+    api::fin(false);
     active_ = false;
     return StatusCode::OK;
 }
@@ -85,7 +85,7 @@ StatusCode Database::create_storage(Slice key, StorageOptions const& options, st
     opts.id(options.storage_id());
     opts.payload(options.payload());
     ::shirakami::Storage handle{};
-    if (auto rc = resolve(utils::create_storage(key.to_string_view(), handle, opts)); rc != StatusCode::OK) {
+    if (auto rc = resolve(api::create_storage(key.to_string_view(), handle, opts)); rc != StatusCode::OK) {
         if(rc == StatusCode::ALREADY_EXISTS) {
             // possibly storage_id already exists
             return rc;
@@ -102,7 +102,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
         return StatusCode::OK;
     }
     ::shirakami::Storage handle{};
-    if (auto rc = resolve(utils::get_storage(key.to_string_view(), handle)); rc != StatusCode::OK) {
+    if (auto rc = resolve(api::get_storage(key.to_string_view(), handle)); rc != StatusCode::OK) {
         if(rc == StatusCode::NOT_FOUND) {
             return rc;
         }
@@ -115,7 +115,7 @@ StatusCode Database::get_storage(Slice key, std::unique_ptr<Storage>& result) {
 
 StatusCode Database::delete_storage(Storage &storage) {
     if (! active_) ABORT();
-    auto rc = resolve(utils::delete_storage(storage.handle()));
+    auto rc = resolve(api::delete_storage(storage.handle()));
     if (rc == StatusCode::ERR_INVALID_ARGUMENT) {
         // when not found, shirakami returns ERR_INVALID_ARGUMENT
         rc = StatusCode::NOT_FOUND;

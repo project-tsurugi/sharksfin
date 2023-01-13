@@ -27,14 +27,14 @@ namespace sharksfin::shirakami {
 StatusCode Storage::check(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     std::string value{};
-    auto res = utils::exist_key(*tx, handle_, key.to_string_view());
+    auto res = api::exist_key(*tx, handle_, key.to_string_view());
     return resolve(res);
 }
 
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NOLINT(readability-make-member-function-const)
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     std::string value{};
-    auto res = utils::search_key(*tx, handle_, key.to_string_view(), buffer);
+    auto res = api::search_key(*tx, handle_, key.to_string_view(), buffer);
     return resolve(res);
 }
 
@@ -42,18 +42,18 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     switch(operation) {
         case PutOperation::CREATE:
-            return resolve(utils::insert(*tx, handle_, key.to_string_view(), value.to_string_view()));
+            return resolve(api::insert(*tx, handle_, key.to_string_view(), value.to_string_view()));
         case PutOperation::UPDATE:
-            return resolve(utils::update(*tx, handle_, key.to_string_view(), value.to_string_view()));
+            return resolve(api::update(*tx, handle_, key.to_string_view(), value.to_string_view()));
         case PutOperation::CREATE_OR_UPDATE:
-            return resolve(utils::upsert(*tx, handle_, key.to_string_view(), value.to_string_view()));
+            return resolve(api::upsert(*tx, handle_, key.to_string_view(), value.to_string_view()));
     }
     ABORT();
 }
 
 StatusCode Storage::remove(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    return resolve(utils::delete_record(tx->native_handle(), handle_, key.to_string_view()));
+    return resolve(api::delete_record(tx->native_handle(), handle_, key.to_string_view()));
 }
 
 std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
@@ -74,13 +74,13 @@ std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
 
 StatusCode Storage::set_options(StorageOptions const& options, Transaction* tx) {  //NOLINT
     (void) tx;
-    return shirakami::resolve(shirakami::utils::storage_set_options(handle_, from(options)));
+    return shirakami::resolve(shirakami::api::storage_set_options(handle_, from(options)));
 }
 
 StatusCode Storage::get_options(StorageOptions& out, Transaction* tx) {  //NOLINT
     (void) tx;
     ::shirakami::storage_option opt{};
-    auto res = shirakami::resolve(shirakami::utils::storage_get_options(handle_, opt));
+    auto res = shirakami::resolve(shirakami::api::storage_get_options(handle_, opt));
     out.storage_id(opt.id());
     out.payload(std::string{opt.payload()});
     return res;

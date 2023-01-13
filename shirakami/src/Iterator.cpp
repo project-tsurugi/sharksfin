@@ -36,7 +36,7 @@ Iterator::Iterator(Storage* owner, Transaction* tx, Slice begin_key, EndPointKin
 
 Iterator::~Iterator() {
     if(handle_open_) {
-        auto rc = utils::close_scan(tx_->native_handle(), handle_);
+        auto rc = api::close_scan(tx_->native_handle(), handle_);
         if(rc == Status::WARN_INVALID_HANDLE || rc == Status::WARN_NOT_BEGIN) {
             // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on shirakami
             // we can safely ignore this error since the handle is already released on shirakami side
@@ -92,19 +92,19 @@ StatusCode Iterator::resolve_scan_errors(Status res) {
 }
 
 StatusCode Iterator::key(Slice& s) {
-    auto res = utils::read_key_from_scan(*tx_, handle_, buffer_key_);
+    auto res = api::read_key_from_scan(*tx_, handle_, buffer_key_);
     s = buffer_key_;
     return resolve_scan_errors(res);
 }
 
 StatusCode Iterator::value(Slice& s) {
-    auto res = utils::read_value_from_scan(*tx_, handle_, buffer_value_);
+    auto res = api::read_value_from_scan(*tx_, handle_, buffer_value_);
     s = buffer_value_;
     return resolve_scan_errors(res);
 }
 
 StatusCode Iterator::next_cursor() {
-    auto res = utils::next(tx_->native_handle(), handle_);
+    auto res = api::next(tx_->native_handle(), handle_);
     return resolve_scan_errors(res);
 }
 
@@ -182,7 +182,7 @@ StatusCode Iterator::open_cursor() {
             end_endpoint = scan_endpoint::EXCLUSIVE;
             break;
     }
-    if (auto res = utils::open_scan(tx_->native_handle(),
+    if (auto res = api::open_scan(tx_->native_handle(),
             owner_->handle(),
             begin_key_, begin_endpoint,
             end_key_, end_endpoint, handle_);

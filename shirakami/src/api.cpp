@@ -76,7 +76,7 @@ StatusCode database_set_logging_callback(
     DatabaseHandle handle,
     LogEventCallback callback) {  //NOLINT(performance-unnecessary-value-param)
     (void) handle;
-    shirakami::utils::database_set_logging_callback(
+    shirakami::api::database_set_logging_callback(
         [cb = std::move(callback)](std::size_t worker, ::shirakami::log_record* begin, ::shirakami::log_record* end) {
             log_entry << "logging callback worker:" << worker << " entries:" << (end-begin);
             cb(worker, reinterpret_cast<LogRecord*>(begin), reinterpret_cast<LogRecord*>(end));  //NOLINT
@@ -173,7 +173,7 @@ StatusCode storage_list(
     std::vector<std::string>& out
 ) {
     (void) handle;
-    return shirakami::resolve(shirakami::utils::list_storage(out));
+    return shirakami::resolve(shirakami::api::list_storage(out));
 }
 
 StatusCode storage_list(
@@ -181,7 +181,7 @@ StatusCode storage_list(
     std::vector<std::string>& out
 ) {
     (void) tx;
-    return shirakami::resolve(shirakami::utils::list_storage(out));
+    return shirakami::resolve(shirakami::api::list_storage(out));
 }
 
 StatusCode storage_get_options(
@@ -531,7 +531,7 @@ extern "C" StatusCode sequence_create(
     DatabaseHandle handle,
     SequenceId* id) {  //NOLINT
     (void)handle;
-    return shirakami::resolve(shirakami::utils::create_sequence(id));
+    return shirakami::resolve(shirakami::api::create_sequence(id));
 }
 
 extern "C" StatusCode sequence_put(
@@ -542,7 +542,7 @@ extern "C" StatusCode sequence_put(
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     return shirakami::resolve(
-        shirakami::utils::update_sequence(tx->native_handle(), id, version, value));
+        shirakami::api::update_sequence(tx->native_handle(), id, version, value));
 }
 
 extern "C" StatusCode sequence_get(
@@ -552,7 +552,7 @@ extern "C" StatusCode sequence_get(
     SequenceValue* value) {  //NOLINT
     (void)handle;
     return shirakami::resolve(
-        shirakami::utils::read_sequence(id, version, value));
+        shirakami::api::read_sequence(id, version, value));
 }
 
 extern "C" StatusCode sequence_delete(
@@ -560,7 +560,7 @@ extern "C" StatusCode sequence_delete(
     SequenceId id) {
     (void)handle;
     if (auto res = shirakami::resolve(
-            shirakami::utils::delete_sequence(id)); res != StatusCode::OK) {
+            shirakami::api::delete_sequence(id)); res != StatusCode::OK) {
         ABORT();
     }
     return StatusCode::OK;

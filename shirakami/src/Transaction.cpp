@@ -78,7 +78,7 @@ Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
 
 void release_tx_handle(::shirakami::TxStateHandle& state_handle) {
     if(state_handle != ::shirakami::undefined_handle) {
-        if(auto res = utils::release_tx_state_handle(state_handle); res != ::shirakami::Status::OK) {
+        if(auto res = api::release_tx_state_handle(state_handle); res != ::shirakami::Status::OK) {
             // internal error, fix if this actually happens
             LOG(ERROR) << "releasing transaction state handle failed:" << res;
         }
@@ -115,7 +115,7 @@ StatusCode Transaction::commit() {
     if(is_long()) {
         check_state(); // to initialize state handle
     }
-    auto res = utils::commit(session_->id());
+    auto res = api::commit(session_->id());
     auto rc = resolve_commit_code(res);
     if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE || rc == StatusCode::WAITING_FOR_OTHER_TRANSACTION) {
         is_active_ = false;
@@ -141,7 +141,7 @@ StatusCode Transaction::abort() {
         // transaction doesn't begin, or commit request has been submitted already
         return StatusCode::OK;
     }
-    auto res = utils::abort(session_->id());
+    auto res = api::abort(session_->id());
     auto rc = resolve(res);
     if (rc != StatusCode::OK) {
         // internal error, fix if this actually happens
@@ -194,12 +194,12 @@ bool Transaction::is_long() const noexcept {
 
 TransactionState Transaction::check_state() {
     if(state_handle_ == ::shirakami::undefined_handle) {
-        if(auto res = utils::acquire_tx_state_handle(session_->id(), state_handle_); res != ::shirakami::Status::OK) {
+        if(auto res = api::acquire_tx_state_handle(session_->id(), state_handle_); res != ::shirakami::Status::OK) {
             ABORT();
         }
     }
     ::shirakami::TxState state{};
-    if(auto res = utils::tx_check(state_handle_, state); res != ::shirakami::Status::OK) {
+    if(auto res = api::tx_check(state_handle_, state); res != ::shirakami::Status::OK) {
         ABORT();
     }
     return from_state(state);
@@ -222,7 +222,7 @@ StatusCode Transaction::declare_begin() {
         storages.emplace_back(e->handle());
     }
     transaction_options options{session_->id(), from(type_), storages};
-    auto res = utils::tx_begin(std::move(options));
+    auto res = api::tx_begin(std::move(options));
     return resolve(res);
 }
 
@@ -263,9 +263,9 @@ std::shared_ptr<CallResult> Transaction::recent_call_result() {
     if(! last_call_supported_) return {}; // unless supported function is called, nothing returns
 
     if(! last_call_status_set_) {
-        last_call_status_ = utils::check_commit(session_->id());
+        last_call_status_ = api::check_commit(session_->id());
     }
-    auto ri = utils::transaction_result_info(session_->id());
+    auto ri = api::transaction_result_info(session_->id());
     std::stringstream ss{};
     ss << "shirakami response Status=" << last_call_status_;
     if(ri) {
@@ -284,7 +284,7 @@ std::shared_ptr<TransactionInfo> Transaction::info() {
         return info_;
     }
     std::string tx_id{};
-    if(auto res = utils::get_tx_id(session_->id(), tx_id); res != ::shirakami::Status::OK) {
+    if(auto res = api::get_tx_id(session_->id(), tx_id); res != ::shirakami::Status::OK) {
         VLOG(log_error) << "Failed to retrieve shirakami transaction id.";
         return {};
     }

@@ -42,7 +42,7 @@ public:
     explicit Session(Token id) noexcept : id_(id) {}
     ~Session() noexcept {
         if(! enter_success_) return;
-        if (auto res = utils::leave(id_); res != Status::OK) {
+        if (auto res = api::leave(id_); res != Status::OK) {
             VLOG(log_error) << "shirakami::leave() failed: " << res;
         }
     };
@@ -57,7 +57,7 @@ public:
      */
     static std::unique_ptr<Session> create_session() {
         auto ret = std::make_unique<Session>();
-        if (auto res = utils::enter(ret->id_); res != Status::OK) {
+        if (auto res = api::enter(ret->id_); res != Status::OK) {
             VLOG(log_error) << "shirakami::enter() failed: " << res;
             return {};
         }
