@@ -71,6 +71,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_CONCURRENT_UPDATE: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
         case Status::WARN_ILLEGAL_OPERATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; break;
         case Status::WARN_INVALID_HANDLE: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
+        case Status::WARN_INVALID_KEY_LENGTH: rc = StatusCode::ERR_INVALID_KEY_LENGTH; break;
         case Status::WARN_NOT_IN_A_SESSION: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
         case Status::WARN_SCAN_LIMIT:
             // WARN_SCAN_LIMIT has multiple meanings, so should not be mapped to a single StatusCode here

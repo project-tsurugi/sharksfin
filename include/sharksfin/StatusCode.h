@@ -141,6 +141,11 @@ enum class StatusCode : std::int64_t {
      * @brief reached resource limit and request could not be accomplished
      */
     ERR_RESOURCE_LIMIT_REACHED = -17,
+
+    /**
+     * @brief key length passed to the API is invalid
+     */
+    ERR_INVALID_KEY_LENGTH = -18,
 };
 
 /**
@@ -171,6 +176,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_INACTIVE_TRANSACTION: return "ERR_INACTIVE_TRANSACTION";
         case StatusCode::ERR_BLOCKED_BY_CONCURRENT_OPERATION: return "ERR_BLOCKED_BY_CONCURRENT_OPERATION";
         case StatusCode::ERR_RESOURCE_LIMIT_REACHED: return "ERR_RESOURCE_LIMIT_REACHED";
+        case StatusCode::ERR_INVALID_KEY_LENGTH: return "ERR_INVALID_KEY_LENGTH";
         default: return "UNDEFINED";
     }
 }
