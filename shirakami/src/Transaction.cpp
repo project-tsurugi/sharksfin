@@ -199,7 +199,7 @@ TransactionState Transaction::check_state() {
         }
     }
     ::shirakami::TxState state{};
-    if(auto res = api::tx_check(state_handle_, state); res != ::shirakami::Status::OK) {
+    if(auto res = api::check_tx_state(state_handle_, state); res != ::shirakami::Status::OK) {
         ABORT();
     }
     return from_state(state);

@@ -359,9 +359,9 @@ Status release_tx_state_handle(::shirakami::TxStateHandle handle) {
     return rc;
 }
 
-Status tx_check(::shirakami::TxStateHandle handle, ::shirakami::TxState& out) {
+Status check_tx_state(::shirakami::TxStateHandle handle, ::shirakami::TxState& out) {
     log_entry << "handle:" << handle;
-    auto rc = details::sanitize_rc(::shirakami::tx_check(handle, out));
+    auto rc = details::sanitize_rc(::shirakami::check_tx_state(handle, out));
     log_rc(rc);
     log_exit << "rc:" << rc << " out:" << out;
     return rc;
