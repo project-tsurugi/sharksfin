@@ -381,5 +381,14 @@ std::shared_ptr<::shirakami::result_info> transaction_result_info(Token token) {
     log_exit << "ret:" << (ret ? to_string_view(ret->get_reason_code()) : "nullptr");
     return ret;
 }
+
+void print_diagnostics(std::ostream& os) {
+    (void) os;
+    log_entry;
+    // TODO un-comment the line below after shirakami implement print_diagnostics
+    // ::shirakami::print_diagnostics(os);
+    log_exit;
+}
+
 }  // namespace api
 }  // namespace sharksfin::shirakami

@@ -587,4 +587,8 @@ StatusCode implementation_get_datastore(
     return StatusCode::NOT_FOUND;
 }
 
+void print_diagnostics(std::ostream& os) {
+    shirakami::api::print_diagnostics(os);
+}
+
 }  // namespace sharksfin

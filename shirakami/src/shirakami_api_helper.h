@@ -135,6 +135,8 @@ Status database_set_logging_callback(::shirakami::log_event_callback const& call
 
 std::shared_ptr<::shirakami::result_info> transaction_result_info(Token token);
 
+void print_diagnostics(std::ostream& os);
+
 }  // namespace api
 }  // namespace sharksfin::shirakami
 

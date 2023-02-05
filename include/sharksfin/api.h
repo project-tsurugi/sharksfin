@@ -925,6 +925,12 @@ StatusCode implementation_get_datastore(
     DatabaseHandle handle,
     std::any* result);
 
+/**
+ * @brief print current diagnostic information
+ * @details this function is to print diagnostic information
+ */
+void print_diagnostics(std::ostream& os);
+
 }  // namespace sharksfin
 
 #endif  // SHARKSFIN_API_H_

@@ -510,4 +510,11 @@ StatusCode implementation_get_datastore(
     return rc;
 }
 
+void print_diagnostics(std::ostream& os) {
+    log_entry << fn_name;
+    impl::print_diagnostics(os);
+    log_exit << fn_name;
+}
+
+
 }  // namespace sharksfin

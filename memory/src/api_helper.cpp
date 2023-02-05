@@ -606,6 +606,10 @@ StatusCode implementation_get_datastore(
     return StatusCode::ERR_UNSUPPORTED;
 }
 
+void print_diagnostics(std::ostream&) {
+    // memory bridge has no diag to print
+}
+
 }  // namespace impl
 
 }  // namespace sharksfin

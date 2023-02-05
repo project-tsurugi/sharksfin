@@ -1800,4 +1800,10 @@ TEST_F(ShirakamiApiTest, transaction_info) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ShirakamiApiTest, print_diag) {
+    // verify just function is callable
+    std::stringstream ss{};
+    print_diagnostics(ss);
+}
+
 }  // namespace sharksfin

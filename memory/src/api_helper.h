@@ -218,4 +218,6 @@ StatusCode implementation_get_datastore(
     DatabaseHandle,
     std::any*);
 
+void print_diagnostics(std::ostream& os);
+
 }  // namespace sharksfin::impl
