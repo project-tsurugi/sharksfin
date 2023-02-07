@@ -383,10 +383,8 @@ std::shared_ptr<::shirakami::result_info> transaction_result_info(Token token) {
 }
 
 void print_diagnostics(std::ostream& os) {
-    (void) os;
     log_entry;
-    // TODO un-comment the line below after shirakami implement print_diagnostics
-    // ::shirakami::print_diagnostics(os);
+    ::shirakami::print_diagnostics(os);
     log_exit;
 }
 

@@ -1804,6 +1804,7 @@ TEST_F(ShirakamiApiTest, print_diag) {
     // verify just function is callable
     std::stringstream ss{};
     print_diagnostics(ss);
+    LOG(INFO) << ss.str();
 }
 
 }  // namespace sharksfin
