@@ -250,7 +250,7 @@ std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_p
         case reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION: rc = ErrorCode::CC_LTX_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
         case reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION: rc = ErrorCode::CC_LTX_WRITE_ERROR; kind = ErrorLocatorKind::storage_key; break;
         case reason_code::CC_OCC_WP_VERIFY: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
-        case reason_code::CC_OCC_READ_VERIFY: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; break;
+        case reason_code::CC_OCC_READ_VERIFY: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; break;  //NOLINT(bugprone-branch-clone)
         case reason_code::CC_OCC_PHANTOM_AVOIDANCE: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; break;
         case reason_code::USER_ABORT: rc = ErrorCode::OK; break;
     }
