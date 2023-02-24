@@ -228,7 +228,9 @@ StatusCode Transaction::declare_begin() {
 
 inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info const& value) {
     if(value.get_reason_code() != ::shirakami::reason_code::UNKNOWN) {
-        out << " reason=" << value.get_reason_code();
+        out << " reason_code:" << value.get_reason_code()
+            << ", storage_name:" << value.get_storage_name()
+            << ", key(len=" << value.get_key().size() << "):" << value.get_key();
     }
     return out;
 }
@@ -249,7 +251,7 @@ std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_p
         case reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION: rc = ErrorCode::CC_LTX_WRITE_ERROR; kind = ErrorLocatorKind::storage_key; break;
         case reason_code::CC_OCC_WP_VERIFY: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
         case reason_code::CC_OCC_READ_VERIFY: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; break;
-        case reason_code::CC_OCC_PHANTOM_AVOIDANCE: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; impl_provides_locator = false; break;
+        case reason_code::CC_OCC_PHANTOM_AVOIDANCE: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; break;
         case reason_code::USER_ABORT: rc = ErrorCode::OK; break;
     }
     return {
@@ -269,7 +271,7 @@ std::shared_ptr<CallResult> Transaction::recent_call_result() {
     std::stringstream ss{};
     ss << "shirakami response Status=" << last_call_status_;
     if(ri) {
-        ss << *ri;
+        ss << " {" << *ri << "}";
     }
     auto [locator, ec] = create_locator(ri);
     result_info_ = std::make_shared<CallResult>(
