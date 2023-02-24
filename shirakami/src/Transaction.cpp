@@ -26,6 +26,7 @@
 #include "Storage.h"
 #include "Error.h"
 #include "logging.h"
+#include "binary_printer.h"
 
 namespace sharksfin::shirakami {
 
@@ -230,7 +231,7 @@ inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info cons
     if(value.get_reason_code() != ::shirakami::reason_code::UNKNOWN) {
         out << " reason_code:" << value.get_reason_code()
             << ", storage_name:" << value.get_storage_name()
-            << ", key(len=" << value.get_key().size() << "):" << value.get_key();
+            << ", key(len=" << value.get_key().size() << "):\"" << common::binary_printer(value.get_key()) << "\"";
     }
     return out;
 }
