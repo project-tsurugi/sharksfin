@@ -227,14 +227,14 @@ StatusCode Transaction::declare_begin() {
     return resolve(res);
 }
 
-inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info const& value) {
-    if(value.get_reason_code() != ::shirakami::reason_code::UNKNOWN) {
-        out << " reason_code:" << value.get_reason_code()
-            << ", storage_name:" << value.get_storage_name()
-            << ", key(len=" << value.get_key().size() << "):\"" << common::binary_printer(value.get_key()) << "\"";
-    }
-    return out;
-}
+//inline std::ostream& operator<<(std::ostream& out, ::shirakami::result_info const& value) {
+//    if(value.get_reason_code() != ::shirakami::reason_code::UNKNOWN) {
+//        out << " reason_code:" << value.get_reason_code()
+//            << ", storage_name:" << value.get_storage_name()
+//            << ", key(len=" << value.get_key().size() << "):\"" << common::binary_printer(value.get_key()) << "\"";
+//    }
+//    return out;
+//}
 
 std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_ptr<::shirakami::result_info> const& ri) {
     using reason_code = ::shirakami::reason_code;
