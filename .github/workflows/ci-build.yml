@@ -15,9 +15,13 @@ jobs:
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GHCR_PAT }}
+      volumes:
+        - ${{ vars.ccache_dir }}:${{ vars.ccache_dir }}
     defaults:
       run:
         shell: bash
+    env:
+      CCACHE_DIR: ${{ vars.ccache_dir }}
 
     steps:
       - id: Checkout
@@ -44,7 +48,7 @@ jobs:
           rm -rf build
           mkdir -p build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=${{ vars.compiler_launcher }} -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
           cmake --build . --target install --clean-first -- -j
 
       - id: Install_shirakami
@@ -54,7 +58,7 @@ jobs:
           rm -rf build
           mkdir -p build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DBUILD_BENCHMARK=OFF -DFORCE_INSTALL_RPATH=ON -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=${{ vars.compiler_launcher }} -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DBUILD_BENCHMARK=OFF -DFORCE_INSTALL_RPATH=ON -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
           cmake --build . --target install --clean-first -- -j
 
       - id: CMake_Build
@@ -63,7 +67,7 @@ jobs:
           rm -rf build
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=${{ vars.compiler_launcher }} -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
           cmake --build . --target all --clean-first -- -j
 
       - id: CTest
