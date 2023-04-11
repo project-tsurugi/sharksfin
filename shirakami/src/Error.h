@@ -21,6 +21,7 @@
 #include "shirakami/scheme.h"
 #include "logging.h"
 #include "exception.h"
+#include "logging_helper.h"
 
 namespace sharksfin::shirakami {
 
@@ -47,39 +48,45 @@ using Status = ::shirakami::Status;
  */
 inline StatusCode resolve(::shirakami::Status const& result) {
     StatusCode rc{StatusCode::ERR_UNKNOWN};
+
+    // log error if the error is not expected normally (even if user request is invalid)
+    bool abnormal_error = false;
+
+    // log error if the error is not unique (i.e. mapping loses original code)
+    bool log_origin = false;
     switch(result) {
         case Status::OK: rc = StatusCode::OK; break;
         case Status::WARN_NOT_FOUND: rc = StatusCode::NOT_FOUND; break;
         case Status::WARN_ALREADY_EXISTS: rc = StatusCode::ALREADY_EXISTS; break;
-        case Status::WARN_ALREADY_BEGIN: rc = StatusCode::ERR_INVALID_STATE; break;
-        case Status::WARN_ALREADY_INIT: rc = StatusCode::ERR_INVALID_STATE; break;
-        case Status::WARN_INVALID_ARGS: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
-        case Status::WARN_NOT_INIT: rc = StatusCode::ERR_INVALID_STATE; break;
-        case Status::WARN_PREMATURE: rc = StatusCode::ERR_INVALID_STATE; break;
+        case Status::WARN_ALREADY_BEGIN: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
+        case Status::WARN_ALREADY_INIT: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
+        case Status::WARN_INVALID_ARGS: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
+        case Status::WARN_NOT_INIT: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
+        case Status::WARN_PREMATURE: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
 
-        case Status::ERR_CC: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
-        case Status::ERR_FATAL: rc = StatusCode::ERR_UNKNOWN; break;
-        case Status::ERR_FATAL_INDEX: rc = StatusCode::ERR_UNKNOWN; break;
-        case Status::ERR_INVALID_CONFIGURATION: rc = StatusCode::ERR_UNKNOWN ; break;
+        case Status::ERR_CC: rc = StatusCode::ERR_ABORTED_RETRYABLE; log_origin = true; break;
+        case Status::ERR_FATAL: rc = StatusCode::ERR_UNKNOWN; abnormal_error = true; break;
+        case Status::ERR_FATAL_INDEX: rc = StatusCode::ERR_UNKNOWN; abnormal_error = true; break;
+        case Status::ERR_INVALID_CONFIGURATION: rc = StatusCode::ERR_UNKNOWN; abnormal_error = true; break;
         case Status::ERR_KVS: rc = StatusCode::ERR_ABORTED; break; //TODO
-        case Status::ERR_READ_AREA_VIOLATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; break; //TODO
+        case Status::ERR_READ_AREA_VIOLATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; log_origin = true; break; //TODO
         case Status::ERR_NOT_IMPLEMENTED: rc = StatusCode::ERR_NOT_IMPLEMENTED; break;
         case Status::WARN_ALREADY_DELETE: rc = StatusCode::NOT_FOUND; break;
         case Status::WARN_CANCEL_PREVIOUS_INSERT: rc = StatusCode::OK; break;
         case Status::WARN_CANCEL_PREVIOUS_UPSERT: rc = StatusCode::OK; break;
-        case Status::WARN_CONCURRENT_INSERT: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
-        case Status::WARN_CONCURRENT_UPDATE: rc = StatusCode::ERR_ABORTED_RETRYABLE; break;
-        case Status::WARN_ILLEGAL_OPERATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; break;
-        case Status::WARN_INVALID_HANDLE: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
+        case Status::WARN_CONCURRENT_INSERT: rc = StatusCode::ERR_ABORTED_RETRYABLE; log_origin = true; break;
+        case Status::WARN_CONCURRENT_UPDATE: rc = StatusCode::ERR_ABORTED_RETRYABLE; log_origin = true; break;
+        case Status::WARN_ILLEGAL_OPERATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; log_origin = true; break;
+        case Status::WARN_INVALID_HANDLE: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
         case Status::WARN_INVALID_KEY_LENGTH: rc = StatusCode::ERR_INVALID_KEY_LENGTH; break;
-        case Status::WARN_NOT_IN_A_SESSION: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
+        case Status::WARN_NOT_IN_A_SESSION: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
         case Status::WARN_SCAN_LIMIT:
             // WARN_SCAN_LIMIT has multiple meanings, so should not be mapped to a single StatusCode here
             VLOG(log_error) << "Shirakami error : " << result;
             break;
-        case Status::WARN_STORAGE_ID_DEPLETION: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
-        case Status::WARN_STORAGE_NOT_FOUND: rc = StatusCode::ERR_INVALID_ARGUMENT; break;
-        case Status::ERR_SESSION_LIMIT: rc = StatusCode::ERR_INVALID_STATE; break;
+        case Status::WARN_STORAGE_ID_DEPLETION: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
+        case Status::WARN_STORAGE_NOT_FOUND: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
+        case Status::ERR_SESSION_LIMIT: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
         case Status::WARN_CONFLICT_ON_WRITE_PRESERVE: rc = StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE; break;
         case Status::WARN_NOT_BEGIN: rc = StatusCode::OK; break;
         case Status::WARN_WAITING_FOR_OTHER_TX: rc = StatusCode::WAITING_FOR_OTHER_TRANSACTION; break;
@@ -93,6 +100,12 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::INTERNAL_WARN_PREMATURE:
             LOG(ERROR) << "Unexpected internal error:" << result;
             rc = StatusCode::ERR_UNKNOWN;
+    }
+    if(abnormal_error) {
+        VLOG_LP(log_error) << "shirakami error:" << result << " sharksfin status:" << rc;
+    } else if (log_origin) {
+        // the error happens in normal scenario, so use log_debug to avoid printing too many messages
+        VLOG_LP(log_debug) << "shirakami error:" << result << " sharksfin status:" << rc;
     }
     return rc;
 }
