@@ -80,7 +80,14 @@ private:
     //add list of preserved ranges in the future enhancement
 };
 
+/**
+ * @brief Write Preserve area
+ */
 using WritePreserve = TableArea;
+
+/**
+ * @brief Read area
+ */
 using ReadArea = TableArea;
 
 }  // namespace sharksfin
