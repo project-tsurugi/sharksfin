@@ -54,18 +54,33 @@ TEST_F(TransactionOptionsTest, set_write_preserve) {
     EXPECT_EQ(options.write_preserves().size(), 2);
 }
 
+TEST_F(TransactionOptionsTest, set_read_area) {
+    std::vector<ReadArea> ras{
+        {StorageHandle{}},
+        {StorageHandle{}},
+    };
+    options.read_areas(std::move(ras));
+    EXPECT_EQ(options.read_areas().size(), 2);
+}
+
 TEST_F(TransactionOptionsTest, constructor) {
     StorageHandle st0{}, st1{};
+    StorageHandle st2{}, st3{};
 
     TransactionOptions opts{
         Type::LONG,
         {
             st0,
             st1,
+        },
+        {
+            st2,
+            st3,
         }
     };
     EXPECT_EQ(opts.transaction_type(), TransactionOptions::TransactionType::LONG);
     EXPECT_EQ(opts.write_preserves().size(), 2);
+    EXPECT_EQ(opts.read_areas().size(), 2);
 
     std::vector<WritePreserve> wps{};
     for(auto&& ps : opts.write_preserves()) {
@@ -75,10 +90,18 @@ TEST_F(TransactionOptionsTest, constructor) {
     EXPECT_EQ(2, wps.size());
     EXPECT_EQ(st0, wps[0].handle());
     EXPECT_EQ(st1, wps[1].handle());
+
+    std::vector<WritePreserve> ras{};
+    for(auto&& ps : opts.read_areas()) {
+        ras.emplace_back(ps);
+    }
+    EXPECT_EQ(2, ras.size());
+    EXPECT_EQ(st2, ras[0].handle());
+    EXPECT_EQ(st3, ras[1].handle());
 }
 
 TEST_F(TransactionOptionsTest, constructor_read_only_batch) {
-    TransactionOptions opts{ Type::LONG, {} };
+    TransactionOptions opts{ Type::LONG, {}, {} };
     EXPECT_EQ(opts.transaction_type(), TransactionOptions::TransactionType::LONG);
     EXPECT_EQ(opts.write_preserves().size(), 0);
 }

@@ -37,6 +37,11 @@ public:
     using WritePreserves = std::vector<WritePreserve>;
 
     /**
+     * @brief entity type for read area for the long transaction
+     */
+    using ReadAreas = std::vector<ReadArea>;
+
+    /**
      * @brief retries infinite times.
      */
     static inline constexpr std::size_t INF = std::numeric_limits<std::size_t>::max();
@@ -72,10 +77,12 @@ public:
      */
     TransactionOptions(
         TransactionType type,
-        WritePreserves wps
+        WritePreserves wps,
+        ReadAreas ras = {}
     ) noexcept :
         transaction_type_(type),
-        write_preserves_(std::move(wps))
+        write_preserves_(std::move(wps)),
+        read_areas_(std::move(ras))
     {}
 
     /**
@@ -111,6 +118,15 @@ public:
     }
 
     /**
+     * @brief returns the read area objects.
+     * @return the read area objects if set for the transaction
+     * @return empty vector otherwise
+     */
+    constexpr ReadAreas const& read_areas() const noexcept {
+        return read_areas_;
+    }
+
+    /**
      * @brief sets the maximum number of transaction retry attempts.
      * The default value is 0.
      * @param count the retry count; 0 - never, TransactionOptions::INF - infinity
@@ -142,10 +158,20 @@ public:
         return *this;
     }
 
+    /**
+     * @brief sets the read area objects.
+     * @param ra the read areas to set
+     * @return this
+     */
+    inline TransactionOptions& read_areas(ReadAreas ra) noexcept {
+        read_areas_ = std::move(ra);
+        return *this;
+    }
 private:
     std::size_t retry_count_ { 0L };
     TransactionType transaction_type_ { TransactionType::SHORT };
     WritePreserves write_preserves_ {};
+    ReadAreas read_areas_ {};
 };
 
 /**
