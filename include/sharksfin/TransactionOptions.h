@@ -21,7 +21,7 @@
 #include <iostream>
 #include <limits>
 #include <string_view>
-#include "WritePreserve.h"
+#include "TableArea.h"
 
 namespace sharksfin {
 
