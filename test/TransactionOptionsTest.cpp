@@ -54,18 +54,28 @@ TEST_F(TransactionOptionsTest, set_write_preserve) {
     EXPECT_EQ(options.write_preserves().size(), 2);
 }
 
-TEST_F(TransactionOptionsTest, set_read_area) {
+TEST_F(TransactionOptionsTest, set_read_area_inclusive) {
     std::vector<ReadArea> ras{
         {StorageHandle{}},
         {StorageHandle{}},
     };
-    options.read_areas(std::move(ras));
-    EXPECT_EQ(options.read_areas().size(), 2);
+    options.read_areas_inclusive(std::move(ras));
+    EXPECT_EQ(options.read_areas_inclusive().size(), 2);
+}
+
+TEST_F(TransactionOptionsTest, set_read_area_exclusive) {
+    std::vector<ReadArea> ras{
+        {StorageHandle{}},
+        {StorageHandle{}},
+    };
+    options.read_areas_exclusive(std::move(ras));
+    EXPECT_EQ(options.read_areas_exclusive().size(), 2);
 }
 
 TEST_F(TransactionOptionsTest, constructor) {
     StorageHandle st0{}, st1{};
     StorageHandle st2{}, st3{};
+    StorageHandle st4{}, st5{};
 
     TransactionOptions opts{
         Type::LONG,
@@ -76,11 +86,16 @@ TEST_F(TransactionOptionsTest, constructor) {
         {
             st2,
             st3,
+        },
+        {
+            st4,
+            st5,
         }
     };
     EXPECT_EQ(opts.transaction_type(), TransactionOptions::TransactionType::LONG);
     EXPECT_EQ(opts.write_preserves().size(), 2);
-    EXPECT_EQ(opts.read_areas().size(), 2);
+    EXPECT_EQ(opts.read_areas_inclusive().size(), 2);
+    EXPECT_EQ(opts.read_areas_exclusive().size(), 2);
 
     std::vector<WritePreserve> wps{};
     for(auto&& ps : opts.write_preserves()) {
@@ -91,13 +106,21 @@ TEST_F(TransactionOptionsTest, constructor) {
     EXPECT_EQ(st0, wps[0].handle());
     EXPECT_EQ(st1, wps[1].handle());
 
-    std::vector<WritePreserve> ras{};
-    for(auto&& ps : opts.read_areas()) {
-        ras.emplace_back(ps);
+    std::vector<ReadArea> rai{};
+    for(auto&& ps : opts.read_areas_inclusive()) {
+        rai.emplace_back(ps);
     }
-    EXPECT_EQ(2, ras.size());
-    EXPECT_EQ(st2, ras[0].handle());
-    EXPECT_EQ(st3, ras[1].handle());
+    EXPECT_EQ(2, rai.size());
+    EXPECT_EQ(st2, rai[0].handle());
+    EXPECT_EQ(st3, rai[1].handle());
+
+    std::vector<ReadArea> rae{};
+    for(auto&& ps : opts.read_areas_exclusive()) {
+        rae.emplace_back(ps);
+    }
+    EXPECT_EQ(2, rae.size());
+    EXPECT_EQ(st4, rae[0].handle());
+    EXPECT_EQ(st5, rae[1].handle());
 }
 
 TEST_F(TransactionOptionsTest, constructor_read_only_batch) {

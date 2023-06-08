@@ -78,11 +78,13 @@ public:
     TransactionOptions(
         TransactionType type,
         WritePreserves wps,
-        ReadAreas ras = {}
+        ReadAreas rai = {},
+        ReadAreas rae = {}
     ) noexcept :
         transaction_type_(type),
         write_preserves_(std::move(wps)),
-        read_areas_(std::move(ras))
+        read_areas_inclusive_(std::move(rai)),
+        read_areas_exclusive_(std::move(rae))
     {}
 
     /**
@@ -118,12 +120,21 @@ public:
     }
 
     /**
-     * @brief returns the read area objects.
+     * @brief returns the inclusive read area objects.
      * @return the read area objects if set for the transaction
      * @return empty vector otherwise
      */
-    constexpr ReadAreas const& read_areas() const noexcept {
-        return read_areas_;
+    constexpr ReadAreas const& read_areas_inclusive() const noexcept {
+        return read_areas_inclusive_;
+    }
+
+    /**
+     * @brief returns the exclusive read area objects.
+     * @return the read area objects if set for the transaction
+     * @return empty vector otherwise
+     */
+    constexpr ReadAreas const& read_areas_exclusive() const noexcept {
+        return read_areas_exclusive_;
     }
 
     /**
@@ -159,19 +170,30 @@ public:
     }
 
     /**
-     * @brief sets the read area objects.
+     * @brief sets the inclusive read area objects.
      * @param ra the read areas to set
      * @return this
      */
-    inline TransactionOptions& read_areas(ReadAreas ra) noexcept {
-        read_areas_ = std::move(ra);
+    inline TransactionOptions& read_areas_inclusive(ReadAreas ra) noexcept {
+        read_areas_inclusive_ = std::move(ra);
+        return *this;
+    }
+
+    /**
+     * @brief sets the exclusive read area objects.
+     * @param ra the read areas to set
+     * @return this
+     */
+    inline TransactionOptions& read_areas_exclusive(ReadAreas ra) noexcept {
+        read_areas_exclusive_ = std::move(ra);
         return *this;
     }
 private:
     std::size_t retry_count_ { 0L };
     TransactionType transaction_type_ { TransactionType::SHORT };
     WritePreserves write_preserves_ {};
-    ReadAreas read_areas_ {};
+    ReadAreas read_areas_inclusive_ {};
+    ReadAreas read_areas_exclusive_ {};
 };
 
 /**
