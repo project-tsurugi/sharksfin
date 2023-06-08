@@ -49,12 +49,14 @@ StatusCode Transaction::construct(
 Transaction::Transaction(
     Database* owner,
     TransactionOptions::TransactionType type,
-    std::vector<Storage*> write_preserves
+    std::vector<Storage*> write_preserves,
+    std::vector<Storage*> read_areas
 ) :
     owner_(owner),
     session_(Session::create_session()),
     type_(type),
-    write_preserves_(std::move(write_preserves))
+    write_preserves_(std::move(write_preserves)),
+    read_areas_(std::move(read_areas))
 {
     buffer_.reserve(default_buffer_size); // This automatically expands.
 }
@@ -217,12 +219,17 @@ TransactionState Transaction::check_state() {
 }
 
 StatusCode Transaction::declare_begin() {
-    std::vector<::shirakami::Storage> storages{};
-    storages.reserve(write_preserves_.size());
+    std::vector<::shirakami::Storage> wps{};
+    wps.reserve(write_preserves_.size());
     for(auto&& e : write_preserves_) {
-        storages.emplace_back(e->handle());
+        wps.emplace_back(e->handle());
     }
-    transaction_options options{session_->id(), from(type_), storages};
+    std::set<::shirakami::Storage> ras{};
+    for(auto&& e : read_areas_) {
+        ras.emplace(e->handle());
+    }
+
+    transaction_options options{session_->id(), from(type_), wps, read_area{ras, {}}};
     auto res = api::tx_begin(std::move(options));
     return resolve(res);
 }

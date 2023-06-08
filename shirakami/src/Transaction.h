@@ -164,6 +164,7 @@ private:
     bool is_active_{true};
     TransactionOptions::TransactionType type_{};
     std::vector<Storage*> write_preserves_{};
+    std::vector<Storage*> read_areas_{};
     ::shirakami::TxStateHandle state_handle_{::shirakami::undefined_handle};
     std::shared_ptr<CallResult> result_info_{};
     ::shirakami::Status last_call_status_{};
@@ -174,7 +175,8 @@ private:
     Transaction(
         Database* owner,
         TransactionOptions::TransactionType type,
-        std::vector<Storage*> write_preserves = {}
+        std::vector<Storage*> write_preserves = {},
+        std::vector<Storage*> read_areas = {}
     );
 
     Transaction(
