@@ -63,10 +63,11 @@ Transaction::Transaction(
     buffer_.reserve(default_buffer_size); // This automatically expands.
 }
 
-std::vector<Storage*> create_storages(TransactionOptions::WritePreserves const& wps) {
+template <class T>
+std::vector<Storage*> create_storages(T const& tas) {
     std::vector<Storage*> ret{};
-    ret.reserve(wps.size());
-    for(auto&& e : wps) {
+    ret.reserve(tas.size());
+    for(auto&& e : tas) {
         auto s = unwrap(e.handle());
         ret.emplace_back(s);
     }
@@ -77,7 +78,9 @@ Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
     Transaction(
         owner,
         opts.transaction_type(),
-        create_storages(opts.write_preserves())
+        create_storages(opts.write_preserves()),
+        create_storages(opts.read_areas_inclusive()),
+        create_storages(opts.read_areas_exclusive())
     )
 {}
 
