@@ -21,7 +21,7 @@
 #include <iostream>
 #include <limits>
 #include <string_view>
-#include "WritePreserve.h"
+#include "TableArea.h"
 
 namespace sharksfin {
 
@@ -35,6 +35,11 @@ public:
      * @brief entity type for write preserves for the long transaction
      */
     using WritePreserves = std::vector<WritePreserve>;
+
+    /**
+     * @brief entity type for read area for the long transaction
+     */
+    using ReadAreas = std::vector<ReadArea>;
 
     /**
      * @brief retries infinite times.
@@ -72,10 +77,14 @@ public:
      */
     TransactionOptions(
         TransactionType type,
-        WritePreserves wps
+        WritePreserves wps,
+        ReadAreas rai = {},
+        ReadAreas rae = {}
     ) noexcept :
         transaction_type_(type),
-        write_preserves_(std::move(wps))
+        write_preserves_(std::move(wps)),
+        read_areas_inclusive_(std::move(rai)),
+        read_areas_exclusive_(std::move(rae))
     {}
 
     /**
@@ -111,6 +120,24 @@ public:
     }
 
     /**
+     * @brief returns the inclusive read area objects.
+     * @return the read area objects if set for the transaction
+     * @return empty vector otherwise
+     */
+    constexpr ReadAreas const& read_areas_inclusive() const noexcept {
+        return read_areas_inclusive_;
+    }
+
+    /**
+     * @brief returns the exclusive read area objects.
+     * @return the read area objects if set for the transaction
+     * @return empty vector otherwise
+     */
+    constexpr ReadAreas const& read_areas_exclusive() const noexcept {
+        return read_areas_exclusive_;
+    }
+
+    /**
      * @brief sets the maximum number of transaction retry attempts.
      * The default value is 0.
      * @param count the retry count; 0 - never, TransactionOptions::INF - infinity
@@ -142,10 +169,31 @@ public:
         return *this;
     }
 
+    /**
+     * @brief sets the inclusive read area objects.
+     * @param ra the read areas to set
+     * @return this
+     */
+    inline TransactionOptions& read_areas_inclusive(ReadAreas ra) noexcept {
+        read_areas_inclusive_ = std::move(ra);
+        return *this;
+    }
+
+    /**
+     * @brief sets the exclusive read area objects.
+     * @param ra the read areas to set
+     * @return this
+     */
+    inline TransactionOptions& read_areas_exclusive(ReadAreas ra) noexcept {
+        read_areas_exclusive_ = std::move(ra);
+        return *this;
+    }
 private:
     std::size_t retry_count_ { 0L };
     TransactionType transaction_type_ { TransactionType::SHORT };
     WritePreserves write_preserves_ {};
+    ReadAreas read_areas_inclusive_ {};
+    ReadAreas read_areas_exclusive_ {};
 };
 
 /**

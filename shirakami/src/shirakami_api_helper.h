@@ -41,6 +41,7 @@ using ScanHandle = ::shirakami::ScanHandle;
 using scan_endpoint = ::shirakami::scan_endpoint;
 using transaction_options = ::shirakami::transaction_options;
 using storage_option = ::shirakami::storage_option;
+using read_area = ::shirakami::transaction_options::read_area;
 
 class Transaction;
 

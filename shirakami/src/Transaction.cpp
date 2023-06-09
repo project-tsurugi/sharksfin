@@ -49,20 +49,25 @@ StatusCode Transaction::construct(
 Transaction::Transaction(
     Database* owner,
     TransactionOptions::TransactionType type,
-    std::vector<Storage*> write_preserves
+    std::vector<Storage*> write_preserves,
+    std::vector<Storage*> read_areas_inclusive,
+    std::vector<Storage*> read_areas_exclusive
 ) :
     owner_(owner),
     session_(Session::create_session()),
     type_(type),
-    write_preserves_(std::move(write_preserves))
+    write_preserves_(std::move(write_preserves)),
+    read_areas_inclusive_(std::move(read_areas_inclusive)),
+    read_areas_exclusive_(std::move(read_areas_exclusive))
 {
     buffer_.reserve(default_buffer_size); // This automatically expands.
 }
 
-std::vector<Storage*> create_storages(TransactionOptions::WritePreserves const& wps) {
+template <class T>
+std::vector<Storage*> create_storages(T const& tas) {
     std::vector<Storage*> ret{};
-    ret.reserve(wps.size());
-    for(auto&& e : wps) {
+    ret.reserve(tas.size());
+    for(auto&& e : tas) {
         auto s = unwrap(e.handle());
         ret.emplace_back(s);
     }
@@ -73,7 +78,9 @@ Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
     Transaction(
         owner,
         opts.transaction_type(),
-        create_storages(opts.write_preserves())
+        create_storages(opts.write_preserves()),
+        create_storages(opts.read_areas_inclusive()),
+        create_storages(opts.read_areas_exclusive())
     )
 {}
 
@@ -217,12 +224,21 @@ TransactionState Transaction::check_state() {
 }
 
 StatusCode Transaction::declare_begin() {
-    std::vector<::shirakami::Storage> storages{};
-    storages.reserve(write_preserves_.size());
+    std::vector<::shirakami::Storage> wps{};
+    wps.reserve(write_preserves_.size());
     for(auto&& e : write_preserves_) {
-        storages.emplace_back(e->handle());
+        wps.emplace_back(e->handle());
     }
-    transaction_options options{session_->id(), from(type_), storages};
+    std::set<::shirakami::Storage> rai{};
+    for(auto&& e : read_areas_inclusive_) {
+        rai.emplace(e->handle());
+    }
+    std::set<::shirakami::Storage> rae{};
+    for(auto&& e : read_areas_exclusive_) {
+        rae.emplace(e->handle());
+    }
+
+    transaction_options options{session_->id(), from(type_), wps, read_area{std::move(rai), std::move(rae)}};
     auto res = api::tx_begin(std::move(options));
     return resolve(res);
 }

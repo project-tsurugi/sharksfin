@@ -16,7 +16,7 @@
 #include "sharksfin/TransactionState.h"
 #include <gtest/gtest.h>
 
-#include "sharksfin/WritePreserve.h"
+#include "sharksfin/TableArea.h"
 
 namespace sharksfin {
 

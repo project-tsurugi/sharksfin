@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SHARKSFIN_WRITEPRESERVE_H_
-#define SHARKSFIN_WRITEPRESERVE_H_
+#ifndef SHARKSFIN_TABLEAREA_H_
+#define SHARKSFIN_TABLEAREA_H_
 
 #include <type_traits>
 
@@ -24,45 +24,45 @@ struct StorageStub;
 using StorageHandle = std::add_pointer_t<StorageStub>;
 
 /**
- * @brief represents write-preserved storage (and possibly data ranges in it)
+ * @brief represents storage (and possibly data ranges in it) for write preserve or read area
  */
-class WritePreserve final {
+class TableArea final {
 public:
     /**
      * @brief construct empty object
      */
-    WritePreserve() = default;
+    TableArea() = default;
 
     /**
      * @brief destruct object
      */
-    ~WritePreserve() = default;
+    ~TableArea() = default;
 
     /**
      * @brief copy construct
      */
-    WritePreserve(WritePreserve const& other) = default;
+    TableArea(TableArea const& other) = default;
 
     /**
      * @brief copy assignment
      */
-    WritePreserve& operator=(WritePreserve const& other) = default;
+    TableArea& operator=(TableArea const& other) = default;
 
     /**
      * @brief move construct
      */
-    WritePreserve(WritePreserve&& other) noexcept = default;
+    TableArea(TableArea&& other) noexcept = default;
 
     /**
      * @brief move assignment
      */
-    WritePreserve& operator=(WritePreserve&& other) noexcept = default;
+    TableArea& operator=(TableArea&& other) noexcept = default;
 
     /**
      * @brief construct new object with storage handle
      * @param handle the storage handle for this object
      */
-    constexpr WritePreserve(StorageHandle handle) noexcept :
+    constexpr TableArea(StorageHandle handle) noexcept :
         handle_(handle)
     {}
 
@@ -80,6 +80,16 @@ private:
     //add list of preserved ranges in the future enhancement
 };
 
+/**
+ * @brief Write Preserve area
+ */
+using WritePreserve = TableArea;
+
+/**
+ * @brief Read area
+ */
+using ReadArea = TableArea;
+
 }  // namespace sharksfin
 
-#endif  // SHARKSFIN_WRITEPRESERVE_H_
+#endif  // SHARKSFIN_TABLEAREA_H_
