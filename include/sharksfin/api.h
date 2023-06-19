@@ -780,6 +780,8 @@ extern "C" StatusCode iterator_next(
  * @param handle the target iterator handle
  * @param result [OUT] the current key
  * @return StatusCode::OK if the key content was successfully obtained
+ * @return StatusCode::NOT_FOUND if the pointing entry doesn't exist (e.g. concurrent modification by other tx after
+ * iterator_next() call). Use iterator_next() to skip the pointing entry.
  * @return otherwise if error was occurred
  * @return undefined if the iterator position is not valid
  */
@@ -795,7 +797,8 @@ extern "C" StatusCode iterator_get_key(
  * @param handle the target iterator handle
  * @param result [OUT] the current value
  * @return StatusCode::OK if the value content was successfully obtained
- * @return StatusCode::NOT_FOUND if the pointing entry is already disabled
+ * @return StatusCode::NOT_FOUND if the pointing entry doesn't exist (e.g. concurrent modification by other tx after
+ * iterator_next() call). Use iterator_next() to skip the pointing entry.
  * @return otherwise if error was occurred
  * @return undefined if the iterator position is not valid
  */
