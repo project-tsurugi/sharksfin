@@ -71,7 +71,6 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::ERR_KVS: rc = StatusCode::ERR_ABORTED_RETRYABLE; log_origin = true; break;
         case Status::ERR_READ_AREA_VIOLATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; log_origin = true; break; //TODO
         case Status::ERR_NOT_IMPLEMENTED: rc = StatusCode::ERR_NOT_IMPLEMENTED; break;
-        case Status::WARN_ALREADY_DELETE: rc = StatusCode::NOT_FOUND; break;
         case Status::WARN_CANCEL_PREVIOUS_INSERT: rc = StatusCode::OK; break;
         case Status::WARN_CANCEL_PREVIOUS_UPSERT: rc = StatusCode::OK; break;
         case Status::WARN_CONCURRENT_INSERT: rc = StatusCode::ERR_ABORTED_RETRYABLE; log_origin = true; break;
