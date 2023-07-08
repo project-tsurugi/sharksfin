@@ -31,18 +31,16 @@ using scan_endpoint = ::shirakami::scan_endpoint;
 using database_options = ::shirakami::database_options;
 using storage_option = ::shirakami::storage_option;
 
+/**
+ * @brief shirakami api helpers
+ * @details these helpers conduct minimum common processing on shirakami function calls,
+ * e.g. logging entry/exit, sanitizing output, or value checks, etc.
+ * Keep them as simple as possible and logic are common for all functions.
+ * For function specific handling, do that outside these helpers (e.g. in Transaction, or Storage class)
+ */
 namespace api {
 
 namespace details {
-
-inline bool abort_if_needed(Transaction& tx, Status res) {
-    if (res == Status::WARN_CONCURRENT_INSERT ||
-        res == Status::WARN_CONCURRENT_UPDATE) {
-        tx.abort();
-        return true;
-    }
-    return false;
-}
 
 Status sanitize_rc(Status rc) {
     if(rc >= Status::INTERNAL_BEGIN) {
@@ -76,7 +74,6 @@ Status exist_key(Transaction& tx, ::shirakami::Storage storage, std::string_view
     auto rc = details::sanitize_rc(::shirakami::exist_key(tx.native_handle(), storage, key));
     log_rc(rc);
     log_exit << "rc:" << rc << " token:" << tx.native_handle();
-    details::abort_if_needed(tx, rc);
     return rc;
 }
 
@@ -85,7 +82,6 @@ Status search_key(Transaction& tx, ::shirakami::Storage storage, std::string_vie
     auto rc = details::sanitize_rc(::shirakami::search_key(tx.native_handle(), storage, key, value));
     log_rc(rc);
     log_exit << "rc:" << rc << " token:" << tx.native_handle() << binstring(value);
-    details::abort_if_needed(tx, rc);
     return rc;
 }
 
@@ -105,7 +101,6 @@ Status read_key_from_scan(Transaction& tx, ScanHandle handle, std::string& key) 
     log_entry << "token:" << tx.native_handle() << " handle:" << handle;
     auto rc = details::sanitize_rc(::shirakami::read_key_from_scan(tx.native_handle(), handle, key));
     log_exit << "rc:" << rc << " token:" << tx.native_handle() << binstring(key);
-    details::abort_if_needed(tx, rc);
     return rc;
 }
 
@@ -114,7 +109,6 @@ Status read_value_from_scan(Transaction& tx, ScanHandle handle, std::string& val
     auto rc = details::sanitize_rc(::shirakami::read_value_from_scan(tx.native_handle(), handle, value));
     log_rc(rc);
     log_exit << "rc:" << rc << " token:" << tx.native_handle() << binstring(value);
-    details::abort_if_needed(tx, rc);
     return rc;
 }
 
@@ -178,9 +172,6 @@ Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     auto rc = details::sanitize_rc(::shirakami::insert(tx.native_handle(), storage, key, val));
     log_rc(rc);
     log_exit << "rc:" << rc << " token:" << tx.native_handle();
-    if (rc == Status::ERR_CC) {
-        tx.deactivate();
-    }
     auto r = resolve(rc);
     if (r != StatusCode::OK &&
         r != StatusCode::ALREADY_EXISTS &&
@@ -221,10 +212,6 @@ Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     log_rc(rc);
     log_exit << "rc:" << rc << " token:" << tx.native_handle();
     auto r = resolve(rc);
-    if (rc == Status::ERR_CC) {
-        tx.deactivate();
-        return rc;
-    }
     if (r != StatusCode::OK &&
         r != StatusCode::ERR_ILLEGAL_OPERATION && // write operation on readonly tx
         r != StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE &&

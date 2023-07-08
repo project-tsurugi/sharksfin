@@ -21,6 +21,7 @@
 #include "Transaction.h"
 #include "Error.h"
 #include "shirakami_api_helper.h"
+#include "utils.h"
 
 namespace sharksfin::shirakami {
 
@@ -28,6 +29,7 @@ StatusCode Storage::check(Transaction* tx, Slice key) {  //NOLINT(readability-ma
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     std::string value{};
     auto res = api::exist_key(*tx, handle_, key.to_string_view());
+    abort_if_needed(*tx, res);
     return resolve(res);
 }
 
@@ -35,20 +37,20 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NO
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     std::string value{};
     auto res = api::search_key(*tx, handle_, key.to_string_view(), buffer);
+    abort_if_needed(*tx, res);
     return resolve(res);
 }
 
 StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {//NOLINT(readability-make-member-function-const)
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
+    Status res{};
     switch(operation) {
-        case PutOperation::CREATE:
-            return resolve(api::insert(*tx, handle_, key.to_string_view(), value.to_string_view()));
-        case PutOperation::UPDATE:
-            return resolve(api::update(*tx, handle_, key.to_string_view(), value.to_string_view()));
-        case PutOperation::CREATE_OR_UPDATE:
-            return resolve(api::upsert(*tx, handle_, key.to_string_view(), value.to_string_view()));
+        case PutOperation::CREATE: res = api::insert(*tx, handle_, key.to_string_view(), value.to_string_view()); break;
+        case PutOperation::UPDATE: res = api::update(*tx, handle_, key.to_string_view(), value.to_string_view()); break;
+        case PutOperation::CREATE_OR_UPDATE: res = api::upsert(*tx, handle_, key.to_string_view(), value.to_string_view()); break;
     }
-    ABORT();
+    deactivate_if_needed(*tx, res);
+    return resolve(res);
 }
 
 StatusCode Storage::remove(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
