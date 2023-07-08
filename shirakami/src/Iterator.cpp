@@ -24,6 +24,7 @@
 #include "Error.h"
 #include "shirakami_api_helper.h"
 #include "logging.h"
+#include "logging_helper.h"
 #include "correct_transaction.h"
 
 namespace sharksfin::shirakami {
@@ -36,14 +37,14 @@ Iterator::Iterator(Storage* owner, Transaction* tx, Slice begin_key, EndPointKin
     end_kind_(end_kind) {}
 
 Iterator::~Iterator() {
-    if(handle_open_) {
+    if(need_scan_close_) {
         auto rc = api::close_scan(tx_->native_handle(), handle_);
         if(rc == Status::WARN_INVALID_HANDLE || rc == Status::WARN_NOT_BEGIN) {
             // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on shirakami
             // we can safely ignore this error since the handle is already released on shirakami side
         } else if (rc != Status::OK) {
             // internal error, fix if this actually happens
-            LOG(ERROR) << "closing scan failed:" << rc;
+            LOG_LP(ERROR) << "closing scan failed:" << rc;
         }
     }
 }
@@ -73,15 +74,6 @@ bool Iterator::is_valid() const {
 
 // common status code handling for scan functions
 StatusCode Iterator::resolve_scan_errors(Status res) {
-    if (res == Status::ERR_CC) {
-        tx_->deactivate();
-        is_valid_ = false;
-        return StatusCode::ERR_ABORTED_RETRYABLE;
-    }
-    if (res == Status::WARN_CONCURRENT_INSERT) {
-        is_valid_ = false;
-        return StatusCode::ERR_ABORTED_RETRYABLE;
-    }
     if (res == Status::WARN_SCAN_LIMIT) {
         state_ = State::SAW_EOF;
         is_valid_ = false;
@@ -108,6 +100,7 @@ StatusCode Iterator::value(Slice& s) {
 
 StatusCode Iterator::next_cursor() {
     auto res = api::next(tx_->native_handle(), handle_);
+    correct_transaction_state(*tx_, res);
     return resolve_scan_errors(res);
 }
 
@@ -185,20 +178,25 @@ StatusCode Iterator::open_cursor() {
             end_endpoint = scan_endpoint::EXCLUSIVE;
             break;
     }
-    if (auto res = api::open_scan(tx_->native_handle(),
-            owner_->handle(),
-            begin_key_, begin_endpoint,
-            end_key_, end_endpoint, handle_);
-        res == Status::WARN_NOT_FOUND) {
+
+    auto res = api::open_scan(tx_->native_handle(),
+        owner_->handle(),
+        begin_key_, begin_endpoint,
+        end_key_, end_endpoint, handle_);
+    correct_transaction_state(*tx_, res);
+    if(res == Status::WARN_NOT_FOUND) {
         state_ = State::SAW_EOF;
         return StatusCode::NOT_FOUND;
-    } else if(res == Status::WARN_SCAN_LIMIT) {  //NOLINT
-        VLOG(log_error) << "too many open scan";
-        return StatusCode::ERR_UNKNOWN;
-    } else {
-        handle_open_ = true;
-        return resolve(res);
     }
+    if(res == Status::WARN_SCAN_LIMIT) {  //NOLINT
+        VLOG_LP(log_error) << "too many open scan";
+        tx_->abort();  // WARN_SCAN_LIMIT has double meanings and correct_transaction_state() fails to abort
+        return StatusCode::ERR_UNKNOWN;
+    }
+    if(res == Status::OK) {
+        need_scan_close_ = true;
+    }
+    return resolve(res);
 }
 
 }  // namespace sharksfin::shirakami

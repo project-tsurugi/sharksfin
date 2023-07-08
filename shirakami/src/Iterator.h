@@ -106,7 +106,7 @@ private:
     std::string end_key_{};
     EndPointKind end_kind_{};
     bool is_valid_{false};
-    bool handle_open_{false};
+    bool need_scan_close_{false};
 
     StatusCode next_cursor();
     StatusCode open_cursor();
