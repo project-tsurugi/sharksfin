@@ -336,7 +336,6 @@ StatusCode transaction_commit(
         bool async) {
     (void) async;
     auto tx = unwrap(handle);
-    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     return tx->commit();
 }
 

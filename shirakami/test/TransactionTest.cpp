@@ -86,7 +86,7 @@ TEST_F(ShirakamiTransactionTest, readonly) {
         ASSERT_EQ(tx->commit(), StatusCode::OK);
         tx->reset();
         ASSERT_NE(st->put(tx.get(), "b", "B", PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx->commit(), StatusCode::OK);
+        ASSERT_EQ(tx->commit(), StatusCode::ERR_INACTIVE_TRANSACTION);
         tx->reset();
     }
     EXPECT_EQ(db->close(), StatusCode::OK);

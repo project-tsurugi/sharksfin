@@ -118,7 +118,7 @@ StatusCode resolve_commit_code(::shirakami::Status st) {
 
 StatusCode Transaction::commit() {
     if(!is_active_) {
-        ABORT();
+        return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     if(is_long()) {
         check_state(); // to initialize state handle

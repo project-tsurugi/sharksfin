@@ -72,6 +72,7 @@ public:
      * @pre transaction is active (i.e. not committed or aborted yet)
      * @return StatusCode::ERR_ABORTED_RETRYABLE when OCC validation fails
      * @return StatusCode::OK when success
+     * @return StatusCode::ERR_INACTIVE_TRANSACTION if the associated transaction is already committed/aborted
      * @return other status
      */
     StatusCode commit();
