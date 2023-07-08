@@ -20,7 +20,7 @@
 
 ## shirakami実装メモ
 
-- shirakami APIも同様に `::shirakami::Status`に接頭辞 `WARN_`/ `ERR_` をもつものがあり、どちらのステータスが戻ったかによって挙動が分かれる
+- shirakami APIも同様に `shirakami::Status`に接頭辞 `WARN_`/ `ERR_` をもつものがあり、どちらのステータスが戻ったかによって挙動が分かれる
 - sharksfinが「情報つき成功」を戻すケースは限定的であり、多くの `WARN_` コードはsharksfinのエラーとしている
   - shirakamiが残している最適化の余地に対応できていないため、一旦エラーに倒している
   - 適宜shirakami bridge内でアボートさせているが、これだとアボート理由が詳細に戻せないので、shirakami側でエラーにする方が望ましいこともある
