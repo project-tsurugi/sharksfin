@@ -24,7 +24,7 @@
 #include "Error.h"
 #include "shirakami_api_helper.h"
 #include "logging.h"
-#include "utils.h"
+#include "correct_transaction.h"
 
 namespace sharksfin::shirakami {
 
@@ -94,15 +94,15 @@ StatusCode Iterator::resolve_scan_errors(Status res) {
 
 StatusCode Iterator::key(Slice& s) {
     auto res = api::read_key_from_scan(*tx_, handle_, buffer_key_);
-    abort_if_needed(*tx_, res);
     s = buffer_key_;
+    correct_transaction_state(*tx_, res);
     return resolve_scan_errors(res);
 }
 
 StatusCode Iterator::value(Slice& s) {
     auto res = api::read_value_from_scan(*tx_, handle_, buffer_value_);
-    abort_if_needed(*tx_, res);
     s = buffer_value_;
+    correct_transaction_state(*tx_, res);
     return resolve_scan_errors(res);
 }
 

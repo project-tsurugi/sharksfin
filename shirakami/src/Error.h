@@ -69,7 +69,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::ERR_FATAL_INDEX: rc = StatusCode::ERR_UNKNOWN; abnormal_error = true; break;
         case Status::ERR_INVALID_CONFIGURATION: rc = StatusCode::ERR_UNKNOWN; abnormal_error = true; break;
         case Status::ERR_KVS: rc = StatusCode::ERR_ABORTED_RETRYABLE; log_origin = true; break;
-        case Status::ERR_READ_AREA_VIOLATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; log_origin = true; break; //TODO
+        case Status::ERR_READ_AREA_VIOLATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; log_origin = true; break;
         case Status::ERR_NOT_IMPLEMENTED: rc = StatusCode::ERR_NOT_IMPLEMENTED; break;
         case Status::WARN_CANCEL_PREVIOUS_INSERT: rc = StatusCode::OK; break;
         case Status::WARN_CANCEL_PREVIOUS_UPSERT: rc = StatusCode::OK; break;
@@ -87,7 +87,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_STORAGE_NOT_FOUND: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
         case Status::ERR_SESSION_LIMIT: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
         case Status::WARN_CONFLICT_ON_WRITE_PRESERVE: rc = StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE; break;
-        case Status::WARN_NOT_BEGIN: rc = StatusCode::OK; break;
+        case Status::WARN_NOT_BEGIN: rc = StatusCode::ERR_INACTIVE_TRANSACTION; break;
         case Status::WARN_WAITING_FOR_OTHER_TX: rc = StatusCode::WAITING_FOR_OTHER_TRANSACTION; break;
         case Status::WARN_WRITE_WITHOUT_WP: rc = StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE; break;
 
