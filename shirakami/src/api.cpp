@@ -69,21 +69,11 @@ StatusCode database_dispose(DatabaseHandle handle) {
     return StatusCode::OK;
 }
 
-// make sure LogRecord and log_record are compatible
-static_assert(sizeof(LogRecord) == sizeof(::shirakami::log_record));
-static_assert(alignof(LogRecord) == alignof(::shirakami::log_record));
-
 StatusCode database_set_logging_callback(
     DatabaseHandle handle,
     LogEventCallback callback) {  //NOLINT(performance-unnecessary-value-param)
     (void) handle;
-    shirakami::api::database_set_logging_callback(
-        [cb = std::move(callback)](std::size_t worker, ::shirakami::log_record* begin, ::shirakami::log_record* end) {
-            log_entry << "logging callback worker:" << worker << " entries:" << (end-begin);
-            cb(worker, reinterpret_cast<LogRecord*>(begin), reinterpret_cast<LogRecord*>(end));  //NOLINT
-            log_exit << "logging callback";
-        }
-    );
+    (void) callback;
     return StatusCode::OK;
 }
 

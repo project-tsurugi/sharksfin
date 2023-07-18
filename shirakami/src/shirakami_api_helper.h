@@ -132,8 +132,6 @@ Status release_tx_state_handle(::shirakami::TxStateHandle handle);
 
 Status check_tx_state(::shirakami::TxStateHandle handle, ::shirakami::TxState& out);
 
-Status database_set_logging_callback(::shirakami::log_event_callback const& callback);
-
 std::shared_ptr<::shirakami::result_info> transaction_result_info(Token token);
 
 void print_diagnostics(std::ostream& os);

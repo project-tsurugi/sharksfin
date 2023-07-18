@@ -357,14 +357,6 @@ Status check_tx_state(::shirakami::TxStateHandle handle, ::shirakami::TxState& o
     return rc;
 }
 
-Status database_set_logging_callback(::shirakami::log_event_callback const& callback) {
-    log_entry;
-    auto rc = details::sanitize_rc(::shirakami::database_set_logging_callback(callback));
-    log_rc(rc);
-    log_exit << "rc:" << rc;
-    return rc;
-}
-
 std::shared_ptr<::shirakami::result_info> transaction_result_info(Token token) {
     log_entry;
     auto ret = ::shirakami::transaction_result_info(token);

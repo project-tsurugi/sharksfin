@@ -22,7 +22,6 @@ list(APPEND TEST_SOURCES
         "DatabaseTest.cpp"
         "ExceptionTest.cpp"
         "IteratorTest.cpp"
-        "LogCallbackApiTest.cpp"
         "LongTxTest.cpp"
         "main.cpp"
         "RecoveryTest.cpp"
