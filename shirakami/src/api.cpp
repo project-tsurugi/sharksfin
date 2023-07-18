@@ -26,6 +26,7 @@
 #include "logging.h"
 #include "shirakami_api_helper.h"
 #include "logging_helper.h"
+#include "correct_transaction.h"
 
 namespace sharksfin {
 
@@ -540,8 +541,9 @@ extern "C" StatusCode sequence_put(
     SequenceValue value) {
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    return shirakami::resolve(
-        shirakami::api::update_sequence(tx->native_handle(), id, version, value));
+    auto res = shirakami::api::update_sequence(tx->native_handle(), id, version, value);
+    correct_transaction_state(*tx, res);
+    return shirakami::resolve(res);
 }
 
 extern "C" StatusCode sequence_get(

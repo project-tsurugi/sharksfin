@@ -42,8 +42,13 @@ StatusCode Transaction::construct(
         t->is_active_ = false;
         return StatusCode::ERR_RESOURCE_LIMIT_REACHED;
     }
+    auto res = t->declare_begin();
+    if(res != StatusCode::OK) {
+        t->is_active_ = false;
+        return res;
+    }
     tx = std::move(t);
-    return tx->declare_begin();
+    return res;
 }
 
 Transaction::Transaction(
