@@ -146,10 +146,6 @@ enum class StatusCode : std::int64_t {
      * @brief key length passed to the API is invalid
      */
     ERR_INVALID_KEY_LENGTH = -18,
-    /**
-     * @brief Too many (>SIZE_MAX) open_scan without close_scan at the one transaction.
-     */
-    ERR_MAX_OPEN_SCAN = -19,
 };
 
 /**
@@ -181,7 +177,6 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_BLOCKED_BY_CONCURRENT_OPERATION: return "ERR_BLOCKED_BY_CONCURRENT_OPERATION";
         case StatusCode::ERR_RESOURCE_LIMIT_REACHED: return "ERR_RESOURCE_LIMIT_REACHED";
         case StatusCode::ERR_INVALID_KEY_LENGTH: return "ERR_INVALID_KEY_LENGTH";
-        case StatusCode::ERR_MAX_OPEN_SCAN: return "ERR_MAX_OPEN_SCAN";
         default: return "UNDEFINED";
     }
 }
