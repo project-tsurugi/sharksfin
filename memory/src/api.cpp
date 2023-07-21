@@ -55,16 +55,6 @@ StatusCode database_dispose(DatabaseHandle handle) {
     return rc;
 }
 
-StatusCode database_set_logging_callback(
-    DatabaseHandle handle,
-    LogEventCallback callback) {  //NOLINT(performance-unnecessary-value-param)
-    log_entry << fn_name << " handle:" << handle;
-    auto rc = impl::database_set_logging_callback(handle, std::move(callback));
-    log_rc(rc, fn_name);
-    log_exit << fn_name << " rc:" << rc;
-    return rc;
-}
-
 StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *result) {
     log_entry << fn_name << " handle:" << handle << binstring(key);
     auto rc = impl::storage_create(handle, key, result);

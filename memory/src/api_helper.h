@@ -32,10 +32,6 @@ StatusCode database_close(DatabaseHandle handle);
 
 StatusCode database_dispose(DatabaseHandle handle);
 
-StatusCode database_set_logging_callback(
-    DatabaseHandle handle,
-    LogEventCallback callback);
-
 StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *result);
 
 StatusCode storage_create(

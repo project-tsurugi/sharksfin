@@ -69,14 +69,6 @@ StatusCode database_dispose(DatabaseHandle handle) {
     return StatusCode::OK;
 }
 
-StatusCode database_set_logging_callback(
-    DatabaseHandle handle,
-    LogEventCallback callback) {  //NOLINT(performance-unnecessary-value-param)
-    (void) handle;
-    (void) callback;
-    return StatusCode::OK;
-}
-
 StatusCode storage_create(
         DatabaseHandle handle,
         Slice key,
