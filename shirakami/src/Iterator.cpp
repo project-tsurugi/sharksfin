@@ -76,8 +76,6 @@ bool Iterator::is_valid() const {
 StatusCode Iterator::resolve_scan_errors(Status res) {
     if (res == Status::WARN_SCAN_LIMIT) {
         state_ = State::SAW_EOF;
-        is_valid_ = false;
-        return StatusCode::NOT_FOUND;
     }
     auto rc = resolve(res);
     is_valid_ = rc == StatusCode::OK;
@@ -187,11 +185,6 @@ StatusCode Iterator::open_cursor() {
     if(res == Status::WARN_NOT_FOUND) {
         state_ = State::SAW_EOF;
         return StatusCode::NOT_FOUND;
-    }
-    if(res == Status::WARN_SCAN_LIMIT) {  //NOLINT
-        VLOG_LP(log_error) << "too many open scan";
-        tx_->abort();  // WARN_SCAN_LIMIT has double meanings and correct_transaction_state() fails to abort
-        return StatusCode::ERR_UNKNOWN;
     }
     if(res == Status::OK) {
         need_scan_close_ = true;

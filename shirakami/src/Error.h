@@ -80,10 +80,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_INVALID_KEY_LENGTH: rc = StatusCode::ERR_INVALID_KEY_LENGTH; break;
         case Status::WARN_MAX_OPEN_SCAN: rc = StatusCode::ERR_RESOURCE_LIMIT_REACHED; log_origin = true; break;
         case Status::WARN_NOT_IN_A_SESSION: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
-        case Status::WARN_SCAN_LIMIT:
-            // WARN_SCAN_LIMIT has multiple meanings, so should not be mapped to a single StatusCode here
-            VLOG(log_error) << "Shirakami error : " << result;
-            break;
+        case Status::WARN_SCAN_LIMIT: rc = StatusCode::NOT_FOUND; log_origin = true; break;
         case Status::WARN_STORAGE_ID_DEPLETION: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
         case Status::WARN_STORAGE_NOT_FOUND: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
         case Status::ERR_SESSION_LIMIT: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
