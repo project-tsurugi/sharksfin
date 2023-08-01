@@ -19,7 +19,6 @@
 #include <cstdint>
 
 #include <atomic>
-#include <thread>
 #include <xmmintrin.h>
 #include <glog/logging.h>
 
