@@ -3,6 +3,7 @@ Checks: "-*,\
 abseil-*,\
 boost-*,\
 bugprone-*,\
+-bugprone-easily-swappable-parameters,\
 cert-*,\
 cppcoreguidelines-*,\
 -cppcoreguidelines-pro-type-const-cast,\
@@ -19,6 +20,7 @@ google-*,\
 -google-runtime-references,\
 hicpp-*,\
 -hicpp-braces-around-statements,\
+-hicpp-named-parameter,\
 -hicpp-no-array-decay,\
 llvm-*,\
 -llvm-include-order,\
@@ -32,6 +34,7 @@ modernize-*,\
 performance-*,\
 readability-*,\
 -readability-braces-around-statements,\
+-readability-identifier-length,\
 -readability-named-parameter,\
 -readability-qualified-auto,\
 "
