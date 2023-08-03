@@ -2,7 +2,7 @@
 
 ## Requirements
 
-* CMake `>= 3.10`
+* CMake `>= 3.16`
 * C++ Compiler `>= C++17`
 * [shirakami](https://github.com/project-tsurugi/shirakami) if you want to run this API with it.
 * and see *Dockerfile* section
@@ -15,7 +15,7 @@ git submodule update --init --recursive
 ### Dockerfile
 
 ```dockerfile
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 RUN apt update -y && apt install -y git build-essential cmake ninja-build libboost-filesystem-dev doxygen libnuma-dev
 ```
