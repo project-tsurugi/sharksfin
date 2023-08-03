@@ -166,7 +166,7 @@ Status storage_set_options(::shirakami::Storage storage, storage_option const& o
     return rc;
 }
 
-Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) { //NOLINT(readability-function-cognitive-complexity)
+Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry <<
         "token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
     auto rc = details::sanitize_rc(::shirakami::insert(tx.native_handle(), storage, key, val));
@@ -186,7 +186,7 @@ Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     return rc;
 }
 
-Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {  //NOLINT(readability-function-cognitive-complexity)
+Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry
         << "token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
     auto rc = details::sanitize_rc(::shirakami::update(tx.native_handle(), storage, key, val));
@@ -205,7 +205,7 @@ Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     return rc;
 }
 
-Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {  //NOLINT(readability-function-cognitive-complexity)
+Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
     log_entry
         << "token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
     auto rc = details::sanitize_rc(::shirakami::upsert(tx.native_handle(), storage, key, val));
