@@ -16,6 +16,7 @@
 #include "Storage.h"
 
 #include <future>
+#include <thread>
 #include <gtest/gtest.h>
 #include "TestRoot.h"
 

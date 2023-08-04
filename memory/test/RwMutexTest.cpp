@@ -16,6 +16,7 @@
 #include "RwMutex.h"
 
 #include <future>
+#include <thread>
 #include <shared_mutex>
 
 #include <gtest/gtest.h>
