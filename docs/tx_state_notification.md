@@ -27,6 +27,7 @@ precommitの完了通知をコールバックで受ける。またprecommit成�
   - あるdurability callbackについて、呼出ごとに渡されるdurability markerは弱い単調増加になる(前回呼出と同じ値が戻ることもあるが、より小さい値は戻らない)
   - precommit callbackで受け取ったmarkerと等しいかより大きいmarkerをdurability callbackで受け取った時点で、そのprecommitの内容は永続化されたと判断してよい
   - durability markerは現実的な時間内にはラップしない(内部的には非負64ビット整数による実装)
+  - durability markerはゼロを値として取ることが可能で、durabilityをサポートしない実装(sharksfin-memory)でprecommit/durability callbackは常にゼロを戻す
 
 ## sharksfin APIの変更
 
@@ -51,11 +52,9 @@ using commit_callback_type = std::function<void(StatusCode, ErrorCode, durabilit
 /**
  * @brief commit function with result notified by callback
  * @param handle the target transaction control handle retrieved with transaction_begin().
- * @param callback the callback function invoked when cc engine (pre-)commit completes. It's called at most once.
- * Caller must ensure the `callback` is kept safely callable by the time earliest of the following:
-   - the callback is called
-   - transaction is aborted (explicitly by transaction_abort() call or implicitly by error occured with transaction operation)
-   - database is closed
+ * @param callback the callback function invoked when cc engine (pre-)commit completes. It's called exactly once.
+ * If this function returns false, caller must keep the `callback` safely callable until its call, including not only the successful commit but the 
+ * case when transaction is aborted for some reason, e.g. error with commit validation, or database is suddenly closed, etc.
  *
  * The callback receives following StatusCode:
  *   - StatusCode::OK for the successful commit. Then the transaction handle associated with the
