@@ -62,7 +62,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::WARN_ALREADY_INIT: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
         case Status::WARN_INVALID_ARGS: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;
         case Status::WARN_NOT_INIT: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
-        case Status::WARN_PREMATURE: rc = StatusCode::ERR_INVALID_STATE; abnormal_error = true; break;
+        case Status::WARN_PREMATURE: rc = StatusCode::PREMATURE; break;
 
         case Status::ERR_CC: rc = StatusCode::ERR_ABORTED_RETRYABLE; log_origin = true; break;
         case Status::ERR_FATAL: rc = StatusCode::ERR_UNKNOWN; abnormal_error = true; break;

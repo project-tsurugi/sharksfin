@@ -174,6 +174,7 @@ Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     log_exit << "rc:" << rc << " token:" << tx.native_handle();
     auto r = resolve(rc);
     if (r != StatusCode::OK &&
+        r != StatusCode::PREMATURE &&
         r != StatusCode::ALREADY_EXISTS &&
         r != StatusCode::ERR_ABORTED_RETRYABLE &&
         r != StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE &&
@@ -194,6 +195,7 @@ Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     log_exit << "rc:" << rc << " token:" << tx.native_handle();
     auto r = resolve(rc);
     if (r != StatusCode::OK &&
+        r != StatusCode::PREMATURE &&
         r != StatusCode::NOT_FOUND &&
         r != StatusCode::ERR_ABORTED_RETRYABLE &&
         r != StatusCode::ERR_CONFLICT_ON_WRITE_PRESERVE &&
@@ -214,6 +216,7 @@ Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     log_exit << "rc:" << rc << " token:" << tx.native_handle();
     auto r = resolve(rc);
     if (r != StatusCode::OK &&
+        r != StatusCode::PREMATURE &&
         r != StatusCode::ERR_ABORTED_RETRYABLE &&
         r != StatusCode::ERR_ILLEGAL_OPERATION && // write operation on readonly tx
         r != StatusCode::ERR_WRITE_WITHOUT_WRITE_PRESERVE &&

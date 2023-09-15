@@ -53,6 +53,11 @@ enum class StatusCode : std::int64_t {
     WAITING_FOR_OTHER_TRANSACTION = 4,
 
     /**
+     * @brief the transaction is not ready for the request
+     */
+    PREMATURE = 5,
+
+    /**
      * @brief unknown errors.
      */
     ERR_UNKNOWN = -1,
@@ -146,6 +151,11 @@ enum class StatusCode : std::int64_t {
      * @brief key length passed to the API is invalid
      */
     ERR_INVALID_KEY_LENGTH = -18,
+
+    /**
+     * @brief read operation made outside read area
+     */
+    ERR_READ_AREA_VIOLATION = -19,
 };
 
 /**
@@ -160,6 +170,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ALREADY_EXISTS: return "ALREADY_EXISTS";
         case StatusCode::USER_ROLLBACK: return "USER_ROLLBACK";
         case StatusCode::WAITING_FOR_OTHER_TRANSACTION: return "WAITING_FOR_OTHER_TRANSACTION";
+        case StatusCode::PREMATURE: return "PREMATURE";
         case StatusCode::ERR_UNKNOWN: return "ERR_UNKNOWN";
         case StatusCode::ERR_IO_ERROR: return "ERR_IO_ERROR";
         case StatusCode::ERR_INVALID_ARGUMENT: return "ERR_INVALID_ARGUMENT";
@@ -177,6 +188,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::ERR_BLOCKED_BY_CONCURRENT_OPERATION: return "ERR_BLOCKED_BY_CONCURRENT_OPERATION";
         case StatusCode::ERR_RESOURCE_LIMIT_REACHED: return "ERR_RESOURCE_LIMIT_REACHED";
         case StatusCode::ERR_INVALID_KEY_LENGTH: return "ERR_INVALID_KEY_LENGTH";
+        case StatusCode::ERR_READ_AREA_VIOLATION: return "ERR_READ_AREA_VIOLATION";
         default: return "UNDEFINED";
     }
 }

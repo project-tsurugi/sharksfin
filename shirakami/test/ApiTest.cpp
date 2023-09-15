@@ -1931,4 +1931,44 @@ TEST_F(ShirakamiApiTest, precommit_callback_ltx) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ShirakamiApiTest, premature_requests) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+
+    HandleHolder<TransactionControlHandle> tch{};
+    ASSERT_EQ(transaction_begin(db, {TransactionOptions::TransactionType::LONG, {st}}, &tch.get()), StatusCode::OK);
+
+    TransactionHandle tx{};
+    ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch.get(), &tx));
+    EXPECT_EQ(content_put(tx, st, "a", "A", PutOperation::CREATE_OR_UPDATE), StatusCode::PREMATURE);
+    EXPECT_EQ(content_put(tx, st, "a", "A", PutOperation::CREATE), StatusCode::PREMATURE);
+    EXPECT_EQ(content_put(tx, st, "a", "A", PutOperation::UPDATE), StatusCode::PREMATURE);
+
+    Slice v{};
+    EXPECT_EQ(content_get(tx, st, "k", &v), StatusCode::PREMATURE);
+    EXPECT_EQ(content_check_exist(tx, st, "k"), StatusCode::PREMATURE);
+    EXPECT_EQ(content_delete(tx, st, "k"), StatusCode::PREMATURE);
+
+    IteratorHandle iter;
+    EXPECT_EQ(
+        content_scan(tx, st, "a", EndPointKind::PREFIXED_EXCLUSIVE, "c", EndPointKind::PREFIXED_INCLUSIVE, &iter),
+        StatusCode::OK
+    );
+    HandleHolder closer { iter };
+
+    Slice s;
+    EXPECT_EQ(iterator_next(iter), StatusCode::PREMATURE);
+    ASSERT_EQ(transaction_commit(tch.get(), true), StatusCode::PREMATURE);
+    wait_epochs(1);
+    ASSERT_EQ(transaction_commit(tch.get(), true), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
 }  // namespace sharksfin

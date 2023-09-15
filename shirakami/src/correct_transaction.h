@@ -37,6 +37,7 @@ inline void correct_transaction_state(Transaction& tx, Status res) {
     if(res == Status::WARN_ALREADY_EXISTS ||
         res == Status::WARN_NOT_FOUND ||
         res == Status::WARN_WAITING_FOR_OTHER_TX ||
+        res == Status::WARN_PREMATURE ||
         res == Status::WARN_SCAN_LIMIT) {
         // typical cases of "success with info"
         return;

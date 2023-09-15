@@ -458,6 +458,7 @@ StatusCode transaction_borrow_handle(
  * Then the transaction handle associated with the given control handle
  * gets invalidated and it should not be used to call APIs any more.
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return Status::PREMATURE if the transaction is not ready to accept request
  * @return otherwise, status code reporting the commit failure such as StatusCode::ERR_ABORTED.
  */
 StatusCode transaction_commit(
@@ -475,6 +476,7 @@ StatusCode transaction_commit(
  *   - StatusCode::OK for the successful commit. Then the transaction handle associated with the
  *     given control handle gets invalidated and it should not be used to call APIs any more.
  *   - StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ *   - StatusCode::PREMATURE if the transaction is not ready to accept request
  *   - otherwise, status code reporting the commit failure
  * On successful commit completion (i.e. StatusCode::OK is passed) durability_marker_type is available.
  * Otherwise (and abort occurs on commit try,) ErrorCode is available to indicate the abort reason.
@@ -565,6 +567,7 @@ std::shared_ptr<CallResult> transaction_inspect_recent_call(
  * @return Status::OK if the target content exists
  * @return Status::NOT_FOUND if the target content does not exist
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return Status::PREMATURE if the transaction is not ready to accept request
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_check_exist(
@@ -583,6 +586,7 @@ extern "C" StatusCode content_check_exist(
  * @return Status::OK if the target content was obtained successfully
  * @return Status::NOT_FOUND if the target content does not exist
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return Status::PREMATURE if the transaction is not ready to accept request
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_get(
@@ -644,6 +648,7 @@ inline std::ostream& operator<<(std::ostream& out, PutOperation value) {
  * @param operation indicates the behavior with the existing/new entry. See PutOperation.
  * @return Status::OK if the target content was successfully put
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return Status::PREMATURE if the transaction is not ready to accept request
  * @return warnings if the operation is not applicable to the entry. See PutOperation.
  * @return otherwise if error was occurred
  */
@@ -662,6 +667,7 @@ extern "C" StatusCode content_put(
  * @return Status::OK if the target content was successfully deleted (or not found)
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return Status::NOT_FOUND if the target content was not found (optional behavior)
+ * @return Status::PREMATURE if the transaction is not ready to accept request
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_delete(
@@ -799,6 +805,7 @@ extern "C" StatusCode content_scan(
  * @param handle the target iterator
  * @return StatusCode::OK if the iterator was successfully advanced
  * @return StatusCode::NOT_FOUND if the next content does not exist
+ * @return Status::PREMATURE if the transaction is not ready to accept request
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode iterator_next(
