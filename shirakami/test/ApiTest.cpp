@@ -1971,4 +1971,50 @@ TEST_F(ShirakamiApiTest, premature_requests) {
     ASSERT_EQ(transaction_commit(tch.get(), true), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
+TEST_F(ShirakamiApiTest, write_by_readonly_transaction) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+
+    struct S {
+        explicit S(DatabaseHandle db) : db_(db) {}
+        void prepare_rtx() {
+            ASSERT_EQ(transaction_begin(db_, {TransactionOptions::TransactionType::READ_ONLY, {}}, &tch_.get()), StatusCode::OK);
+            ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch_.get(), &tx_));
+        }
+        HandleHolder<TransactionControlHandle> tch_{};
+        TransactionHandle tx_{};
+        DatabaseHandle db_{};
+    };
+    {
+        S s{db};
+        s.prepare_rtx();
+        EXPECT_EQ(content_put(s.tx_, st, "a", "A", PutOperation::CREATE_OR_UPDATE), StatusCode::ERR_ILLEGAL_OPERATION);
+    }
+    {
+        S s{db};
+        s.prepare_rtx();
+        EXPECT_EQ(content_put(s.tx_, st, "a", "A", PutOperation::CREATE), StatusCode::ERR_ILLEGAL_OPERATION);
+    }
+    {
+        S s{db};
+        s.prepare_rtx();
+        EXPECT_EQ(content_put(s.tx_, st, "a", "A", PutOperation::UPDATE), StatusCode::ERR_ILLEGAL_OPERATION);
+    }
+    {
+        S s{db};
+        s.prepare_rtx();
+        EXPECT_EQ(content_delete(s.tx_, st, "k"), StatusCode::ERR_ILLEGAL_OPERATION);
+    }
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+
 }  // namespace sharksfin

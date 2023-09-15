@@ -125,7 +125,7 @@ using durability_callback_type = std::function<void(durability_marker_type)>;
  * The created handle must be disposed by database_dispose().
  * @param options the target database options
  * @param result [OUT] the output target of database handle
- * @return Status::OK if the target database is successfully opened
+ * @return StatusCode::OK if the target database is successfully opened
  * @return otherwise if error was occurred
  */
 StatusCode database_open(
@@ -458,7 +458,7 @@ StatusCode transaction_borrow_handle(
  * Then the transaction handle associated with the given control handle
  * gets invalidated and it should not be used to call APIs any more.
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
- * @return Status::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::PREMATURE if the transaction is not ready to accept request
  * @return otherwise, status code reporting the commit failure such as StatusCode::ERR_ABORTED.
  */
 StatusCode transaction_commit(
@@ -564,10 +564,10 @@ std::shared_ptr<CallResult> transaction_inspect_recent_call(
  * @param transaction the current transaction handle
  * @param storage the target storage
  * @param key the content key
- * @return Status::OK if the target content exists
- * @return Status::NOT_FOUND if the target content does not exist
+ * @return StatusCode::OK if the target content exists
+ * @return StatusCode::NOT_FOUND if the target content does not exist
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
- * @return Status::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::PREMATURE if the transaction is not ready to accept request
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_check_exist(
@@ -577,16 +577,16 @@ extern "C" StatusCode content_check_exist(
 
 /**
  * @brief obtains a content on the target key.
- * The result is available only if the returned status was Status::OK.
+ * The result is available only if the returned status was StatusCode::OK.
  * The returned slice will be disposed after calling other API functions.
  * @param transaction the current transaction handle
  * @param storage the target storage
  * @param key the content key
  * @param result [OUT] the slice of obtained content
- * @return Status::OK if the target content was obtained successfully
- * @return Status::NOT_FOUND if the target content does not exist
+ * @return StatusCode::OK if the target content was obtained successfully
+ * @return StatusCode::NOT_FOUND if the target content does not exist
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
- * @return Status::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::PREMATURE if the transaction is not ready to accept request
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_get(
@@ -646,9 +646,10 @@ inline std::ostream& operator<<(std::ostream& out, PutOperation value) {
  * @param key the content key
  * @param value the content value
  * @param operation indicates the behavior with the existing/new entry. See PutOperation.
- * @return Status::OK if the target content was successfully put
+ * @return StatusCode::OK if the target content was successfully put
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
- * @return Status::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::ERR_ILLEGAL_OPERATION if the transaction is read-only
  * @return warnings if the operation is not applicable to the entry. See PutOperation.
  * @return otherwise if error was occurred
  */
@@ -664,10 +665,11 @@ extern "C" StatusCode content_put(
  * @param transaction the current transaction handle
  * @param storage the target storage
  * @param key the content key
- * @return Status::OK if the target content was successfully deleted (or not found)
+ * @return StatusCode::OK if the target content was successfully deleted (or not found)
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
- * @return Status::NOT_FOUND if the target content was not found (optional behavior)
- * @return Status::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::NOT_FOUND if the target content was not found (optional behavior)
+ * @return StatusCode::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::ERR_ILLEGAL_OPERATION if the transaction is read-only
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_delete(
@@ -684,7 +686,7 @@ extern "C" StatusCode content_delete(
  * @param storage the target storage
  * @param prefix_key the content key prefix
  * @param result [OUT] an iterator handle over the key prefix range
- * @return Status::OK if the iterator was successfully prepared
+ * @return StatusCode::OK if the iterator was successfully prepared
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  */
@@ -707,7 +709,7 @@ extern "C" StatusCode content_scan_prefix(
  * @param end_key the content key of ending position, or empty slice
  * @param end_exclusive whether or not ending position is exclusive
  * @param result [OUT] an iterator handle over the key range
- * @return Status::OK if the iterator was successfully prepared
+ * @return StatusCode::OK if the iterator was successfully prepared
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  */
@@ -787,7 +789,7 @@ inline std::ostream& operator<<(std::ostream& out, EndPointKind value) {
  * @param end_key the content key of ending position
  * @param end_kind end-point kind of the ending position
  * @param result [OUT] an iterator handle over the key range
- * @return Status::OK if the iterator was successfully prepared
+ * @return StatusCode::OK if the iterator was successfully prepared
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return otherwise if error was occurred
  */
@@ -805,7 +807,7 @@ extern "C" StatusCode content_scan(
  * @param handle the target iterator
  * @return StatusCode::OK if the iterator was successfully advanced
  * @return StatusCode::NOT_FOUND if the next content does not exist
- * @return Status::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::PREMATURE if the transaction is not ready to accept request
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode iterator_next(
@@ -947,7 +949,7 @@ extern "C" StatusCode sequence_delete(
  * @brief accessor for the sharksfin implementation identifier
  * @details the identifier gives information on the implementation currently running sharksfin
  * @param name [OUT] the slice to hold the implementation name (e.g. "memory", "shirakami", etc.)
- * @return Status::OK if the call is successful
+ * @return StatusCode::OK if the call is successful
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode implementation_id(

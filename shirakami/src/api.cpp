@@ -416,9 +416,6 @@ StatusCode content_put(
         PutOperation operation) {
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    if (tx->readonly()) {
-        return StatusCode::ERR_UNSUPPORTED;
-    }
     auto stg = unwrap(storage);
     auto db = tx->owner();
     if (!db) {
@@ -433,9 +430,6 @@ StatusCode content_delete(
         Slice key) {
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
-    if (tx->readonly()) {
-        return StatusCode::ERR_UNSUPPORTED;
-    }
     auto stg = unwrap(storage);
     auto db = tx->owner();
     if (!db) {

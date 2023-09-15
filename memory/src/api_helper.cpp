@@ -425,7 +425,7 @@ StatusCode content_put(
         return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     if (tx->readonly()) {
-        return StatusCode::ERR_UNSUPPORTED;
+        return StatusCode::ERR_ILLEGAL_OPERATION;
     }
     switch (operation) {
         case PutOperation::CREATE:
@@ -457,7 +457,7 @@ StatusCode content_delete(
         return StatusCode::ERR_INACTIVE_TRANSACTION;
     }
     if (tx->readonly()) {
-        return StatusCode::ERR_UNSUPPORTED;
+        return StatusCode::ERR_ILLEGAL_OPERATION;
     }
     if (st->remove(key)) {
         return StatusCode::OK;
