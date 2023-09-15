@@ -1807,4 +1807,128 @@ TEST_F(ShirakamiApiTest, print_diag) {
     LOG(INFO) << ss.str();
 }
 
+TEST_F(ShirakamiApiTest, durable_callback) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    std::atomic_size_t call_count = 0;
+    ASSERT_EQ(database_register_durability_callback(db, [&](durability_marker_type marker){
+        ++call_count;
+        std::cerr << "*** durability callback : " << marker << std::endl;
+    }), StatusCode::OK);
+
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+
+    HandleHolder<TransactionControlHandle> tch{};
+    ASSERT_EQ(transaction_begin(db, {}, &tch.get()), StatusCode::OK);
+    TransactionHandle tx{};
+    ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch.get(), &tx));
+    ASSERT_EQ(content_put(tx, st, "a", "A", PutOperation::CREATE_OR_UPDATE), StatusCode::OK);
+    EXPECT_EQ(transaction_commit(tch.get()), StatusCode::OK);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    EXPECT_LT(0, call_count);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ShirakamiApiTest, precommit_callback_occ) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    std::atomic_size_t durability_marker{};
+    ASSERT_EQ(database_register_durability_callback(db, [&](durability_marker_type marker){
+        durability_marker = marker;
+        std::cerr << "*** durability callback : " << marker << std::endl;
+    }), StatusCode::OK);
+
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+
+    HandleHolder<TransactionControlHandle> tch{};
+    ASSERT_EQ(transaction_begin(db, {}, &tch.get()), StatusCode::OK);
+    TransactionHandle tx{};
+    ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch.get(), &tx));
+    ASSERT_EQ(content_put(tx, st, "a", "A", PutOperation::CREATE_OR_UPDATE), StatusCode::OK);
+
+    std::atomic_size_t tx_durable_mark{};
+    std::atomic_bool called{};
+    EXPECT_FALSE(transaction_commit_with_callback(tch.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){  // FIXME when shirakami fixes return value
+        (void) error;
+        called = true;
+        ASSERT_EQ(StatusCode::OK, st);
+        tx_durable_mark = marker;
+    }));
+    EXPECT_TRUE(called); // occ callback is called synchronously
+    wait_epochs(5);
+    EXPECT_LT(tx_durable_mark, durability_marker);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ShirakamiApiTest, precommit_callback_ltx) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    std::atomic_size_t durability_marker{};
+    ASSERT_EQ(database_register_durability_callback(db, [&](durability_marker_type marker){
+        durability_marker = marker;
+        std::cerr << "*** durability callback : " << marker << std::endl;
+    }), StatusCode::OK);
+
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+
+    HandleHolder<TransactionControlHandle> tch0{};
+    ASSERT_EQ(transaction_begin(db, {TransactionOptions::TransactionType::LONG, {st}}, &tch0.get()), StatusCode::OK);
+    wait_epochs(1);
+    HandleHolder<TransactionControlHandle> tch1{};
+    ASSERT_EQ(transaction_begin(db, {TransactionOptions::TransactionType::LONG, {st}}, &tch1.get()), StatusCode::OK);
+    wait_epochs(1);
+
+    TransactionHandle tx0{};
+    TransactionHandle tx1{};
+    ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch0.get(), &tx0));
+    ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch1.get(), &tx1));
+    ASSERT_EQ(content_put(tx0, st, "a", "A", PutOperation::CREATE_OR_UPDATE), StatusCode::OK);
+    ASSERT_EQ(content_put(tx1, st, "b", "B", PutOperation::CREATE_OR_UPDATE), StatusCode::OK);
+
+    std::atomic_size_t tx_durable_mark{};
+    std::atomic_bool called0{};
+    std::atomic_bool called1{};
+    EXPECT_TRUE(transaction_commit_with_callback(tch1.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){  // FIXME when shirakami fixes return value
+        (void) error;
+        called1 = true;
+        ASSERT_EQ(StatusCode::OK, st);
+        tx_durable_mark = marker;
+    }));
+    EXPECT_FALSE(called1);
+    wait_epochs(1);
+    EXPECT_FALSE(called1);
+    EXPECT_FALSE(transaction_commit_with_callback(tch0.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){  // FIXME when shirakami fixes return value
+        (void) error;
+        (void) marker;
+        called0 = true;
+        ASSERT_EQ(StatusCode::OK, st);
+    }));
+    EXPECT_TRUE(called0);
+    wait_epochs(5);
+    EXPECT_TRUE(called1);
+    EXPECT_LT(tx_durable_mark, durability_marker);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin

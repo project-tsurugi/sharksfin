@@ -147,9 +147,13 @@ StatusCode Transaction::commit() {
 ErrorCode from(::shirakami::reason_code reason, ErrorLocatorKind& kind, bool& impl_provides_locator);
 
 bool Transaction::commit(commit_callback_type callback) {
+    if(!is_active_) {
+        callback(StatusCode::ERR_INACTIVE_TRANSACTION, {}, {});
+        return true;
+    }
     return api::commit(
         session_->id(),
-        [cb = std::move(callback)](
+        [cb = std::move(callback), this](
             ::shirakami::Status st,
             ::shirakami::reason_code rc,
             ::shirakami::durability_marker_type marker
@@ -158,6 +162,15 @@ bool Transaction::commit(commit_callback_type callback) {
             ErrorLocatorKind kind{};
             bool impl_provides_locator{};
             auto error = from(rc, kind, impl_provides_locator);
+            if (res == StatusCode::OK || res == StatusCode::ERR_ABORTED_RETRYABLE) {
+                // commit request is accepted, mark this as inactive
+                is_active_ = false;
+            } else {
+                // TODO handle pre-condition failure
+            }
+            last_call_status_ = st;
+            last_call_status_set_ = true;
+            last_call_supported_ = true;
             cb(res, error, static_cast<durability_marker_type>(marker));
         }
     );
