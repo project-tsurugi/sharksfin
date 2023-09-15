@@ -144,9 +144,23 @@ StatusCode Transaction::commit() {
     return rc;
 }
 
+ErrorCode from(::shirakami::reason_code reason, ErrorLocatorKind& kind, bool& impl_provides_locator);
+
 bool Transaction::commit(commit_callback_type callback) {
-    (void) callback;
-    return true;
+    return api::commit(
+        session_->id(),
+        [cb = std::move(callback)](
+            ::shirakami::Status st,
+            ::shirakami::reason_code rc,
+            ::shirakami::durability_marker_type marker
+        ){
+            auto res = resolve_commit_code(st);
+            ErrorLocatorKind kind{};
+            bool impl_provides_locator{};
+            auto error = from(rc, kind, impl_provides_locator);
+            cb(res, error, static_cast<durability_marker_type>(marker));
+        }
+    );
 }
 
 StatusCode Transaction::wait_for_commit(std::size_t) {  //NOLINT
@@ -262,12 +276,10 @@ StatusCode Transaction::declare_begin() {
 //    return out;
 //}
 
-std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_ptr<::shirakami::result_info> const& ri) {
+ErrorCode from(::shirakami::reason_code reason, ErrorLocatorKind& kind, bool& impl_provides_locator) {
     using reason_code = ::shirakami::reason_code;
     ErrorCode rc{ErrorCode::OK};
-    ErrorLocatorKind kind{ErrorLocatorKind::unknown};
-    bool impl_provides_locator = true; // whether implementation provides locator as ErrorCode expects
-    switch(ri->get_reason_code()) {
+    switch(reason) {
         case reason_code::UNKNOWN: rc = ErrorCode::ERROR; break;
         case reason_code::KVS_DELETE: rc = ErrorCode::KVS_KEY_NOT_FOUND; kind = ErrorLocatorKind::storage_key; break;
         case reason_code::KVS_INSERT: rc = ErrorCode::KVS_KEY_ALREADY_EXISTS; kind = ErrorLocatorKind::storage_key; break;
@@ -281,6 +293,13 @@ std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_p
         case reason_code::CC_OCC_PHANTOM_AVOIDANCE: rc = ErrorCode::CC_OCC_READ_ERROR; kind = ErrorLocatorKind::storage_key; break;
         case reason_code::USER_ABORT: rc = ErrorCode::OK; break;
     }
+    return rc;
+}
+
+std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_ptr<::shirakami::result_info> const& ri) {
+    ErrorLocatorKind kind{ErrorLocatorKind::unknown};
+    bool impl_provides_locator = true; // whether implementation provides locator as ErrorCode expects
+    auto rc = from(ri->get_reason_code(), kind, impl_provides_locator);
     return {
         (kind == ErrorLocatorKind::unknown || !impl_provides_locator) ? nullptr :
             std::make_shared<StorageKeyErrorLocator>(ri->get_key(), ri->get_storage_name()),

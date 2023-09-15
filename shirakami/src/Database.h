@@ -179,10 +179,14 @@ public:
      */
     StatusCode create_transaction(std::unique_ptr<Transaction>& out, TransactionOptions const& options = {});
 
-    StatusCode register_durability_callback(durability_callback_type cb) {
-        (void) cb;
-        return StatusCode::OK;
-    }
+    /**
+    * @brief register durability callback
+    * @param cb the callback function invoked on durability status change
+    * @return StatusCode::OK if function is successful
+    * @return any error otherwise
+    */
+    StatusCode register_durability_callback(durability_callback_type cb);
+
 private:
     std::mutex mutex_for_storage_metadata_{};
     StorageCache storage_cache_{};

@@ -142,4 +142,9 @@ Database::~Database() {
     }
 }
 
+StatusCode Database::register_durability_callback(durability_callback_type cb) {
+    if (! active_) ABORT();
+    return resolve(api::register_durability_callback(std::move(cb)));
+}
+
 }  // namespace sharksfin::shirakami

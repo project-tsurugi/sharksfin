@@ -110,6 +110,10 @@ Status close_scan(Token token, ScanHandle handle);
 
 Status commit(Token token);
 
+Status commit(Token token);
+
+bool commit(Token token, ::shirakami::commit_callback_type callback);
+
 Status check_commit(Token token);
 
 Status abort(Token token);
@@ -135,6 +139,8 @@ Status check_tx_state(::shirakami::TxStateHandle handle, ::shirakami::TxState& o
 std::shared_ptr<::shirakami::result_info> transaction_result_info(Token token);
 
 void print_diagnostics(std::ostream& os);
+
+Status register_durability_callback(::shirakami::durability_callback_type cb);
 
 }  // namespace api
 }  // namespace sharksfin::shirakami

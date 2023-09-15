@@ -264,6 +264,13 @@ Status commit(Token token) {
     return rc;
 }
 
+bool commit(Token token, ::shirakami::commit_callback_type callback) {
+    log_entry << "token:" << token;
+    auto rc = ::shirakami::commit(token, std::move(callback));
+    log_exit << "rc:" << rc << " token:" << token;
+    return rc;
+}
+
 Status check_commit(Token token) {
     log_entry << "token:" << token;
     auto rc = details::sanitize_rc(::shirakami::check_commit(token));
@@ -370,6 +377,15 @@ void print_diagnostics(std::ostream& os) {
     log_entry;
     ::shirakami::print_diagnostics(os);
     log_exit;
+}
+
+Status register_durability_callback(::shirakami::durability_callback_type cb) {
+    log_entry;
+    auto rc = details::sanitize_rc(::shirakami::register_durability_callback(std::move(cb)));
+    log_rc(rc);
+    log_exit << "rc:" << rc;
+    log_exit;
+    return rc;
 }
 
 }  // namespace api
