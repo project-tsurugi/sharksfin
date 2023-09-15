@@ -77,6 +77,27 @@ public:
      */
     StatusCode commit();
 
+    bool transaction_commit_with_callback(
+        TransactionControlHandle handle,
+        commit_callback_type callback
+    ) {
+        auto tx = unwrap(handle);
+        return tx->commit(std::move(callback));
+    }
+
+    /**
+     * @brief commit the transaction.
+     * @pre transaction is active (i.e. not committed or aborted yet)
+     * @param callback callback invoked when commit completes (either successfully or unsuccessfully)
+     *
+     * callback receives the following status code:
+     *   - StatusCode::ERR_ABORTED_RETRYABLE when OCC validation fails
+     *   - StatusCode::OK when success
+     *   - StatusCode::ERR_INACTIVE_TRANSACTION if the associated transaction is already committed/aborted
+     *   - other status
+     */
+    bool commit(commit_callback_type callback);
+
     /**
      * @brief wait the commit of this transaction.
      * @return StatusCode::OK when success

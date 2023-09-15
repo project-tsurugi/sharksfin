@@ -144,6 +144,11 @@ StatusCode Transaction::commit() {
     return rc;
 }
 
+bool Transaction::commit(commit_callback_type callback) {
+    (void) callback;
+    return true;
+}
+
 StatusCode Transaction::wait_for_commit(std::size_t) {  //NOLINT
     // deprecated
     return StatusCode::OK;

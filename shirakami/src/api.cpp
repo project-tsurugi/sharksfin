@@ -69,6 +69,11 @@ StatusCode database_dispose(DatabaseHandle handle) {
     return StatusCode::OK;
 }
 
+StatusCode database_register_durability_callback(DatabaseHandle handle, durability_callback_type cb) {
+    auto db = unwrap(handle);
+    return db->register_durability_callback(std::move(cb));
+}
+
 StatusCode storage_create(
         DatabaseHandle handle,
         Slice key,
@@ -320,6 +325,14 @@ StatusCode transaction_commit(
     (void) async;
     auto tx = unwrap(handle);
     return tx->commit();
+}
+
+bool transaction_commit_with_callback(
+    TransactionControlHandle handle,
+    commit_callback_type callback
+) {
+    auto tx = unwrap(handle);
+    return tx->commit(std::move(callback));
 }
 
 StatusCode transaction_abort(

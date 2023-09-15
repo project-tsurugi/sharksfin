@@ -109,6 +109,15 @@ StatusCode database_dispose(DatabaseHandle handle) {
     return StatusCode::OK;
 }
 
+// sharksfin-memory doesn't support durability, so it sends zero marker
+constexpr auto zero_marker = static_cast<durability_marker_type>(0);
+
+StatusCode database_register_durability_callback(DatabaseHandle handle, durability_callback_type cb) {
+    (void) handle;
+    cb(zero_marker);
+    return StatusCode::OK;
+}
+
 StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *result) {
     return impl::storage_create(handle, key, {}, result);
 }
@@ -311,6 +320,23 @@ StatusCode transaction_commit(
     }
     // transaction is already finished
     return StatusCode::ERR_INVALID_STATE;
+}
+
+bool transaction_commit_with_callback(
+    TransactionControlHandle handle,
+    commit_callback_type callback) {
+    auto tx = unwrap(handle);
+    if (! tx->is_alive()) {
+        callback(StatusCode::ERR_INACTIVE_TRANSACTION, ErrorCode::ERROR, zero_marker);
+        return true;
+    }
+    if (tx->release()) {
+        callback(StatusCode::OK, ErrorCode::OK, zero_marker);
+        return true;
+    }
+    // transaction is already finished
+    callback(StatusCode::ERR_INVALID_STATE, ErrorCode::ERROR, zero_marker);
+    return true;
 }
 
 StatusCode transaction_abort(

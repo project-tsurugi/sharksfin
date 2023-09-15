@@ -179,6 +179,10 @@ public:
      */
     StatusCode create_transaction(std::unique_ptr<Transaction>& out, TransactionOptions const& options = {});
 
+    StatusCode register_durability_callback(durability_callback_type cb) {
+        (void) cb;
+        return StatusCode::OK;
+    }
 private:
     std::mutex mutex_for_storage_metadata_{};
     StorageCache storage_cache_{};

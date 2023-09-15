@@ -55,6 +55,14 @@ StatusCode database_dispose(DatabaseHandle handle) {
     return rc;
 }
 
+StatusCode database_register_durability_callback(DatabaseHandle handle, durability_callback_type cb) {
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::database_register_durability_callback(handle, std::move(cb));
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
+}
+
 StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *result) {
     log_entry << fn_name << " handle:" << handle << binstring(key);
     auto rc = impl::storage_create(handle, key, result);
@@ -257,6 +265,16 @@ StatusCode transaction_commit(
     log_entry << fn_name << " handle:" << handle << " async:" << async;
     auto rc = impl::transaction_commit(handle, async);
     log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
+}
+
+bool transaction_commit_with_callback(
+    TransactionControlHandle handle,
+    commit_callback_type callback
+) {
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_commit_with_callback(handle, std::move(callback));
     log_exit << fn_name << " rc:" << rc;
     return rc;
 }

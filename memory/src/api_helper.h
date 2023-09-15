@@ -32,6 +32,8 @@ StatusCode database_close(DatabaseHandle handle);
 
 StatusCode database_dispose(DatabaseHandle handle);
 
+StatusCode database_register_durability_callback(DatabaseHandle handle, durability_callback_type cb);
+
 StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *result);
 
 StatusCode storage_create(
@@ -117,6 +119,10 @@ StatusCode transaction_borrow_handle(
 StatusCode transaction_commit(
         TransactionControlHandle handle,
         [[maybe_unused]] bool async);
+
+bool transaction_commit_with_callback(
+    TransactionControlHandle handle,
+    commit_callback_type callback);
 
 StatusCode transaction_abort(
         TransactionControlHandle handle,
