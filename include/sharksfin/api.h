@@ -568,6 +568,7 @@ std::shared_ptr<CallResult> transaction_inspect_recent_call(
  * @return StatusCode::NOT_FOUND if the target content does not exist
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_check_exist(
@@ -587,6 +588,7 @@ extern "C" StatusCode content_check_exist(
  * @return StatusCode::NOT_FOUND if the target content does not exist
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_get(
@@ -650,6 +652,7 @@ inline std::ostream& operator<<(std::ostream& out, PutOperation value) {
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::PREMATURE if the transaction is not ready to accept request
  * @return StatusCode::ERR_ILLEGAL_OPERATION if the transaction is read-only
+ * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return warnings if the operation is not applicable to the entry. See PutOperation.
  * @return otherwise if error was occurred
  */
@@ -670,6 +673,7 @@ extern "C" StatusCode content_put(
  * @return StatusCode::NOT_FOUND if the target content was not found (optional behavior)
  * @return StatusCode::PREMATURE if the transaction is not ready to accept request
  * @return StatusCode::ERR_ILLEGAL_OPERATION if the transaction is read-only
+ * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_delete(
@@ -688,6 +692,7 @@ extern "C" StatusCode content_delete(
  * @param result [OUT] an iterator handle over the key prefix range
  * @return StatusCode::OK if the iterator was successfully prepared
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan_prefix(
@@ -711,6 +716,7 @@ extern "C" StatusCode content_scan_prefix(
  * @param result [OUT] an iterator handle over the key range
  * @return StatusCode::OK if the iterator was successfully prepared
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan_range(
@@ -791,6 +797,7 @@ inline std::ostream& operator<<(std::ostream& out, EndPointKind value) {
  * @param result [OUT] an iterator handle over the key range
  * @return StatusCode::OK if the iterator was successfully prepared
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_scan(
