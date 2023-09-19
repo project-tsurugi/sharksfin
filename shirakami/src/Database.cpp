@@ -38,9 +38,11 @@ namespace sharksfin::shirakami {
         std::filesystem::path p{*loc};
         ret.set_log_directory_path(p);
     }
-    if (auto sz = options.attribute(KEY_LOGGING_MAX_PARALLELISM); sz) {
-//        legacy parameter not supported by shirakami any more
-//        ret.set_logger_thread_num(std::stoul(*sz));
+    if (auto sz = options.attribute(KEY_EPOCH_DURATION); sz) {
+        ret.set_epoch_time(std::stoul(*sz));
+    }
+    if (auto sz = options.attribute(KEY_WAITING_RESOLVER_THREADS); sz) {
+        ret.set_waiting_resolver_threads(std::stoul(*sz));
     }
     return ret;
 }

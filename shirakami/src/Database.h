@@ -34,7 +34,8 @@ class Transaction;
 class Storage;
 
 static constexpr std::string_view KEY_LOCATION { "location" };
-static constexpr std::string_view KEY_LOGGING_MAX_PARALLELISM{ "logging_max_parallelism" };
+static constexpr std::string_view KEY_EPOCH_DURATION{ "epoch_duration" };
+static constexpr std::string_view KEY_WAITING_RESOLVER_THREADS{ "waiting_resolver_threads" };
 /**
  * @brief a shirakami wrapper.
  */
