@@ -36,6 +36,7 @@ class Storage;
 static constexpr std::string_view KEY_LOCATION { "location" };
 static constexpr std::string_view KEY_EPOCH_DURATION{ "epoch_duration" };
 static constexpr std::string_view KEY_WAITING_RESOLVER_THREADS{ "waiting_resolver_threads" };
+static constexpr std::string_view KEY_RECOVER_MAX_PARALLELISM{ "recover_max_parallelism" };
 /**
  * @brief a shirakami wrapper.
  */

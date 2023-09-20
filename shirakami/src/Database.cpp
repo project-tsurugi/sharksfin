@@ -44,6 +44,9 @@ namespace sharksfin::shirakami {
     if (auto sz = options.attribute(KEY_WAITING_RESOLVER_THREADS); sz) {
         ret.set_waiting_resolver_threads(std::stoul(*sz));
     }
+    if (auto sz = options.attribute(KEY_RECOVER_MAX_PARALLELISM); sz) {
+        ret.set_recover_max_parallelism(std::stoi(*sz));
+    }
     return ret;
 }
 
