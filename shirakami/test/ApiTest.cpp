@@ -1861,7 +1861,7 @@ TEST_F(ShirakamiApiTest, precommit_callback_occ) {
 
     std::atomic_size_t tx_durable_mark{};
     std::atomic_bool called{};
-    EXPECT_FALSE(transaction_commit_with_callback(tch.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){  // FIXME when shirakami fixes return value
+    EXPECT_TRUE(transaction_commit_with_callback(tch.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){
         (void) error;
         called = true;
         ASSERT_EQ(StatusCode::OK, st);
@@ -1908,7 +1908,7 @@ TEST_F(ShirakamiApiTest, precommit_callback_ltx) {
     std::atomic_size_t tx_durable_mark{};
     std::atomic_bool called0{};
     std::atomic_bool called1{};
-    EXPECT_TRUE(transaction_commit_with_callback(tch1.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){  // FIXME when shirakami fixes return value
+    EXPECT_FALSE(transaction_commit_with_callback(tch1.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){
         (void) error;
         called1 = true;
         ASSERT_EQ(StatusCode::OK, st);
@@ -1917,7 +1917,7 @@ TEST_F(ShirakamiApiTest, precommit_callback_ltx) {
     EXPECT_FALSE(called1);
     wait_epochs(1);
     EXPECT_FALSE(called1);
-    EXPECT_FALSE(transaction_commit_with_callback(tch0.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){  // FIXME when shirakami fixes return value
+    EXPECT_TRUE(transaction_commit_with_callback(tch0.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){
         (void) error;
         (void) marker;
         called0 = true;
