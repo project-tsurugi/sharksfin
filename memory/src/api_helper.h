@@ -128,10 +128,6 @@ StatusCode transaction_abort(
         TransactionControlHandle handle,
         [[maybe_unused]] bool rollback);
 
-StatusCode transaction_wait_commit(
-        [[maybe_unused]] TransactionControlHandle handle,
-        [[maybe_unused]] std::size_t timeout_ns);
-
 StatusCode transaction_dispose(
         TransactionControlHandle handle);
 

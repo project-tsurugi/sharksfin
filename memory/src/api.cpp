@@ -289,16 +289,6 @@ StatusCode transaction_abort(
     return rc;
 }
 
-StatusCode transaction_wait_commit(
-        TransactionControlHandle handle,
-        std::size_t timeout_ns) {
-    log_entry << fn_name << " handle:" << handle << " timeout_ns:" << timeout_ns;
-    auto rc = impl::transaction_wait_commit(handle, timeout_ns);
-    log_rc(rc, fn_name);
-    log_exit << fn_name << " rc:" << rc;
-    return rc;
-}
-
 StatusCode transaction_dispose(
         TransactionControlHandle handle) {
     log_entry << fn_name << " handle:" << handle;

@@ -507,26 +507,6 @@ StatusCode transaction_abort(
         bool rollback = true);
 
 /**
- * @brief wait for completion of async (group) commit
- * If this backing transaction engine supports group commit, the commit is deemed completed only when group commit is.
- * This API can be used to ensure/check the completion of commit initiated by transaction_commit() with async=true.
- * If the backing transaction engine doesn't support group commit, this call is no-op with StatusCode::OK.
- * See also transaction_commit() description about async commit.
- * @param handle the target transaction control handle retrieved with transaction_begin().
- * @param timeout_ns timeout duration in nanosecond
- * When zero is specified, this call doesn't wait and simply returns the result status instantly.
- * @return StatusCode::ERR_INVALID_STATE if transaction_commit() is not yet issued with the control handle,
- * or the handle is invalid for some reason.
- * @return StatusCode::ERR_TIME_OUT if the commit doesn't end within a timeout limit given by timeout_ns
- * @return otherwise, the transaction's result status of group commit
- * E.g. StatusCode::OK for successfully committed transaction, or status code reporting the commit failure
- * such as StatusCode::ERR_ABORTED.
- */
-StatusCode transaction_wait_commit(
-        TransactionControlHandle handle,
-        std::size_t timeout_ns = 0UL);
-
-/**
  * @brief check the current state of the transaction
  * @details the caller typically calls this function to periodically check the transaction state in order to
  * verify the permission to issue the transactional operations.

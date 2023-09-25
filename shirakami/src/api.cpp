@@ -346,13 +346,6 @@ StatusCode transaction_abort(
     return StatusCode::OK;
 }
 
-StatusCode transaction_wait_commit(
-        [[maybe_unused]] TransactionControlHandle handle,
-        [[maybe_unused]] std::size_t timeout_ns) {
-    auto tx = unwrap(handle);
-    return tx->wait_for_commit(timeout_ns);
-}
-
 StatusCode transaction_dispose(
         TransactionControlHandle handle) {
     auto tx = unwrap(handle);

@@ -176,11 +176,6 @@ bool Transaction::commit(commit_callback_type callback) {
     );
 }
 
-StatusCode Transaction::wait_for_commit(std::size_t) {  //NOLINT
-    // deprecated
-    return StatusCode::OK;
-}
-
 StatusCode Transaction::abort() {
     if(!is_active_) {
         // transaction doesn't begin, or commit request has been submitted already

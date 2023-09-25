@@ -1236,7 +1236,7 @@ TEST_F(ApiTest, transaction_begin_and_commit) {
             if (transaction_commit(tch.get(), true) != StatusCode::OK) {
                 return false;
             }
-            return transaction_wait_commit(tch.get()) == StatusCode::OK;
+            return true;
         }
         static TransactionOperation validate(TransactionHandle tx, void* args) {
             auto st = extract<S>(args);

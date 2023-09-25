@@ -203,13 +203,11 @@ TEST_F(ShirakamiStorageTest, remove) {
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::OK);
         EXPECT_EQ(buf, "testing");
         ASSERT_EQ(tx->commit(), StatusCode::OK);
-        ASSERT_EQ(StatusCode::OK, tx->wait_for_commit(2000*1000*1000));
         tx->reset();
 
         ASSERT_EQ(st->remove(tx, "K"), StatusCode::OK);
         ASSERT_EQ(tx->commit(), StatusCode::OK);
         wait_epochs(2);
-        ASSERT_EQ(StatusCode::OK, tx->wait_for_commit(2000*1000*1000));
         tx->reset();
         ASSERT_EQ(st->get(tx, "K", buf), StatusCode::NOT_FOUND);
     }

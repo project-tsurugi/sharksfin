@@ -99,13 +99,6 @@ public:
     bool commit(commit_callback_type callback);
 
     /**
-     * @brief wait the commit of this transaction.
-     * @return StatusCode::OK when success
-     * @return other status
-     */
-    StatusCode wait_for_commit(std::size_t timeout_ns);
-
-    /**
      * @brief abort the transaction.
      * This function can be called regardless whether the transaction is active or not.
      * @return StatusCode::OK - we expect this function to be successful always
