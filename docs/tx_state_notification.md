@@ -15,8 +15,10 @@ precommitの完了通知をコールバックで受ける。またprecommit成�
 - 下記のコールバックを新規に定義する
     - precommit callback 
       - precommit要求時に渡され、precommitの完了通知と永続化媒介変数(durability marker)の値の受け渡しを行う
+      - 渡されたcallbackオブジェクトはコールバック実行後に速やかに廃棄される
     - durability callback 
       - dbに対して登録され、定期的な呼び出しでdurability markerの値を通知する
+      - 登録されたcallbackオブジェクトはdatabaseのclose時に廃棄される
       - dbに複数個のdurability callbackを登録することが可能
         - ただしせいぜい2-3個を想定
 - いずれのコールバックもブロックせず、2-3us程度で完了する処理のみを行う
@@ -53,6 +55,7 @@ using commit_callback_type = std::function<void(StatusCode, ErrorCode, durabilit
  * @brief commit function with result notified by callback
  * @param handle the target transaction control handle retrieved with transaction_begin().
  * @param callback the callback function invoked when cc engine (pre-)commit completes. It's called exactly once.
+ * After the callback invocation, the callback object passed as `callback` parameter will be quickly destroyed.
  * If this function returns false, caller must keep the `callback` safely callable until its call, including not only the successful commit but the 
  * case when transaction is aborted for some reason, e.g. error with commit validation, or database is suddenly closed, etc.
  *
@@ -84,6 +87,7 @@ using durability_callback_type = std::function<void(durability_marker_type)>;
  * Caller must ensure the callback `cb` is kept safely callable until database close.
  * By calling the function multiple-times, multiple callbacks can be registered for a single database.
  * When there are multiple callbacks registered, the order of callback invocation is undefined.
+ * When database is closed, the callback object passed as `cb` parameter is destroyed.
  * @param handle the target database
  * @param cb the callback function invoked on durability status change
  * @return StatusCode::OK if function is successful
