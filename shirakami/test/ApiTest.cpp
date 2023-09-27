@@ -1861,13 +1861,18 @@ TEST_F(ShirakamiApiTest, precommit_callback_occ) {
 
     std::atomic_size_t tx_durable_mark{};
     std::atomic_bool called{};
-    EXPECT_TRUE(transaction_commit_with_callback(tch.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){
+    auto p = std::make_shared<int>(0);
+    EXPECT_EQ(1, p.use_count());
+    EXPECT_TRUE(transaction_commit_with_callback(tch.get(), [&, p](StatusCode st, ErrorCode error, durability_marker_type marker){
         (void) error;
+        (void) p;
         called = true;
         ASSERT_EQ(StatusCode::OK, st);
         tx_durable_mark = marker;
     }));
     EXPECT_TRUE(called); // occ callback is called synchronously
+    EXPECT_EQ(1, p.use_count());
+
     wait_epochs(5);
     EXPECT_LT(tx_durable_mark, durability_marker);
     EXPECT_EQ(database_close(db), StatusCode::OK);
@@ -1908,24 +1913,29 @@ TEST_F(ShirakamiApiTest, precommit_callback_ltx) {
     std::atomic_size_t tx_durable_mark{};
     std::atomic_bool called0{};
     std::atomic_bool called1{};
-    EXPECT_FALSE(transaction_commit_with_callback(tch1.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){
+    auto p = std::make_shared<int>(0);
+    EXPECT_EQ(1, p.use_count());
+    EXPECT_FALSE(transaction_commit_with_callback(tch1.get(), [&, p](StatusCode st, ErrorCode error, durability_marker_type marker){
         (void) error;
         called1 = true;
         ASSERT_EQ(StatusCode::OK, st);
         tx_durable_mark = marker;
     }));
+    EXPECT_EQ(2, p.use_count());
     EXPECT_FALSE(called1);
     wait_epochs(1);
     EXPECT_FALSE(called1);
-    EXPECT_TRUE(transaction_commit_with_callback(tch0.get(), [&](StatusCode st, ErrorCode error, durability_marker_type marker){
+    EXPECT_TRUE(transaction_commit_with_callback(tch0.get(), [&, p](StatusCode st, ErrorCode error, durability_marker_type marker){
         (void) error;
         (void) marker;
         called0 = true;
         ASSERT_EQ(StatusCode::OK, st);
     }));
     EXPECT_TRUE(called0);
+    EXPECT_EQ(2, p.use_count());
     wait_epochs(5);
     EXPECT_TRUE(called1);
+    EXPECT_EQ(1, p.use_count());
     EXPECT_LT(tx_durable_mark, durability_marker);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
