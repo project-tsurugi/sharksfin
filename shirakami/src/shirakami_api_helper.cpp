@@ -387,7 +387,6 @@ Status register_durability_callback(::shirakami::durability_callback_type cb) {
     auto rc = details::sanitize_rc(::shirakami::register_durability_callback(std::move(cb)));
     log_rc(rc);
     log_exit << "rc:" << rc;
-    log_exit;
     return rc;
 }
 
