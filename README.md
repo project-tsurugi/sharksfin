@@ -20,34 +20,19 @@ FROM ubuntu:22.04
 RUN apt update -y && apt install -y git build-essential cmake ninja-build libboost-filesystem-dev doxygen libnuma-dev
 ```
 
-## How to setup shirakami 
-
-If you want to run sharksfin with shirakami, install it before building the api code. Follow the procedure below.
-(see [instruction](https://github.com/project-tsurugi/shirakami/blob/master/README.md) for details)
-
-```sh
-cd sharksfin/third_party/shirakami
-mkdir build
-cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<installation directory> ..
-ninja
-ninja install
-```
-
 ## How to build
 
 ```sh
 mkdir build
 cd build
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
-ninja
+cmake --build .
 ```
 
 available options:
 * `-DBUILD_TESTS=OFF` - never build test programs
 * `-DBUILD_MEMORY=OFF` - never build API in-memory implementation
 * `-DBUILD_SHIRAKAMI=OFF` - never build shirakami bridge
-* `-DBUILD_SHIRAKAMI_WP=ON` - (temporary) enables building with shirakami build with BUILD_WP=ON/BUILD_CPR=OFF. Use with BUILD_SHIRAKAMI=ON.
 * `-DBUILD_EXAMPLES=OFF` - never build example programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
 * `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths
@@ -65,19 +50,19 @@ available options:
 ### install
 
 ```sh
-ninja install
+cmake --build . --target install
 ```
 
 ### run tests
 
 ```sh
-ctest
+ctest -V
 ```
 
 ### generate documents
 
 ```sh
-ninja doxygen
+cmake --build . --target doxygen
 ```
 
 ### Customize logging setting 
