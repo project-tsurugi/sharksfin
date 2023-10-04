@@ -1907,8 +1907,8 @@ TEST_F(ShirakamiApiTest, precommit_callback_ltx) {
     TransactionHandle tx1{};
     ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch0.get(), &tx0));
     ASSERT_EQ(StatusCode::OK, transaction_borrow_handle(tch1.get(), &tx1));
-    ASSERT_EQ(content_put(tx0, st, "a", "A", PutOperation::CREATE_OR_UPDATE), StatusCode::OK);
-    ASSERT_EQ(content_put(tx1, st, "b", "B", PutOperation::CREATE_OR_UPDATE), StatusCode::OK);
+    ASSERT_EQ(content_put(tx0, st, "a", "A", PutOperation::CREATE), StatusCode::OK);
+    ASSERT_EQ(content_put(tx1, st, "b", "B", PutOperation::CREATE), StatusCode::OK);
 
     std::atomic_size_t tx_durable_mark{};
     std::atomic_bool called0{};
