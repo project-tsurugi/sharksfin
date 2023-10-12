@@ -140,7 +140,6 @@ StatusCode Transaction::commit() {
         // last commit() call result will be available via check_commit()
         last_call_status_set_ = false;
     }
-    last_call_supported_ = true;
     return rc;
 }
 
@@ -170,7 +169,6 @@ bool Transaction::commit(commit_callback_type callback) {
             }
             last_call_status_ = st;
             last_call_status_set_ = true;
-            last_call_supported_ = true;
             cb(res, error, static_cast<durability_marker_type>(marker));
         }
     );
@@ -191,7 +189,6 @@ StatusCode Transaction::abort() {
     is_active_ = false;
     last_call_status_ = res;
     last_call_status_set_ = true;
-    last_call_supported_ = true;
     return rc;
 }
 
@@ -272,6 +269,7 @@ StatusCode Transaction::declare_begin() {
 
     transaction_options options{session_->id(), from(type_), wps, read_area{std::move(rai), std::move(rae)}};
     auto res = api::tx_begin(std::move(options));
+    last_call_status(res);
     return resolve(res);
 }
 
@@ -316,9 +314,8 @@ std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_p
 }
 
 std::shared_ptr<CallResult> Transaction::recent_call_result() {
-    if(! last_call_supported_) return {}; // unless supported function is called, nothing returns
-
     if(! last_call_status_set_) {
+        // this is the case only for legacy (wo callback) commit
         last_call_status_ = api::check_commit(session_->id());
     }
     auto ri = api::transaction_result_info(session_->id());

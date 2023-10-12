@@ -28,6 +28,7 @@ namespace sharksfin::shirakami {
 StatusCode Storage::check(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto res = api::exist_key(*tx, handle_, key.to_string_view());
+    tx->last_call_status(res);
     correct_transaction_state(*tx, res);
     return resolve(res);
 }
@@ -35,6 +36,7 @@ StatusCode Storage::check(Transaction* tx, Slice key) {  //NOLINT(readability-ma
 StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NOLINT(readability-make-member-function-const)
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto res = api::search_key(*tx, handle_, key.to_string_view(), buffer);
+    tx->last_call_status(res);
     correct_transaction_state(*tx, res);
     return resolve(res);
 }
@@ -47,6 +49,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
         case PutOperation::UPDATE: res = api::update(*tx, handle_, key.to_string_view(), value.to_string_view()); break;
         case PutOperation::CREATE_OR_UPDATE: res = api::upsert(*tx, handle_, key.to_string_view(), value.to_string_view()); break;
     }
+    tx->last_call_status(res);
     correct_transaction_state(*tx, res);
     return resolve(res);
 }
@@ -54,6 +57,7 @@ StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation op
 StatusCode Storage::remove(Transaction* tx, Slice key) {  //NOLINT(readability-make-member-function-const)
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto res = api::delete_record(tx->native_handle(), handle_, key.to_string_view());
+    tx->last_call_status(res);
     correct_transaction_state(*tx, res);
     return resolve(res);
 }

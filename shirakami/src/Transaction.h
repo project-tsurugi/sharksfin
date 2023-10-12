@@ -162,7 +162,6 @@ public:
     /**
      * @brief return the most recent request result info
      * @return result info
-     * @warning currently this function supports commit()/abort() call only
      */
     std::shared_ptr<CallResult> recent_call_result();
 
@@ -172,6 +171,10 @@ public:
      */
     std::shared_ptr<TransactionInfo> info();
 
+    void last_call_status(::shirakami::Status st) {
+        last_call_status_ = st;
+        last_call_status_set_ = true;
+    }
 private:
     Database* owner_{};
     std::unique_ptr<Session> session_{};
@@ -185,7 +188,6 @@ private:
     std::shared_ptr<CallResult> result_info_{};
     ::shirakami::Status last_call_status_{};
     bool last_call_status_set_{false};
-    bool last_call_supported_{false};
     std::shared_ptr<TransactionInfo> info_{};
 
     Transaction(
