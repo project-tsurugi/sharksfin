@@ -77,14 +77,6 @@ public:
      */
     StatusCode commit();
 
-    bool transaction_commit_with_callback(
-        TransactionControlHandle handle,
-        commit_callback_type callback
-    ) {
-        auto tx = unwrap(handle);
-        return tx->commit(std::move(callback));
-    }
-
     /**
      * @brief commit the transaction.
      * @pre transaction is active (i.e. not committed or aborted yet)

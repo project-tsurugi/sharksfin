@@ -18,6 +18,7 @@
 #include <thread>
 #include <chrono>
 #include "glog/logging.h"
+#include <xmmintrin.h>
 
 #include "sharksfin/api.h"
 #include "shirakami_api_helper.h"
@@ -122,25 +123,20 @@ StatusCode resolve_commit_code(::shirakami::Status st) {
 }
 
 StatusCode Transaction::commit() {
-    if(!is_active_) {
-        return StatusCode::ERR_INACTIVE_TRANSACTION;
+    StatusCode ret{};
+    std::atomic_bool called = false;
+    auto b = commit([&](StatusCode st, ErrorCode ec, durability_marker_type marker) {
+        (void) ec;
+        (void) marker;
+        ret = st;
+        called = true;
+    });
+    if(! b) {
+        while(! called) {
+            _mm_pause();
+        }
     }
-    if(is_long()) {
-        check_state(); // to initialize state handle
-    }
-    auto res = api::commit(session_->id());
-    auto rc = resolve_commit_code(res);
-    if (rc == StatusCode::OK || rc == StatusCode::ERR_ABORTED_RETRYABLE || rc == StatusCode::WAITING_FOR_OTHER_TRANSACTION) {
-        is_active_ = false;
-    }
-    if (rc != StatusCode::WAITING_FOR_OTHER_TRANSACTION) {
-        last_call_status_ = res;
-        last_call_status_set_ = true;
-    } else {
-        // last commit() call result will be available via check_commit()
-        last_call_status_set_ = false;
-    }
-    return rc;
+    return ret;
 }
 
 ErrorCode from(::shirakami::reason_code reason, ErrorLocatorKind& kind, bool& impl_provides_locator);
