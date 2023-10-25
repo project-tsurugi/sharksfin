@@ -74,6 +74,7 @@ public:
      * @return StatusCode::OK when success
      * @return StatusCode::ERR_INACTIVE_TRANSACTION if the associated transaction is already committed/aborted
      * @return other status
+     * @deprecated this is left for testing. Use `commit(commit_callback_type callback)` instead
      */
     StatusCode commit();
 

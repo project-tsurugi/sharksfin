@@ -238,16 +238,21 @@ TEST_F(ShirakamiTransactionTest, recent_call_result_ltx) {
         }
         ASSERT_EQ(st->put(tx0.get(), "K", TESTING, PutOperation::CREATE), StatusCode::OK);
         ASSERT_EQ(st->put(tx1.get(), "K", TESTING, PutOperation::CREATE), StatusCode::OK);
-        ASSERT_EQ(tx1->commit(), StatusCode::WAITING_FOR_OTHER_TRANSACTION);
+        std::atomic_bool called = false;
+        StatusCode st2{};
+        ASSERT_FALSE(tx1->commit([&](auto s, auto, auto){
+            called = true;
+            st2 = s;
+        }));
         {
             auto ri = tx1->recent_call_result();
             std::cerr << ri->description() << std::endl;
             ASSERT_TRUE(ri);
         }
         ASSERT_EQ(tx0->commit(), StatusCode::OK);
-        while(tx1->check_state().state_kind() == TransactionState::StateKind::WAITING_CC_COMMIT) {
-            std::this_thread::sleep_for(1ms);
-        }
+        wait_epochs(1);
+        ASSERT_TRUE(called);
+        ASSERT_EQ(st2, StatusCode::ERR_ABORTED_RETRYABLE);
         {
             auto ri = tx1->recent_call_result();
             std::cerr << ri->description() << std::endl;
