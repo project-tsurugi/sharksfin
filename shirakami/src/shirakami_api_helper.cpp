@@ -259,14 +259,6 @@ Status close_scan(Token token, ScanHandle handle) {
     return rc;
 }
 
-Status commit(Token token) {
-    log_entry << "token:" << token;
-    auto rc = details::sanitize_rc(::shirakami::commit(token));
-    log_rc(rc);
-    log_exit << "rc:" << rc << " token:" << token;
-    return rc;
-}
-
 bool commit(Token token, ::shirakami::commit_callback_type callback) {
     log_entry << "token:" << token;
     auto rc = ::shirakami::commit(token, std::move(callback));

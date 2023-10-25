@@ -108,10 +108,6 @@ Status init(::shirakami::database_options options);
 
 Status close_scan(Token token, ScanHandle handle);
 
-Status commit(Token token);
-
-Status commit(Token token);
-
 bool commit(Token token, ::shirakami::commit_callback_type callback);
 
 Status abort(Token token);
