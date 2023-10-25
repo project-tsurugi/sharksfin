@@ -114,8 +114,6 @@ Status commit(Token token);
 
 bool commit(Token token, ::shirakami::commit_callback_type callback);
 
-Status check_commit(Token token);
-
 Status abort(Token token);
 
 Status tx_begin(transaction_options options);

@@ -274,14 +274,6 @@ bool commit(Token token, ::shirakami::commit_callback_type callback) {
     return rc;
 }
 
-Status check_commit(Token token) {
-    log_entry << "token:" << token;
-    auto rc = details::sanitize_rc(::shirakami::check_commit(token));
-    log_rc(rc);
-    log_exit << "rc:" << rc << " token:" << token;
-    return rc;
-}
-
 Status abort(Token token) {
     log_entry << "token:" << token;
     auto rc = details::sanitize_rc(::shirakami::abort(token));

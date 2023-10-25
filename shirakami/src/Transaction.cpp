@@ -164,7 +164,6 @@ bool Transaction::commit(commit_callback_type callback) {
                 // TODO handle pre-condition failure
             }
             last_call_status_ = st;
-            last_call_status_set_ = true;
             cb(res, error, static_cast<durability_marker_type>(marker));
         }
     );
@@ -184,7 +183,6 @@ StatusCode Transaction::abort() {
     }
     is_active_ = false;
     last_call_status_ = res;
-    last_call_status_set_ = true;
     return rc;
 }
 
@@ -310,10 +308,6 @@ std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_p
 }
 
 std::shared_ptr<CallResult> Transaction::recent_call_result() {
-    if(! last_call_status_set_) {
-        // this is the case only for legacy (wo callback) commit
-        last_call_status_ = api::check_commit(session_->id());
-    }
     auto ri = api::transaction_result_info(session_->id());
     std::stringstream ss{};
     ss << "shirakami response Status=" << last_call_status_;
@@ -339,6 +333,10 @@ std::shared_ptr<TransactionInfo> Transaction::info() {
     }
     info_ = std::make_shared<TransactionInfo>(tx_id);
     return info_;
+}
+
+void Transaction::last_call_status(::shirakami::Status st) {
+    last_call_status_ = st;
 }
 
 }  // namespace sharksfin::shirakami

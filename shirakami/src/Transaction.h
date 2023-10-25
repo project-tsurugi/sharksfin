@@ -164,10 +164,12 @@ public:
      */
     std::shared_ptr<TransactionInfo> info();
 
-    void last_call_status(::shirakami::Status st) {
-        last_call_status_ = st;
-        last_call_status_set_ = true;
-    }
+    /**
+     * @brief set call status result
+     * @arg the status code for the last api call
+     */
+    void last_call_status(::shirakami::Status st);
+
 private:
     Database* owner_{};
     std::unique_ptr<Session> session_{};
@@ -180,7 +182,6 @@ private:
     ::shirakami::TxStateHandle state_handle_{::shirakami::undefined_handle};
     std::shared_ptr<CallResult> result_info_{};
     ::shirakami::Status last_call_status_{};
-    bool last_call_status_set_{false};
     std::shared_ptr<TransactionInfo> info_{};
 
     Transaction(
