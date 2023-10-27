@@ -261,7 +261,7 @@ Status close_scan(Token token, ScanHandle handle) {
 
 bool commit(Token token, ::shirakami::commit_callback_type callback) {
     log_entry << "token:" << token;
-    auto rc = ::shirakami::commit(token, [callback](auto status, auto reason, auto marker) {
+    auto rc = ::shirakami::commit(token, [callback=std::move(callback)](auto status, auto reason, auto marker) {
         constexpr auto lp = "/:sharksfin:shirakami:api:commit:callback ";
         DVLOG(log_trace) << lp << "--> status:" << status << " reason:" << reason << " marker:" << marker;
         callback(status, reason, marker);
