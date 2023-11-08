@@ -1,10 +1,5 @@
 # CMake
-/build
-/build-*
-
-# ANTLR build
-/dist
-.antlr
+/build*
 
 # MS Office
 ~*
@@ -13,9 +8,27 @@
 .DS_Store
 
 # VSCode
-/.vscode
+/.vscode/*
+!/.vscode/samples
+
 
 # CLion
 cmake-build-*
 .idea
 *.tokens
+
+# work in progress files
+*.wip
+
+#GLOBAL
+GPATH
+GRTAGS
+GTAGS
+HTML/
+
+#gdb
+.gdb_history
+.gdb_init
+
+# WSL related files
+*:Zone.Identifier
