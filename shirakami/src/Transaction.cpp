@@ -300,9 +300,11 @@ std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_p
     ErrorLocatorKind kind{ErrorLocatorKind::unknown};
     bool impl_provides_locator = true; // whether implementation provides locator as ErrorCode expects
     auto rc = from(ri->get_reason_code(), kind, impl_provides_locator);
+    auto k = ri->get_has_key_info() ? std::optional{ri->get_key()} : std::nullopt;
+    auto s = ri->get_has_storage_name_info() ? std::optional{ri->get_storage_name()} : std::nullopt;
     return {
         (kind == ErrorLocatorKind::unknown || !impl_provides_locator) ? nullptr :
-            std::make_shared<StorageKeyErrorLocator>(ri->get_key(), ri->get_storage_name()),
+            std::make_shared<StorageKeyErrorLocator>(k, s),
         rc
     };
 }

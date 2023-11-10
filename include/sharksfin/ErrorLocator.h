@@ -103,8 +103,8 @@ public:
      * @param storage_name the storage name where the key exists that caused the error
      */
     StorageKeyErrorLocator(
-        std::string_view key,
-        std::string_view storage_name
+        std::optional<std::string_view> key,
+        std::optional<std::string_view> storage_name
     ) noexcept :
         key_(key),
         storage_name_(storage_name)
@@ -114,7 +114,7 @@ public:
      * @brief accessor for the key of the page that caused the erroneous result
      * @return the key for the page that caused the current result
      */
-    [[nodiscard]] std::string_view key() const noexcept {
+    [[nodiscard]] std::optional<std::string_view> key() const noexcept {
         return key_;
     }
 
@@ -122,13 +122,13 @@ public:
      * @brief accessor for the key of the page that caused the erroneous result
      * @return the key for the page that caused the current result
      */
-    [[nodiscard]] std::string_view storage() const noexcept {
+    [[nodiscard]] std::optional<std::string_view> storage() const noexcept {
         return storage_name_;
     }
 
 private:
-    std::string key_{};
-    std::string storage_name_{};
+    std::optional<std::string> key_{};
+    std::optional<std::string> storage_name_{};
 
 };
 
