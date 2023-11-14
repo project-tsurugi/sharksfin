@@ -253,8 +253,6 @@ TEST_F(ShirakamiTransactionTest, recent_call_result_ltx) {
             ASSERT_TRUE(ri);
         }
         ASSERT_EQ(tx0->commit(), StatusCode::OK);
-        // wait_epochs(1);
-        // ASSERT_TRUE(called);
         while (!called) { _mm_pause(); }
         ASSERT_EQ(st2, StatusCode::ERR_ABORTED_RETRYABLE);
         {
