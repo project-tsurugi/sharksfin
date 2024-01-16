@@ -27,6 +27,7 @@
 #include "shirakami_api_helper.h"
 #include "logging_helper.h"
 #include "correct_transaction.h"
+#include "logging_helper.h"
 
 namespace sharksfin {
 
@@ -38,6 +39,7 @@ static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLIN
 StatusCode database_open(
         DatabaseOptions const& options,
         DatabaseHandle* result) {
+    VLOG_LP(log_info) << "database_options " << options;
     std::unique_ptr<shirakami::Database> db{};
     auto rc = shirakami::Database::open(options, &db);
     if (rc == StatusCode::OK) {
@@ -254,7 +256,7 @@ StatusCode transaction_exec(
                 if(rc != StatusCode::OK) {
                     if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                         // retry
-                        VLOG(log_warning) << "commit failed. retry transaction.";
+                        VLOG_LP(log_warning) << "commit failed. retry transaction.";
                         continue;
                     }
                     ABORT();

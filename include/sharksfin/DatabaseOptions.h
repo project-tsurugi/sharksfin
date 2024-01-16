@@ -99,6 +99,20 @@ public:
         return *this;
     }
 
+    /**
+     * @brief returns begin iterator for the attributes
+     */
+    auto begin() const {
+        return attributes_.begin();
+    }
+
+    /**
+     * @brief returns end iterator for the attributes
+     */
+    auto end() const {
+        return attributes_.end();
+    }
+
 private:
     std::map<std::string, std::string> attributes_ {};
     OpenMode open_mode_ = OpenMode::CREATE_OR_RESTORE;
@@ -125,6 +139,23 @@ inline constexpr std::string_view to_string_view(DatabaseOptions::OpenMode value
  */
 inline std::ostream& operator<<(std::ostream& out, DatabaseOptions::OpenMode value) {
     return out << to_string_view(value);
+}
+
+/**
+ * @brief appends enum label into the given stream.
+ * @param out the target stream
+ * @param value the source enum value
+ * @return the target stream
+ */
+inline std::ostream& operator<<(std::ostream& out, DatabaseOptions const& value) {
+    out << "mode:";
+    out << value.open_mode();
+    for(auto&& [k,v] : value) {
+        out << " {key:" << k;
+        out << " value:" << v;
+        out << "}";
+    }
+    return out;
 }
 
 }  // namespace sharksfin
