@@ -27,7 +27,6 @@
 #include "shirakami_api_helper.h"
 #include "logging_helper.h"
 #include "correct_transaction.h"
-#include "logging_helper.h"
 
 namespace sharksfin {
 
