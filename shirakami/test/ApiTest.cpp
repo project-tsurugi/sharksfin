@@ -31,6 +31,7 @@ namespace sharksfin {
 
 static constexpr std::string_view KEY_LOCATION { "location" };
 static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };
+static constexpr std::string_view KEY_STARTUP_MODE { "startup_mode" };
 
 static constexpr std::string_view TESTING { "test" }; // around 8 chars cause delete_record crash
 
@@ -2025,5 +2026,34 @@ TEST_F(ShirakamiApiTest, write_by_readonly_transaction) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ShirakamiApiTest, get_data_store) {
+    {
+        // normal mode
+        DatabaseOptions options;
+        options.attribute(KEY_LOCATION, path());
+
+        DatabaseHandle db;
+        ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+        HandleHolder dbh{db};
+        std::any result{};
+        ASSERT_EQ(implementation_get_datastore(db, &result), StatusCode::OK);
+        ASSERT_NE(std::any_cast<void*>(result), nullptr);
+        EXPECT_EQ(database_close(db), StatusCode::OK);
+    }
+    {
+        // maintenance mode
+        DatabaseOptions options;
+        options.attribute(KEY_LOCATION, path());
+        options.attribute(KEY_STARTUP_MODE, "maintenance");
+
+        DatabaseHandle db;
+        ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+        HandleHolder dbh{db};
+        std::any result{};
+        ASSERT_EQ(implementation_get_datastore(db, &result), StatusCode::OK);
+        ASSERT_NE(std::any_cast<void*>(result), nullptr);
+        EXPECT_EQ(database_close(db), StatusCode::OK);
+    }
+}
 
 }  // namespace sharksfin

@@ -33,6 +33,9 @@ namespace sharksfin::shirakami {
         case DatabaseOptions::OpenMode::RESTORE: mode = open_mode::RESTORE; break;
         case DatabaseOptions::OpenMode::CREATE_OR_RESTORE: mode = open_mode::CREATE_OR_RESTORE; break;
     }
+    if(auto m = options.attribute(KEY_STARTUP_MODE); m == "maintenance") {
+        mode = open_mode::MAINTENANCE;
+    }
     ::shirakami::database_options ret{mode};
     if (auto loc = options.attribute(KEY_LOCATION); loc) {
         std::filesystem::path p{*loc};
