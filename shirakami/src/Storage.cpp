@@ -62,13 +62,16 @@ StatusCode Storage::remove(Transaction* tx, Slice key) {  //NOLINT(readability-m
     return resolve(res);
 }
 
-std::unique_ptr<Iterator> Storage::scan(Transaction* tx,
+StatusCode Storage::scan(Transaction* tx,
         Slice begin_key, EndPointKind begin_kind,
-        Slice end_key, EndPointKind end_kind) {
-    assert(tx->active());  //NOLINT
-    return std::make_unique<Iterator>(this, tx,
+        Slice end_key, EndPointKind end_kind,
+        std::unique_ptr<Iterator>& out
+) {
+    if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
+    out = std::make_unique<Iterator>(this, tx,
             begin_key, begin_kind,
             end_key, end_kind);
+    return StatusCode::OK;
 }
 
 ::shirakami::storage_option from(StorageOptions const& opt) {

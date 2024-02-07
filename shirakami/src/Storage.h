@@ -104,11 +104,14 @@ public:
      * @param begin_kind end-point kind of the beginning position
      * @param end_key the content key of ending position
      * @param end_kind end-point kind of the ending position
-     * @return the created iterator
+     * @param out [OUT] the created iterator
+     * @return the operation status
      */
-    std::unique_ptr<Iterator> scan(Transaction* tx,
+    StatusCode scan(Transaction* tx,
             Slice begin_key, EndPointKind begin_kind,
-            Slice end_key, EndPointKind end_kind);
+            Slice end_key, EndPointKind end_kind,
+            std::unique_ptr<Iterator>& out
+    );
 
     [[nodiscard]] Database* owner() const {
         return owner_;

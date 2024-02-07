@@ -55,9 +55,12 @@ TEST_F(ShirakamiCCTest, simple) {
         // read committed, remove and abort
         tx->reset();
         {
-            auto iter = test_iterator(st->scan(tx.get(),
-                "", EndPointKind::PREFIXED_INCLUSIVE,
-                "", EndPointKind::PREFIXED_INCLUSIVE));
+            std::unique_ptr<Iterator> it{};
+            ASSERT_EQ(st->scan(tx.get(),
+                    "", EndPointKind::PREFIXED_INCLUSIVE,
+                    "", EndPointKind::PREFIXED_INCLUSIVE,
+                    it), StatusCode::OK);
+            auto iter = test_iterator(std::move(it));
 
             ASSERT_EQ(iter->next(), StatusCode::OK);
             EXPECT_EQ(iter->key().to_string_view(), "a");
@@ -80,9 +83,12 @@ TEST_F(ShirakamiCCTest, simple) {
         // read committed, remove and commit
         tx->reset();
         {
-            auto iter = test_iterator(st->scan(tx.get(),
-                "a", EndPointKind::PREFIXED_INCLUSIVE,
-                "a", EndPointKind::PREFIXED_INCLUSIVE));
+            std::unique_ptr<Iterator> it{};
+            ASSERT_EQ(st->scan(tx.get(),
+                    "a", EndPointKind::PREFIXED_INCLUSIVE,
+                    "a", EndPointKind::PREFIXED_INCLUSIVE,
+                    it), StatusCode::OK);
+            auto iter = test_iterator(std::move(it));
 
             ASSERT_EQ(iter->next(), StatusCode::OK);
             EXPECT_EQ(iter->key().to_string_view(), "a");
@@ -116,9 +122,12 @@ TEST_F(ShirakamiCCTest, simple) {
     {
         tx->reset();
         {
-            auto iter = test_iterator(st->scan(tx.get(),
-                "", EndPointKind::PREFIXED_INCLUSIVE,
-                "", EndPointKind::PREFIXED_INCLUSIVE));
+            std::unique_ptr<Iterator> it{};
+            ASSERT_EQ(st->scan(tx.get(),
+                    "", EndPointKind::PREFIXED_INCLUSIVE,
+                    "", EndPointKind::PREFIXED_INCLUSIVE,
+                    it), StatusCode::OK);
+            auto iter = test_iterator(std::move(it));
 
             ASSERT_EQ(iter->next(), StatusCode::OK);
             EXPECT_EQ(iter->key().to_string_view(), "a");
@@ -160,9 +169,13 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
         for (std::size_t i = 0U; i < COUNT; ++i) {
             StatusCode rc{};
             {
-                auto iter = test_iterator(st->scan(tx2.get(),
-                    "a", EndPointKind::PREFIXED_INCLUSIVE,
-                    "a", EndPointKind::PREFIXED_INCLUSIVE));
+                std::unique_ptr<Iterator> it{};
+                EXPECT_EQ(st->scan(tx2.get(),
+                        "a", EndPointKind::PREFIXED_INCLUSIVE,
+                        "a", EndPointKind::PREFIXED_INCLUSIVE,
+                        it), StatusCode::OK);
+                auto iter = test_iterator(std::move(it));
+
                 while((rc = iter->next()) == StatusCode::OK) {
                     Slice s{};
                     if((rc = iter->key(s)) != StatusCode::OK) break;
@@ -235,9 +248,12 @@ TEST_F(ShirakamiCCTest, scan_and_delete) {
         for (std::size_t i = 0U; i < COUNT; ++i) {
             StatusCode rc{};
             {
-                auto iter = test_iterator(st->scan(tx2.get(),
-                    "a", EndPointKind::PREFIXED_INCLUSIVE,
-                    "a", EndPointKind::PREFIXED_INCLUSIVE));
+                std::unique_ptr<Iterator> it{};
+                EXPECT_EQ(st->scan(tx2.get(),
+                        "a", EndPointKind::PREFIXED_INCLUSIVE,
+                        "a", EndPointKind::PREFIXED_INCLUSIVE,
+                        it), StatusCode::OK);
+                auto iter = test_iterator(std::move(it));
                 while((rc = iter->next()) == StatusCode::OK) {
                     Slice s{};
                     if((rc = iter->key(s)) != StatusCode::OK) break;

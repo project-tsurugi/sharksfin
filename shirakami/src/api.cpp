@@ -472,7 +472,11 @@ StatusCode content_scan(
     if (!db) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto iter = stg->scan(tx, begin_key, begin_kind, end_key, end_kind);
+    std::unique_ptr<shirakami::Iterator> iter{};
+    auto rc = stg->scan(tx, begin_key, begin_kind, end_key, end_kind, iter);
+    if(rc != StatusCode::OK) {
+        return rc;
+    }
     *result = wrap(iter.release());
     return StatusCode::OK;
 }
