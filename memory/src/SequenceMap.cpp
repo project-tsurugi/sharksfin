@@ -15,7 +15,8 @@
  */
 #include "SequenceMap.h"
 
-#include <cassert>
+#include "logging.h"
+#include "logging_helper.h"
 #include "glog/logging.h"
 
 namespace sharksfin::memory {
@@ -44,13 +45,17 @@ SequenceId SequenceMap::create() {
 }
 
 bool SequenceMap::put(SequenceId id, SequenceVersion version, SequenceValue value) {
-    assert(version > 0);  //NOLINT
+    if(version == 0) {
+        // should not happen normally
+        LOG_LP(ERROR) << "invalid sequence version received";
+        return false;
+    }
     std::unique_lock lock{mutex_};
     if (values_.size() <= id || !values_[id]) {
         return false;
     }
     if (version <= values_[id].version()) {
-        LOG(INFO) << "obsolete sequence version. No update. ";
+        LOG_LP(INFO) << "obsolete sequence version. No update. ";
         return true;
     }
     values_[id] = {version, value};

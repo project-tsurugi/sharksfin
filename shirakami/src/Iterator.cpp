@@ -135,7 +135,11 @@ StatusCode Iterator::open_cursor() {
     is_valid_ = false;
     switch (begin_kind_) {
         case EndPointKind::UNBOUND:
-            assert(begin_key_.empty());  //NOLINT
+            if(! begin_key_.empty()) {
+                // should not happen normally
+                LOG_LP(ERROR) << "key must be empty for unbound end point";
+                return StatusCode::ERR_UNKNOWN;
+            }
             break;
         case EndPointKind::PREFIXED_INCLUSIVE:
         case EndPointKind::INCLUSIVE:
@@ -158,7 +162,11 @@ StatusCode Iterator::open_cursor() {
     }
     switch (end_kind_) {
         case EndPointKind::UNBOUND:
-            assert(end_key_.empty());  //NOLINT
+            if(! end_key_.empty()) {
+                // should not happen normally
+                LOG_LP(ERROR) << "key must be empty for unbound end point";
+                return StatusCode::ERR_UNKNOWN;
+            }
             break;
         case EndPointKind::PREFIXED_INCLUSIVE: {
             end_endpoint = scan_endpoint::EXCLUSIVE;  // strictly less than next neighbor
