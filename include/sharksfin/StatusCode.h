@@ -58,6 +58,11 @@ enum class StatusCode : std::int64_t {
     PREMATURE = 5,
 
     /**
+     * @brief api request is not fulfilled due to concurrent operation
+     */
+    CONCURRENT_OPERATION = 6,
+
+    /**
      * @brief unknown errors.
      */
     ERR_UNKNOWN = -1,
@@ -171,6 +176,7 @@ inline constexpr std::string_view to_string_view(StatusCode value) {
         case StatusCode::USER_ROLLBACK: return "USER_ROLLBACK";
         case StatusCode::WAITING_FOR_OTHER_TRANSACTION: return "WAITING_FOR_OTHER_TRANSACTION";
         case StatusCode::PREMATURE: return "PREMATURE";
+        case StatusCode::CONCURRENT_OPERATION: return "CONCURRENT_OPERATION";
         case StatusCode::ERR_UNKNOWN: return "ERR_UNKNOWN";
         case StatusCode::ERR_IO_ERROR: return "ERR_IO_ERROR";
         case StatusCode::ERR_INVALID_ARGUMENT: return "ERR_INVALID_ARGUMENT";

@@ -79,7 +79,7 @@ StatusCode Iterator::resolve_scan_errors(Status res) {
         state_ = State::SAW_EOF;
     }
     auto rc = resolve(res);
-    is_valid_ = rc == StatusCode::OK;
+    is_valid_ = rc == StatusCode::OK || rc == StatusCode::CONCURRENT_OPERATION; // even on concurrent_operation, current position is still valid
     return rc;
 }
 

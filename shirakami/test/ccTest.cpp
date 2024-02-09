@@ -336,7 +336,7 @@ TEST_F(ShirakamiCCTest, get_concurrently) {
         for (std::size_t i = 0U; i < COUNT; ++i) {
             std::string buf{};
             auto rc = st->get(tx2.get(), "aX"s+std::to_string(i), buf);
-            EXPECT_TRUE(rc == StatusCode::OK || rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
+            EXPECT_TRUE(rc == StatusCode::OK || rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE || rc == StatusCode::CONCURRENT_OPERATION);
             if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 tx2->reset();
