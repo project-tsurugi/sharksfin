@@ -550,6 +550,9 @@ std::shared_ptr<CallResult> transaction_inspect_recent_call(
  * @return StatusCode::NOT_FOUND if the target content does not exist
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::CONCURRENT_OPERATION if other concurrent operation is observed and the request is rejected.
+ * The transaction is still active (i.e. not aborted). Retrying the request might be successful if the concurrent
+ * operation complete, or doesn't exist any more.
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
  */
@@ -570,6 +573,9 @@ extern "C" StatusCode content_check_exist(
  * @return StatusCode::NOT_FOUND if the target content does not exist
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::CONCURRENT_OPERATION if other concurrent operation is observed and the request is rejected.
+ * The transaction is still active (i.e. not aborted). Retrying the request might be successful if the concurrent
+ * operation complete, or doesn't exist any more.
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
  */
@@ -633,6 +639,9 @@ inline std::ostream& operator<<(std::ostream& out, PutOperation value) {
  * @return StatusCode::OK if the target content was successfully put
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::CONCURRENT_OPERATION if `operation` is `CREATE` and other concurrent operation is observed.
+ * The transaction is still active (i.e. not aborted). Retrying the request might be successful if the concurrent
+ * operation complete, or doesn't exist any more.
  * @return StatusCode::ERR_ILLEGAL_OPERATION if the transaction is read-only
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return warnings if the operation is not applicable to the entry. See PutOperation.
@@ -812,6 +821,9 @@ extern "C" StatusCode iterator_next(
  * @return StatusCode::OK if the key content was successfully obtained
  * @return StatusCode::NOT_FOUND if the pointing entry doesn't exist (e.g. concurrent modification by other tx after
  * iterator_next() call). Use iterator_next() to skip the pointing entry.
+ * @return StatusCode::CONCURRENT_OPERATION if other concurrent operation is observed and the request is rejected.
+ * The transaction is still active (i.e. not aborted). Retrying the request might be successful if the concurrent
+ * operation complete, or doesn't exist any more.
  * @return otherwise if error was occurred
  * @return undefined if the iterator position is not valid
  */
@@ -829,6 +841,9 @@ extern "C" StatusCode iterator_get_key(
  * @return StatusCode::OK if the value content was successfully obtained
  * @return StatusCode::NOT_FOUND if the pointing entry doesn't exist (e.g. concurrent modification by other tx after
  * iterator_next() call). Use iterator_next() to skip the pointing entry.
+ * @return StatusCode::CONCURRENT_OPERATION if other concurrent operation is observed and the request is rejected.
+ * The transaction is still active (i.e. not aborted). Retrying the request might be successful if the concurrent
+ * operation complete, or doesn't exist any more.
  * @return otherwise if error was occurred
  * @return undefined if the iterator position is not valid
  */

@@ -73,7 +73,7 @@ inline StatusCode resolve(::shirakami::Status const& result) {
         case Status::ERR_NOT_IMPLEMENTED: rc = StatusCode::ERR_NOT_IMPLEMENTED; break;
         case Status::WARN_CANCEL_PREVIOUS_INSERT: rc = StatusCode::OK; break;
         case Status::WARN_CANCEL_PREVIOUS_UPSERT: rc = StatusCode::OK; break;
-        case Status::WARN_CONCURRENT_INSERT: rc = StatusCode::ERR_ABORTED_RETRYABLE; log_origin = true; break;
+        case Status::WARN_CONCURRENT_INSERT: rc = StatusCode::CONCURRENT_OPERATION; break;
         case Status::WARN_CONCURRENT_UPDATE: rc = StatusCode::ERR_ABORTED_RETRYABLE; log_origin = true; break;
         case Status::WARN_ILLEGAL_OPERATION: rc = StatusCode::ERR_ILLEGAL_OPERATION; log_origin = true; break;
         case Status::WARN_INVALID_HANDLE: rc = StatusCode::ERR_INVALID_ARGUMENT; abnormal_error = true; break;

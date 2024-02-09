@@ -38,7 +38,8 @@ inline void correct_transaction_state(Transaction& tx, Status res) {
         res == Status::WARN_NOT_FOUND ||
         res == Status::WARN_WAITING_FOR_OTHER_TX ||
         res == Status::WARN_PREMATURE ||
-        res == Status::WARN_SCAN_LIMIT) {
+        res == Status::WARN_SCAN_LIMIT ||
+        res == Status::WARN_CONCURRENT_INSERT) {
         // typical cases of "success with info"
         return;
     }
