@@ -57,7 +57,7 @@ StatusCode Iterator::next() {
     if (state_ == State::INIT) {
         auto rc = open_cursor();
         if(rc == StatusCode::OK) {
-            is_valid_ = true;
+            key_value_readable_ = true;
             state_ = State::BODY;
         }
         return rc;
@@ -75,12 +75,12 @@ StatusCode Iterator::resolve_scan_errors(Status res) {
         state_ = State::SAW_EOF;
     }
     auto rc = resolve(res);
-    is_valid_ = rc == StatusCode::OK || rc == StatusCode::CONCURRENT_OPERATION; // even on concurrent_operation, current position is still valid
+    key_value_readable_ = rc == StatusCode::OK || rc == StatusCode::CONCURRENT_OPERATION; // even on concurrent_operation, current position is still valid
     return rc;
 }
 
 StatusCode Iterator::key(Slice& s) {
-    if (! is_valid_) {
+    if (! key_value_readable_) {
         return StatusCode::ERR_INVALID_STATE;
     }
     auto res = api::read_key_from_scan(*tx_, handle_, buffer_key_);
@@ -91,7 +91,7 @@ StatusCode Iterator::key(Slice& s) {
 }
 
 StatusCode Iterator::value(Slice& s) {
-    if (! is_valid_) {
+    if (! key_value_readable_) {
         return StatusCode::ERR_INVALID_STATE;
     }
     auto res = api::read_value_from_scan(*tx_, handle_, buffer_value_);
@@ -134,7 +134,7 @@ Slice next_neighbor(Slice key) {
 StatusCode Iterator::open_cursor() {
     scan_endpoint begin_endpoint{scan_endpoint::INF};
     scan_endpoint end_endpoint{scan_endpoint::INF};
-    is_valid_ = false;
+    key_value_readable_ = false;
     switch (begin_kind_) {
         case EndPointKind::UNBOUND:
             if(! begin_key_.empty()) {

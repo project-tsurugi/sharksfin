@@ -98,7 +98,7 @@ private:
     EndPointKind begin_kind_{};
     std::string end_key_{};
     EndPointKind end_kind_{};
-    bool is_valid_{false};
+    bool key_value_readable_{false};
     bool need_scan_close_{false};
 
     StatusCode next_cursor();
