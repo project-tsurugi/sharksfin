@@ -57,10 +57,6 @@ public:
         return orig_->next();
     }
 
-    bool is_valid() const {
-        return orig_->is_valid();
-    }
-
     Slice key() {
         Slice ret{};
         if(auto res = key(ret); res != StatusCode::OK) {

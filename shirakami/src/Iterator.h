@@ -70,13 +70,6 @@ public:
     StatusCode next();
 
     /**
-     * @brief return whether the iterator is pointing to valid record
-     * @return true if this points a valid entry
-     * @return false otherwise
-     */
-    bool is_valid() const;
-
-    /**
      * @brief retrieve the key
      * @param s [out] key on the current position
      * @return StatusCode::OK if next entry exists

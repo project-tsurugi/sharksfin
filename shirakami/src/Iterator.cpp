@@ -69,10 +69,6 @@ StatusCode Iterator::next() {
     return rc;
 }
 
-bool Iterator::is_valid() const {
-    return is_valid_;
-}
-
 // common status code handling for scan functions
 StatusCode Iterator::resolve_scan_errors(Status res) {
     if (res == Status::WARN_SCAN_LIMIT) {
@@ -84,6 +80,9 @@ StatusCode Iterator::resolve_scan_errors(Status res) {
 }
 
 StatusCode Iterator::key(Slice& s) {
+    if (! is_valid_) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
     auto res = api::read_key_from_scan(*tx_, handle_, buffer_key_);
     tx_->last_call_status(res);
     s = buffer_key_;
@@ -92,6 +91,9 @@ StatusCode Iterator::key(Slice& s) {
 }
 
 StatusCode Iterator::value(Slice& s) {
+    if (! is_valid_) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
     auto res = api::read_value_from_scan(*tx_, handle_, buffer_value_);
     tx_->last_call_status(res);
     s = buffer_value_;
