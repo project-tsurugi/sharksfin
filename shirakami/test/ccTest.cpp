@@ -333,18 +333,20 @@ TEST_F(ShirakamiCCTest, get_concurrently) {
         std::unique_ptr<Storage> st{};
         EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
         std::size_t row_count = 0;
-        for (std::size_t i = 0U; i < COUNT; ++i) {
+        for (std::size_t i = 0U; i < COUNT;) {
             std::string buf{};
             auto rc = st->get(tx2.get(), "aX"s+std::to_string(i), buf);
             EXPECT_TRUE(rc == StatusCode::OK || rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE || rc == StatusCode::CONCURRENT_OPERATION);
-            if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
+            if (rc != StatusCode::OK) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                tx2->abort();
                 tx2->reset();
                 continue;
             }
             EXPECT_EQ(tx2->commit(), StatusCode::OK);
             if (rc == StatusCode::OK) {
                 ++row_count;
+                ++i;
             }
             tx2->reset();
         }
