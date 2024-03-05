@@ -15,7 +15,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(sharksfin
-    VERSION 0.0.1
+    VERSION 1.0.0
     DESCRIPTION "Shark's fin - minimal API for transactional key-value stores"
     LANGUAGES CXX)
 
