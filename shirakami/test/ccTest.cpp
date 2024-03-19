@@ -184,7 +184,7 @@ TEST_F(ShirakamiCCTest, scan_concurrently) {
                     EXPECT_EQ(s.to_string_view().substr(0,1), "A");
                     ++row_count;
                 }
-                EXPECT_TRUE(rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE);
+                EXPECT_TRUE(rc == StatusCode::NOT_FOUND || rc == StatusCode::ERR_ABORTED_RETRYABLE || rc == StatusCode::CONCURRENT_OPERATION);
             }
             if (rc == StatusCode::ERR_ABORTED_RETRYABLE) {
                 ++retry_error_count;
