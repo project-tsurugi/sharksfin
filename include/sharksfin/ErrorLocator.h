@@ -16,10 +16,11 @@
 #ifndef SHARKSFIN_ERROR_LOCATOR_H_
 #define SHARKSFIN_ERROR_LOCATOR_H_
 
-#include <string>
 #include <memory>
-#include <variant>
+#include <optional>
+#include <string>
 #include <string_view>
+#include <variant>
 
 namespace sharksfin {
 
