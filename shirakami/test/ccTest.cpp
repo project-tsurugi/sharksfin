@@ -290,8 +290,26 @@ TEST_F(ShirakamiCCTest, scan_and_delete) {
         EXPECT_EQ(tx3->commit(), StatusCode::OK);
         return true;
     });
-    EXPECT_GE(r1.get(), 2);
     EXPECT_TRUE(r2.get());
+    {
+        std::unique_ptr<Transaction> tx{};
+        EXPECT_EQ(StatusCode::OK, db->create_transaction(tx));
+        std::unique_ptr<Storage> st{};
+        EXPECT_EQ(db->get_storage("S", st), StatusCode::OK);
+        std::unique_ptr<Iterator> it{};
+        EXPECT_EQ(st->scan(tx.get(),
+                "", EndPointKind::UNBOUND,
+                "", EndPointKind::UNBOUND,
+                it), StatusCode::OK);
+        auto iter = test_iterator(std::move(it));
+        StatusCode rc{};
+        std::size_t row_count = 0;
+        while((rc = iter->next()) == StatusCode::OK) {
+            ++row_count;
+        }
+        EXPECT_EQ(tx->commit(), StatusCode::OK);
+        EXPECT_EQ(row_count, 0);
+    }
     EXPECT_EQ(db->close(), StatusCode::OK);
 }
 

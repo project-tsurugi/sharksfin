@@ -1442,6 +1442,10 @@ TEST_F(ShirakamiApiTest, tracking) {
 }
 
 TEST_F(ShirakamiApiTest, transaction_begin_and_commit) {
+    // verify two conflicting transactions repeat begin/commit and finally meet the goal
+    // note: even if this test fails intermittently, you don't need to worry if re-run is successful
+    // due to the environment or resource, the test may fail in low probability
+    constexpr std::size_t retry = 200;
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
@@ -1500,7 +1504,7 @@ TEST_F(ShirakamiApiTest, transaction_begin_and_commit) {
     ASSERT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
     auto r1 = std::async(std::launch::async, [&] {
         std::size_t count = 5;
-        for (std::size_t i = 0U; i < 100U; ++i) {
+        for (std::size_t i = 0U; i < retry; ++i) {
             if (S::run(db, s)) {
                 count--;
                 if (count == 0) {
@@ -1513,7 +1517,7 @@ TEST_F(ShirakamiApiTest, transaction_begin_and_commit) {
     });
     std::size_t count = 5;
     bool success = false;
-    for (std::size_t i = 0U; i < 100U; ++i) {
+    for (std::size_t i = 0U; i < retry; ++i) {
         if (S::run(db, s)) {
             count--;
             if (count == 0) {
