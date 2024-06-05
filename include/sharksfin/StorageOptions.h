@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2024 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #define SHARKSFIN_STORAGEOPTIONS_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 #include <iostream>
 #include <limits>
