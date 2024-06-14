@@ -244,8 +244,8 @@ TEST_F(ShirakamiTransactionTest, recent_call_result_ltx) {
         std::atomic_bool called = false;
         StatusCode st2{};
         ASSERT_FALSE(tx1->commit([&](auto s, auto, auto){
-            called = true;
             st2 = s;
+            called = true;
         }));
         {
             auto ri = tx1->recent_call_result();
