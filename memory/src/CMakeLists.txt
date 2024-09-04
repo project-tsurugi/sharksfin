@@ -21,6 +21,7 @@ add_library(memory
 
 set_target_properties(memory
     PROPERTIES
+        INSTALL_RPATH "\$ORIGIN/../lib"
         LIBRARY_OUTPUT_NAME "sharksfin-memory"
 )
 
