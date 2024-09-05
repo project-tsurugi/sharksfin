@@ -43,7 +43,6 @@ available options:
 * `-DBUILD_SHIRAKAMI=OFF` - never build shirakami bridge
 * `-DBUILD_EXAMPLES=OFF` - never build example programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
-* `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths
 * `-DINSTALL_EXAMPLES=ON` - also install example programs (requires `BUILD_EXAMPLES` is enables)
 * `-DEXAMPLE_IMPLEMENTATION=...` - link the specified target-name implementation to example programs
   * `memory` - link to in-memory implementation (default)
@@ -54,7 +53,7 @@ available options:
   * `-DENABLE_UB_SANITIZER=ON` - enable undefined behavior sanitizer (requires `-DENABLE_SANITIZER=ON`)
   * `-DENABLE_COVERAGE=ON` - enable code coverage analysis (requires `-DCMAKE_BUILD_TYPE=Debug`)
   * `-DBUILD_SHARED_LIBS=OFF` - create static libraries instead of shared libraries
-  
+
 ### install
 
 ```sh
@@ -73,8 +72,8 @@ ctest -V
 cmake --build . --target doxygen
 ```
 
-### Customize logging setting 
-Sharksfin internally uses [glog](https://github.com/google/glog) so you can pass glog environment variables such as `GLOG_logtostderr=1` to customize the logging output of executable that uses sharksfin. 
+### Customize logging setting
+Sharksfin internally uses [glog](https://github.com/google/glog) so you can pass glog environment variables such as `GLOG_logtostderr=1` to customize the logging output of executable that uses sharksfin.
 
 ```sh
 GLOG_logtostderr=1 ./sharksfin-cli -Dlocation=./db1 put 0 A

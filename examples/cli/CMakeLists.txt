@@ -25,6 +25,7 @@ add_executable(cli
 
 set_target_properties(cli
     PROPERTIES
+        INSTALL_RPATH "\$ORIGIN/../lib"
         RUNTIME_OUTPUT_NAME "sharksfin-cli"
 )
 

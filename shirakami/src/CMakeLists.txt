@@ -12,7 +12,8 @@ add_library(shirakami
 
 set_target_properties(shirakami
         PROPERTIES
-        LIBRARY_OUTPUT_NAME "sharksfin-shirakami"
+                INSTALL_RPATH "\$ORIGIN/../lib"
+                LIBRARY_OUTPUT_NAME "sharksfin-shirakami"
         )
 
 target_compile_definitions(shirakami
