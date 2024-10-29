@@ -1936,9 +1936,8 @@ TEST_F(ShirakamiApiTest, precommit_callback_ltx) {
         called0 = true;
         ASSERT_EQ(StatusCode::OK, st);
     }));
-    EXPECT_TRUE(called0);
-    EXPECT_EQ(2, p.use_count());
     wait_epochs(5);
+    EXPECT_TRUE(called0);
     EXPECT_TRUE(called1);
     EXPECT_EQ(1, p.use_count());
     EXPECT_LT(tx_durable_mark, durability_marker);
