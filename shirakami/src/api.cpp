@@ -541,11 +541,7 @@ extern "C" StatusCode sequence_delete(
     DatabaseHandle handle,
     SequenceId id) {
     (void)handle;
-    if (auto res = shirakami::resolve(
-            shirakami::api::delete_sequence(id)); res != StatusCode::OK) {
-        ABORT();
-    }
-    return StatusCode::OK;
+    return shirakami::resolve(shirakami::api::delete_sequence(id));
 }
 
 extern "C" StatusCode implementation_id(

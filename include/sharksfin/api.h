@@ -941,6 +941,7 @@ extern "C" StatusCode sequence_get(
  * @param handle the database handle where the sequence exists
  * @param id the sequence id that will be deleted
  * @return StatusCode::OK if the deletion was successful
+ * @return StatusCode::NOT_FOUND if the sequence doesn't exist
  * @return otherwise if any error occurs
  * @note This function is not intended to be called concurrently with running transactions.
  * Typical usage is in DDL to unregister sequence objects.
