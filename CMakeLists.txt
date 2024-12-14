@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Project Tsurugi.
+# Copyright 2018-2024 Project Tsurugi.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,9 +51,17 @@ find_package(Doxygen)
 find_package(Threads REQUIRED)
 find_package(Boost 1.65
         COMPONENTS filesystem
-        COMPONENTS stacktrace_backtrace
+        OPTIONAL_COMPONENTS stacktrace_backtrace stacktrace_basic
         REQUIRED
         )
+if(Boost_STACKTRACE_BACKTRACE_FOUND
+   AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+    set(boost_stacktrace_component stacktrace_backtrace)
+elseif(Boost_STACKTRACE_BASIC_FOUND)
+    set(boost_stacktrace_component stacktrace_basic)
+else()
+    message(FATAL_ERROR "No usable Boost stacktrace component")
+endif()
 find_package(glog)
 find_package(numa)
 find_package(shirakami)
