@@ -109,8 +109,8 @@ private:
     Buffer end_key_;
     End end_type_;
     State state_;
-    std::size_t limit_;
-    bool reverse_;
+    std::size_t limit_;  //NOLINT
+    bool reverse_;  //NOLINT
 
     Slice payload_ {};
 
