@@ -398,7 +398,8 @@ StatusCode content_scan(
     StorageHandle storage,
     Slice begin_key, EndPointKind begin_kind,
     Slice end_key, EndPointKind end_kind,
-    IteratorHandle* result) {
+    IteratorHandle* result,
+    bool reverse) {
     log_entry << fn_name << " transaction:" << transaction << " storage:" << storage <<
         binstring(begin_key) << " begin_kind:" << begin_kind <<
         binstring(end_key) << " end_kind:" << end_kind;
@@ -407,7 +408,7 @@ StatusCode content_scan(
         storage,
         begin_key, begin_kind,
         end_key, end_kind,
-        result);
+        result, reverse);
     log_rc(rc, fn_name);
     log_exit << fn_name << " rc:" << rc << " result:" << *result;
     return rc;

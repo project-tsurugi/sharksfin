@@ -68,7 +68,8 @@ Status open_scan(
     std::string_view l_key, scan_endpoint l_end,
     std::string_view r_key, scan_endpoint r_end,
     ScanHandle& handle,
-    std::size_t max_size = 0);
+    std::size_t max_size = 0,
+    bool right_to_left = false);
 
 Status read_key_from_scan(
     Transaction& tx,

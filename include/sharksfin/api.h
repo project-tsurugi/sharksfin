@@ -685,6 +685,7 @@ extern "C" StatusCode content_delete(
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
+ * @deprecated kept for compatibility. Use content_scan() instead.
  */
 extern "C" StatusCode content_scan_prefix(
         TransactionHandle transaction,
@@ -709,6 +710,7 @@ extern "C" StatusCode content_scan_prefix(
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
+ * @deprecated kept for compatibility. Use content_scan() instead.
  */
 extern "C" StatusCode content_scan_range(
         TransactionHandle transaction,
@@ -786,6 +788,9 @@ inline std::ostream& operator<<(std::ostream& out, EndPointKind value) {
  * @param end_key the content key of ending position
  * @param end_kind end-point kind of the ending position
  * @param result [OUT] an iterator handle over the key range
+ * @param reverse whether or not the iterator scans in reverse order (from end to begin)
+ * Current limitation on reverse = true is that end_kind must be EndPointKind::UNBOUND and at most one entry is
+ * fetched as the scan result
  * @return StatusCode::OK if the iterator was successfully prepared
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
@@ -796,7 +801,7 @@ extern "C" StatusCode content_scan(
         StorageHandle storage,
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind,
-        IteratorHandle* result);
+        IteratorHandle* result, bool reverse = false);
 
 /**
  * @brief advances the given iterator.

@@ -46,16 +46,18 @@ public:
      * @param begin_kind end-point kind of the beginning position
      * @param end_key the content key of ending position
      * @param end_kind end-point kind of the ending position
+     * @param reverse whether or not the iterator scans in reverse order (from end to begin)
      */
     Iterator(
             Storage* owner,
             Slice begin_key, EndPointKind begin_kind,
-            Slice end_key, EndPointKind end_kind)
+            Slice end_key, EndPointKind end_kind, bool reverse = false)
         : owner_(owner)
         , next_key_(begin_kind == EndPointKind::UNBOUND ? std::string_view {} : begin_key.to_string_view())
         , end_key_(end_kind == EndPointKind::UNBOUND ? Slice {} : end_key)
         , end_type_(interpret_end_kind(end_kind))
         , state_(interpret_begin_kind(begin_kind))
+        , reverse_(reverse)
     {}
 
     bool next() {
@@ -105,6 +107,7 @@ private:
     Buffer end_key_;
     End end_type_;
     State state_;
+    bool reverse_;
 
     Slice payload_ {};
 

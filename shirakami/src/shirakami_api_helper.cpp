@@ -86,12 +86,12 @@ Status search_key(Transaction& tx, ::shirakami::Storage storage, std::string_vie
 }
 
 Status open_scan(Token token, ::shirakami::Storage storage, std::string_view l_key, scan_endpoint l_end,
-    std::string_view r_key, scan_endpoint r_end, ScanHandle& handle, std::size_t max_size) {
+    std::string_view r_key, scan_endpoint r_end, ScanHandle& handle, std::size_t max_size, bool right_to_left) {
     log_entry <<
         "token:" << token << " storage:" << storage <<
         binstring(l_key) << " (" << l_end << ")" <<
         binstring(r_key) << " (" << r_end << ")";
-    auto rc = details::sanitize_rc(::shirakami::open_scan(token, storage, l_key, l_end, r_key, r_end, handle, max_size));
+    auto rc = details::sanitize_rc(::shirakami::open_scan(token, storage, l_key, l_end, r_key, r_end, handle, max_size, right_to_left));
     log_rc(rc);
     log_exit << "rc:" << rc << " token:" << token << " handle:" << handle;
     return rc;

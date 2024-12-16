@@ -471,7 +471,7 @@ StatusCode content_scan_prefix(
     auto iterator = std::make_unique<memory::Iterator>(
             st,
             prefix_key, EndPointKind::PREFIXED_INCLUSIVE,
-            prefix_key, EndPointKind::PREFIXED_INCLUSIVE);
+            prefix_key, EndPointKind::PREFIXED_INCLUSIVE, false); // this api is deprecated and reverse is not supported
     *result = wrap(iterator.release());
     return StatusCode::OK;
 }
@@ -493,7 +493,8 @@ StatusCode content_scan_range(
         begin_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE,
         end_key,
         end_key.empty() ? EndPointKind::UNBOUND
-                        : end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE);
+                        : end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE,
+        false); // this api is deprecated and reverse is not supported
     *result = wrap(iterator.release());
     return StatusCode::OK;
 }
@@ -503,7 +504,8 @@ StatusCode content_scan(
         StorageHandle storage,
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind,
-        IteratorHandle* result) {
+        IteratorHandle* result,
+        bool reverse) {
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
     if (!tx->is_alive()) {
@@ -512,7 +514,7 @@ StatusCode content_scan(
     auto iterator = std::make_unique<memory::Iterator>(
             st,
             begin_key, begin_kind,
-            end_key, end_kind);
+            end_key, end_kind, reverse);
     *result = wrap(iterator.release());
     return StatusCode::OK;
 }

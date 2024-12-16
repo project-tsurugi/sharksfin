@@ -105,12 +105,14 @@ public:
      * @param end_key the content key of ending position
      * @param end_kind end-point kind of the ending position
      * @param out [OUT] the created iterator
+     * @param reverse whether or not the scan in reverse order (from end to begin)
      * @return the operation status
      */
     StatusCode scan(Transaction* tx,
             Slice begin_key, EndPointKind begin_kind,
             Slice end_key, EndPointKind end_kind,
-            std::unique_ptr<Iterator>& out
+            std::unique_ptr<Iterator>& out,
+            bool reverse = false
     );
 
     [[nodiscard]] Database* owner() const {
