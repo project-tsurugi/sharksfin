@@ -60,7 +60,10 @@ public:
         , state_(interpret_begin_kind(begin_kind))
         , limit_(limit)
         , reverse_(reverse)
-    {}
+    {
+        (void) limit_;
+        (void) reverse_;
+    }
 
     bool next() {
         switch (state_) {
