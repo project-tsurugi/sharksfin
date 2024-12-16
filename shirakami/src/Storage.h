@@ -105,6 +105,7 @@ public:
      * @param end_key the content key of ending position
      * @param end_kind end-point kind of the ending position
      * @param out [OUT] the created iterator
+     * @param limit the max number of entries to be fetched. 0 indicates no limit.
      * @param reverse whether or not the scan in reverse order (from end to begin)
      * @return the operation status
      */
@@ -112,6 +113,7 @@ public:
             Slice begin_key, EndPointKind begin_kind,
             Slice end_key, EndPointKind end_kind,
             std::unique_ptr<Iterator>& out,
+            std::size_t limit = 0,
             bool reverse = false
     );
 

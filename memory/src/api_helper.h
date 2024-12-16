@@ -179,7 +179,9 @@ StatusCode content_scan(
         StorageHandle storage,
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind,
-        IteratorHandle* result, bool reverse);
+        IteratorHandle* result,
+        std::size_t limit,
+        bool reverse);
 
 StatusCode iterator_next(IteratorHandle handle);
 

@@ -937,6 +937,7 @@ TEST_F(ShirakamiApiTest, scan_range) {
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
+
 TEST_F(ShirakamiApiTest, scan) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
@@ -1026,6 +1027,83 @@ TEST_F(ShirakamiApiTest, scan) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ShirakamiApiTest, scan_with_limit) {
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "a1", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "b", "B") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "c", "C") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "d", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            IteratorHandle iter;
+            if (content_scan(
+                    tx, st,
+                    "b", EndPointKind::PREFIXED_INCLUSIVE,
+                    "", EndPointKind::UNBOUND,
+                    &iter,
+                    2) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder closer { iter };
+
+            Slice s;
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "b") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "B") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "c") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "C") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 TEST_F(ShirakamiApiTest, reverse_scan) {
     // currently reverse scan can fetch only one entry with unbonded end point
     DatabaseOptions options;
@@ -1056,6 +1134,7 @@ TEST_F(ShirakamiApiTest, reverse_scan) {
                     "a", EndPointKind::PREFIXED_INCLUSIVE,
                     "", EndPointKind::UNBOUND,
                     &iter,
+                    1,  // reverse scan must have limit 1
                     true // reverse scan
                     ) != StatusCode::OK) {
                 return TransactionOperation::ERROR;

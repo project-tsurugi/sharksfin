@@ -36,6 +36,7 @@ Iterator::Iterator(
     EndPointKind begin_kind,
     Slice end_key,
     EndPointKind end_kind,
+    std::size_t limit,
     bool reverse) :
     owner_(owner),
     state_(State::INIT),
@@ -44,6 +45,7 @@ Iterator::Iterator(
     begin_kind_(begin_kind),
     end_key_(end_kind == EndPointKind::UNBOUND ? std::string_view{} : end_key.to_string_view()),
     end_kind_(end_kind),
+    limit_(limit),
     reverse_(reverse) {}
 
 Iterator::~Iterator() {
@@ -201,13 +203,10 @@ StatusCode Iterator::open_cursor() {
             break;
     }
 
-    // reverse scan can fetch only one entry for now
-    std::size_t max_size = reverse_ ? 1 : 0;
-
     auto res = api::open_scan(tx_->native_handle(),
         owner_->handle(),
         begin_key_, begin_endpoint,
-        end_key_, end_endpoint, handle_, max_size, reverse_);
+        end_key_, end_endpoint, handle_, limit_, reverse_);
     tx_->last_call_status(res);
     correct_transaction_state(*tx_, res);
     if(res == Status::WARN_NOT_FOUND) {

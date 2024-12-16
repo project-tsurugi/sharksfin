@@ -46,6 +46,7 @@ public:
      * @param end_key the content key of ending position
      * @param end_kind whether or not ending position is exclusive
      * If end_key is not empty and end kind UNBOUND, the end_kind is reduced to PREFIXED_INCLUSIVE
+     * @param limit the max number of entries to be fetched. 0 indicates no limit.
      * @param reverse whether or not the iterator scans in reverse order (from end to begin)
      */
     Iterator( // NOLINT(performance-unnecessary-value-param)
@@ -53,6 +54,7 @@ public:
         Transaction* tx,
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind,
+        std::size_t limit = 0,
         bool reverse = false
     );
 
@@ -99,6 +101,7 @@ private:
     EndPointKind begin_kind_{};
     std::string end_key_{};
     EndPointKind end_kind_{};
+    std::size_t limit_{};
     bool reverse_{};
     bool key_value_readable_{false};
     bool need_scan_close_{false};

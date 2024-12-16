@@ -465,6 +465,7 @@ StatusCode content_scan(
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind,
         IteratorHandle* result,
+        std::size_t limit,
         bool reverse) {
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
@@ -474,7 +475,7 @@ StatusCode content_scan(
         return StatusCode::ERR_INVALID_STATE;
     }
     std::unique_ptr<shirakami::Iterator> iter{};
-    auto rc = stg->scan(tx, begin_key, begin_kind, end_key, end_kind, iter, reverse);
+    auto rc = stg->scan(tx, begin_key, begin_kind, end_key, end_kind, iter, limit, reverse);
     if(rc != StatusCode::OK) {
         return rc;
     }

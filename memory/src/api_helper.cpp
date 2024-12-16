@@ -505,6 +505,7 @@ StatusCode content_scan(
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind,
         IteratorHandle* result,
+        std::size_t limit,
         bool reverse) {
     auto tx = unwrap(transaction);
     auto st = unwrap(storage);
@@ -514,7 +515,7 @@ StatusCode content_scan(
     auto iterator = std::make_unique<memory::Iterator>(
             st,
             begin_key, begin_kind,
-            end_key, end_kind, reverse);
+            end_key, end_kind, limit, reverse);
     *result = wrap(iterator.release());
     return StatusCode::OK;
 }

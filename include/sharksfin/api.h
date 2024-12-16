@@ -788,6 +788,7 @@ inline std::ostream& operator<<(std::ostream& out, EndPointKind value) {
  * @param end_key the content key of ending position
  * @param end_kind end-point kind of the ending position
  * @param result [OUT] an iterator handle over the key range
+ * @param limit the max number of entries to be fetched. 0 indicates no limit.
  * @param reverse whether or not the iterator scans in reverse order (from end to begin)
  * Current limitation on reverse = true is that end_kind must be EndPointKind::UNBOUND and at most one entry is
  * fetched as the scan result
@@ -801,7 +802,9 @@ extern "C" StatusCode content_scan(
         StorageHandle storage,
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind,
-        IteratorHandle* result, bool reverse = false);
+        IteratorHandle* result,
+        std::size_t limit = 0,
+        bool reverse = false);
 
 /**
  * @brief advances the given iterator.

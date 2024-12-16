@@ -399,16 +399,18 @@ StatusCode content_scan(
     Slice begin_key, EndPointKind begin_kind,
     Slice end_key, EndPointKind end_kind,
     IteratorHandle* result,
+    std::size_t limit,
     bool reverse) {
     log_entry << fn_name << " transaction:" << transaction << " storage:" << storage <<
         binstring(begin_key) << " begin_kind:" << begin_kind <<
-        binstring(end_key) << " end_kind:" << end_kind;
+        binstring(end_key) << " end_kind:" << end_kind <<
+        " limit:" << limit << " reverse:" << reverse;
     auto rc = impl::content_scan(
         transaction,
         storage,
         begin_key, begin_kind,
         end_key, end_kind,
-        result, reverse);
+        result, limit, reverse);
     log_rc(rc, fn_name);
     log_exit << fn_name << " rc:" << rc << " result:" << *result;
     return rc;

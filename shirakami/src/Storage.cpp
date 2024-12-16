@@ -66,12 +66,13 @@ StatusCode Storage::scan(Transaction* tx,
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind,
         std::unique_ptr<Iterator>& out,
+        std::size_t limit,
         bool reverse
 ) {
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     out = std::make_unique<Iterator>(this, tx,
             begin_key, begin_kind,
-            end_key, end_kind, reverse);
+            end_key, end_kind, limit, reverse);
     return StatusCode::OK;
 }
 
