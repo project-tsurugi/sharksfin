@@ -30,7 +30,7 @@ target_link_libraries(shirakami
         PRIVATE glog::glog
         PRIVATE shirakami-shirakami
         PUBLIC Boost::boost
-        PUBLIC Boost::stacktrace_backtrace
+        PUBLIC Boost::${boost_stacktrace_component}
         PUBLIC ${CMAKE_DL_LIBS}
         )
 
