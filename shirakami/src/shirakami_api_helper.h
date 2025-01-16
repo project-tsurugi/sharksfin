@@ -42,6 +42,7 @@ using scan_endpoint = ::shirakami::scan_endpoint;
 using transaction_options = ::shirakami::transaction_options;
 using storage_option = ::shirakami::storage_option;
 using read_area = ::shirakami::transaction_options::read_area;
+using blob_id_type = ::shirakami::blob_id_type;
 
 class Transaction;
 
@@ -95,11 +96,14 @@ Status storage_get_options(::shirakami::Storage storage, storage_option& options
 
 Status storage_set_options(::shirakami::Storage storage, storage_option const& options);
 
-Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
+Status insert(Transaction &tx, ::shirakami::Storage storage, std::string_view key, std::string_view val,
+              blob_id_type const* blobs_data, std::size_t blobs_size);
 
-Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
+Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val,
+              blob_id_type const* blobs_data, std::size_t blobs_size);
 
-Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val);
+Status update(Transaction &tx, ::shirakami::Storage storage, std::string_view key, std::string_view val,
+              blob_id_type const* blobs_data, std::size_t blobs_size);
 
 Status delete_storage(::shirakami::Storage storage);
 

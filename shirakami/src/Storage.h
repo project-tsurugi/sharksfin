@@ -84,9 +84,13 @@ public:
      * @param key the entry key
      * @param value the entry value
      * @param operation type of the put operation
+     * @param blobs_data the list of blob refs used
+     * @param blobs_size the length of the list
      * @return the operation status
      */
-    StatusCode put(Transaction* tx, Slice key, Slice value, PutOperation operation = PutOperation::CREATE_OR_UPDATE);
+    StatusCode put(Transaction *tx, Slice key, Slice value, PutOperation operation = PutOperation::CREATE_OR_UPDATE,
+                   blob_id_type const *blobs_data = nullptr,
+                   std::size_t blobs_size = 0);
 
     /**
      * @brief removes an entry.

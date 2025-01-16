@@ -352,6 +352,24 @@ StatusCode content_put(
     return rc;
 }
 
+StatusCode content_put_with_blobs(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice key,
+        Slice value,
+        blob_id_type const* blobs_data,
+        std::size_t blobs_size,
+        PutOperation operation) {
+    // currently nothing is implemented to handle blobs
+    (void) blobs_data;
+    (void) blobs_size;
+    log_entry << fn_name << " transaction:" << transaction << " storage:" << storage << binstring(key) << binstring(value) << " operation:" << operation;
+    auto rc = impl::content_put(transaction, storage, key, value, operation);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
+}
+
 StatusCode content_delete(
         TransactionHandle transaction,
         StorageHandle storage,

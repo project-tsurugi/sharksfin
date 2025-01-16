@@ -121,6 +121,12 @@ using commit_callback_type = std::function<void(StatusCode, ErrorCode, durabilit
 using durability_callback_type = std::function<void(durability_marker_type)>;
 
 /**
+ * @brief BLOB reference type.
+ * @details the reference type for BLOB data. This must be same as one defined by datastore.
+ */
+using blob_id_type = std::uint64_t;
+
+/**
  * @brief opens a database and returns its handle.
  * The created handle must be disposed by database_dispose().
  * @param options the target database options
@@ -652,6 +658,35 @@ extern "C" StatusCode content_put(
         StorageHandle storage,
         Slice key,
         Slice value,
+        PutOperation operation = PutOperation::CREATE_OR_UPDATE);
+
+/**
+ * @brief puts a content onto the target key possibly with blob ids that are used in the content
+ * @param transaction the current transaction handle
+ * @param storage the target storage
+ * @param key the content key
+ * @param value the content value
+ * @param blobs_data list of blob reference id that are used by the entry under put operation
+ * @param blobs_size the length of the blob reference id list
+ * @param operation indicates the behavior with the existing/new entry. See PutOperation.
+ * @return StatusCode::OK if the target content was successfully put
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return StatusCode::PREMATURE if the transaction is not ready to accept request
+ * @return StatusCode::CONCURRENT_OPERATION if `operation` is `CREATE` and other concurrent operation is observed.
+ * The transaction is still active (i.e. not aborted). Retrying the request might be successful if the concurrent
+ * operation complete, or doesn't exist any more.
+ * @return StatusCode::ERR_ILLEGAL_OPERATION if the transaction is read-only
+ * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
+ * @return warnings if the operation is not applicable to the entry. See PutOperation.
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode content_put_with_blobs(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice key,
+        Slice value,
+        blob_id_type const* blobs_data,
+        std::size_t blobs_size,
         PutOperation operation = PutOperation::CREATE_OR_UPDATE);
 
 /**

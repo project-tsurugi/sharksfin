@@ -418,6 +418,24 @@ StatusCode content_put(
     return stg->put(tx, key, value, operation);
 }
 
+StatusCode content_put_with_blobs(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice key,
+        Slice value,
+        blob_id_type const* blobs_data,
+        std::size_t blobs_size,
+        PutOperation operation) {
+    auto tx = unwrap(transaction);
+    if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
+    auto stg = unwrap(storage);
+    auto db = tx->owner();
+    if (!db) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    return stg->put(tx, key, value, operation, blobs_data, blobs_size);
+}
+
 StatusCode content_delete(
         TransactionHandle transaction,
         StorageHandle storage,

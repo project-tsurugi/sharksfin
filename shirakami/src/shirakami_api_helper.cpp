@@ -166,7 +166,9 @@ Status storage_set_options(::shirakami::Storage storage, storage_option const& o
     return rc;
 }
 
-Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
+Status insert(Transaction &tx, ::shirakami::Storage storage, std::string_view key, std::string_view val,
+              [[maybe_unused]] blob_id_type const *blobs_data,
+              [[maybe_unused]] std::size_t blobs_size) {
     log_entry <<
         "token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
     auto rc = details::sanitize_rc(::shirakami::insert(tx.native_handle(), storage, key, val));
@@ -187,7 +189,9 @@ Status insert(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     return rc;
 }
 
-Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
+Status update(Transaction &tx, ::shirakami::Storage storage, std::string_view key, std::string_view val,
+              [[maybe_unused]] blob_id_type const *blobs_data,
+              [[maybe_unused]] std::size_t blobs_size) {
     log_entry
         << "token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
     auto rc = details::sanitize_rc(::shirakami::update(tx.native_handle(), storage, key, val));
@@ -208,7 +212,9 @@ Status update(Transaction& tx, ::shirakami::Storage storage, std::string_view ke
     return rc;
 }
 
-Status upsert(Transaction& tx, ::shirakami::Storage storage, std::string_view key, std::string_view val) {
+Status upsert(Transaction &tx, ::shirakami::Storage storage, std::string_view key, std::string_view val,
+              [[maybe_unused]] blob_id_type const *blobs_data,
+              [[maybe_unused]] std::size_t blobs_size) {
     log_entry
         << "token:" << tx.native_handle() << " storage:" << storage << binstring(key) << binstring(val);
     auto rc = details::sanitize_rc(::shirakami::upsert(tx.native_handle(), storage, key, val));

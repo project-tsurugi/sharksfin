@@ -41,13 +41,15 @@ StatusCode Storage::get(Transaction* tx, Slice key, std::string &buffer) {  //NO
     return resolve(res);
 }
 
-StatusCode Storage::put(Transaction* tx, Slice key, Slice value, PutOperation operation) {//NOLINT(readability-make-member-function-const)
+StatusCode Storage::put(Transaction *tx, Slice key, Slice value, PutOperation operation, // NOLINT(readability-make-member-function-const)
+                        blob_id_type const *blobs_data,
+                        std::size_t blobs_size) {
     if(! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     Status res{};
     switch(operation) {
-        case PutOperation::CREATE: res = api::insert(*tx, handle_, key.to_string_view(), value.to_string_view()); break;
-        case PutOperation::UPDATE: res = api::update(*tx, handle_, key.to_string_view(), value.to_string_view()); break;
-        case PutOperation::CREATE_OR_UPDATE: res = api::upsert(*tx, handle_, key.to_string_view(), value.to_string_view()); break;
+        case PutOperation::CREATE: res = api::insert(*tx, handle_, key.to_string_view(), value.to_string_view(), blobs_data, blobs_size); break;
+        case PutOperation::UPDATE: res = api::update(*tx, handle_, key.to_string_view(), value.to_string_view(), blobs_data, blobs_size); break;
+        case PutOperation::CREATE_OR_UPDATE: res = api::upsert(*tx, handle_, key.to_string_view(), value.to_string_view(), blobs_data, blobs_size); break;
     }
     tx->last_call_status(res);
     correct_transaction_state(*tx, res);

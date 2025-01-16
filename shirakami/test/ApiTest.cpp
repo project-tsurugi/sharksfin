@@ -2202,4 +2202,44 @@ TEST_F(ShirakamiApiTest, get_data_store) {
     }
 }
 
+TEST_F(ShirakamiApiTest, put_with_blobs) {
+    // currently test just calling content_put_with_blobs
+    DatabaseOptions options;
+    options.attribute(KEY_LOCATION, path());
+
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation f1(TransactionHandle tx, void* args) {
+            std::vector<blob_id_type> blobs{1, 2, 3, 4};
+            auto st = extract<S>(args);
+            if (content_put_with_blobs(tx, st, "a", "A", blobs.data(), blobs.size()) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation f2(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            Slice s;
+            if (content_get(tx, st, "a", &s) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (s != "A") {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::f1, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::f2, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin
