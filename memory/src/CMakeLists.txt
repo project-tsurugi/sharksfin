@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Project Tsurugi.
+# Copyright 2018-2025 Project Tsurugi.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ add_library(memory
 
 set_target_properties(memory
     PROPERTIES
-        INSTALL_RPATH "\$ORIGIN/../lib"
+        INSTALL_RPATH "\$ORIGIN"
         LIBRARY_OUTPUT_NAME "sharksfin-memory"
 )
 

@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Project Tsurugi.
+# Copyright 2018-2025 Project Tsurugi.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ add_executable(cli
 
 set_target_properties(cli
     PROPERTIES
-        INSTALL_RPATH "\$ORIGIN/../lib"
+        INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"
         RUNTIME_OUTPUT_NAME "sharksfin-cli"
 )
 
