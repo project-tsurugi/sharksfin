@@ -50,7 +50,7 @@ Iterator::Iterator(
 
 Iterator::~Iterator() {
     if(need_scan_close_) {
-        auto rc = api::close_scan(tx_->native_handle(), handle_);
+        auto rc = api::close_scan(cloned_session_ ?: tx_->native_handle(), handle_);
         tx_->last_call_status(rc);
         if(rc == Status::WARN_INVALID_HANDLE || rc == Status::WARN_NOT_BEGIN) {
             // the handle was already invalidated due to some error (e.g. ERR_ILLEGAL_STATE) and tx aborted on shirakami
@@ -58,6 +58,15 @@ Iterator::~Iterator() {
         } else if (rc != Status::OK) {
             // internal error, fix if this actually happens
             LOG_LP(ERROR) << "closing scan failed:" << rc;
+        }
+        if (cloned_session_) {
+            if (auto rc = ::shirakami::commit(cloned_session_); rc != ::shirakami::Status::OK) {
+                LOG_LP(ERROR) << "commit cloned session failed:" << rc;
+            }
+            if (auto rc = ::shirakami::leave(cloned_session_); rc != ::shirakami::Status::OK) {
+                LOG_LP(ERROR) << "leave for clone failed:" << rc;
+            }
+            cloned_session_ = ::shirakami::Token{};
         }
     }
 }
@@ -203,7 +212,17 @@ StatusCode Iterator::open_cursor() {
             break;
     }
 
-    auto res = api::open_scan(tx_->native_handle(),
+    auto shirakami_token = tx_->native_handle();
+    if (tx_->readonly()) {
+        if (auto rc = ::shirakami::enter(cloned_session_); rc != ::shirakami::Status::OK) {
+            LOG_LP(ERROR) << "enter for clone failed:" << rc;
+        }
+        if (auto rc = ::shirakami::tx_clone(cloned_session_, tx_->native_handle()); rc != ::shirakami::Status::OK) {
+            LOG_LP(ERROR) << "clone failed:" << rc;
+        }
+        shirakami_token = cloned_session_;
+    }
+    auto res = api::open_scan(shirakami_token,
         owner_->handle(),
         begin_key_, begin_endpoint,
         end_key_, end_endpoint, handle_, limit_, reverse_);

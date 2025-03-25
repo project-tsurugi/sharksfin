@@ -34,7 +34,7 @@ runs:
       with:
         repository: project-tsurugi/shirakami
         path: ${{ inputs.path }}/shirakami
-        ref: master
+        ref: rtx-clone
 
     - name: Install_Limestone
       run: |

@@ -97,6 +97,7 @@ private:
     std::string buffer_key_{};
     std::string buffer_value_{};
     Transaction* tx_{};
+    ::shirakami::Token cloned_session_{};
     std::string begin_key_{};
     EndPointKind begin_kind_{};
     std::string end_key_{};
