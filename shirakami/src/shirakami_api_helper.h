@@ -82,6 +82,16 @@ Status read_value_from_scan(
     ScanHandle handle,
     std::string& value);
 
+Status read_key_from_scan(
+    Token token,
+    ScanHandle handle,
+    std::string& key);
+
+Status read_value_from_scan(
+    Token token,
+    ScanHandle handle,
+    std::string& value);
+
 Status next(Token token, ScanHandle handle);
 
 void fin(bool force_shut_down_cpr = true);

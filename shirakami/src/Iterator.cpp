@@ -104,7 +104,7 @@ StatusCode Iterator::key(Slice& s) {
     if (! key_value_readable_) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto res = api::read_key_from_scan(*tx_, handle_, buffer_key_);
+    auto res = api::read_key_from_scan(cloned_session_ ?: tx_->native_handle(), handle_, buffer_key_);
     tx_->last_call_status(res);
     s = buffer_key_;
     correct_transaction_state(*tx_, res);
@@ -115,7 +115,7 @@ StatusCode Iterator::value(Slice& s) {
     if (! key_value_readable_) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto res = api::read_value_from_scan(*tx_, handle_, buffer_value_);
+    auto res = api::read_value_from_scan(cloned_session_ ?: tx_->native_handle(), handle_, buffer_value_);
     tx_->last_call_status(res);
     s = buffer_value_;
     correct_transaction_state(*tx_, res);
@@ -123,7 +123,7 @@ StatusCode Iterator::value(Slice& s) {
 }
 
 StatusCode Iterator::next_cursor() {
-    auto res = api::next(tx_->native_handle(), handle_);
+    auto res = api::next(cloned_session_ ?: tx_->native_handle(), handle_);
     tx_->last_call_status(res);
     correct_transaction_state(*tx_, res);
     return resolve_scan_errors(res);

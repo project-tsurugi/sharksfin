@@ -112,6 +112,21 @@ Status read_value_from_scan(Transaction& tx, ScanHandle handle, std::string& val
     return rc;
 }
 
+Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
+    log_entry << "token:" << token << " handle:" << handle;
+    auto rc = details::sanitize_rc(::shirakami::read_key_from_scan(token, handle, key));
+    log_exit << "rc:" << rc << " token:" << token << binstring(key);
+    return rc;
+}
+
+Status read_value_from_scan(Token token, ScanHandle handle, std::string& value) {
+    log_entry << "token:" << token << " handle:" << handle;
+    auto rc = details::sanitize_rc(::shirakami::read_value_from_scan(token, handle, value));
+    log_rc(rc);
+    log_exit << "rc:" << rc << " token:" << token << binstring(value);
+    return rc;
+}
+
 Status next(Token token, ScanHandle handle) {
     log_entry << "token:" << token << " handle:" << handle;
     auto rc = details::sanitize_rc(::shirakami::next(token, handle));
