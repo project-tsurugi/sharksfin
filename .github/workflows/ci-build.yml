@@ -48,7 +48,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          ctest --verbose --timeout 100 -j 4 --test-load 16
+          ctest --verbose --timeout 100 -j 16
 
       - name: Verify
         uses: project-tsurugi/tsurugi-annotations-action@v1
@@ -88,7 +88,7 @@ jobs:
 
       - name: Clang-Tidy
         run: |
-          python tools/bin/run-clang-tidy.py -j 48 -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -header-filter=$(pwd)'/(include|memory|shirakami|examples)/.*\\.h$' $(pwd)'/(memory/src|shirakami/src|examples)/.*' 2>&1 | awk '!a[$0]++{print > "build/clang-tidy.log"}'
+          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -header-filter=$(pwd)'/(include|memory|shirakami|examples)/.*\\.h$' $(pwd)'/(memory/src|shirakami/src|examples)/.*' 2>&1 | awk '!a[$0]++{print > "build/clang-tidy.log"}'
 
       - name: Doxygen
         run: |
