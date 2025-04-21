@@ -38,15 +38,15 @@ cmake --build .
 ```
 
 available options:
-* `-DBUILD_TESTS=OFF` - never build test programs
-* `-DBUILD_MEMORY=OFF` - never build API in-memory implementation
+* `-DBUILD_TESTS=ON` - build test programs
+* `-DBUILD_MEMORY=ON` - build API in-memory implementation
 * `-DBUILD_SHIRAKAMI=OFF` - never build shirakami bridge
-* `-DBUILD_EXAMPLES=OFF` - never build example programs
-* `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
+* `-DBUILD_EXAMPLES=ON` - build example programs
+* `-DBUILD_DOCUMENTS=ON` - build documents by doxygen
 * `-DINSTALL_EXAMPLES=ON` - also install example programs (requires `BUILD_EXAMPLES` is enables)
 * `-DEXAMPLE_IMPLEMENTATION=...` - link the specified target-name implementation to example programs
-  * `memory` - link to in-memory implementation (default)
-  * `shirakami` - link to shirakami implementation
+  * `memory` - link to in-memory implementation
+  * `shirakami` - link to shirakami implementation (default)
 * `-DCMAKE_PREFIX_PATH=<installation directory>` - indicate dependant installation directory
 * for debugging only
   * `-DENABLE_SANITIZER=OFF` - disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug`)

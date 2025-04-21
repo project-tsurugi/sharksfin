@@ -21,18 +21,12 @@ project(sharksfin
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-option(BUILD_TESTS "Build test programs" ON)
-option(BUILD_MEMORY "Build in-memory implementation" ON)
+option(BUILD_TESTS "Build test programs" OFF)
+option(BUILD_MEMORY "Build in-memory implementation" OFF)
 option(BUILD_SHIRAKAMI "Build transaction engine with shirakami" ON)
-option(BUILD_SHIRAKAMI_WP "Build transaction engine with shirakami enabling write preserve" ON)
-option(BUILD_EXAMPLES "Build and test example programs" ON)
-option(BUILD_DOCUMENTS "Build documents" ON)
+option(BUILD_EXAMPLES "Build and test example programs" OFF)
+option(BUILD_DOCUMENTS "Build documents" OFF)
 option(INSTALL_EXAMPLES "Install example programs" OFF)
-option(FORCE_INSTALL_RPATH "Force add lib dir of custom prefixes to INSTALL_RPATH" OFF)
-
-if (FORCE_INSTALL_RPATH)
-    message(DEPRECATION "FORCE_INSTALL_RPATH is obsoleted")
-endif (FORCE_INSTALL_RPATH)
 
 option(ENABLE_SANITIZER "enable sanitizer on debug build" ON)
 option(ENABLE_UB_SANITIZER "enable undefined behavior sanitizer on debug build" OFF)
@@ -41,7 +35,7 @@ option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 
 if(NOT EXAMPLE_IMPLEMENTATION)
     set(
-        EXAMPLE_IMPLEMENTATION "memory"
+        EXAMPLE_IMPLEMENTATION "shirakami"
         CACHE STRING
         "Target name to link implementation with example programs"
     )
