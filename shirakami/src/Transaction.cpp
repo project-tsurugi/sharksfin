@@ -163,7 +163,7 @@ bool Transaction::commit(commit_callback_type callback) {
             } else {
                 // TODO handle pre-condition failure
             }
-            last_call_status_ = st;
+            last_call_status(st);
             cb(res, error, static_cast<durability_marker_type>(marker));
         }
     );
@@ -182,7 +182,7 @@ StatusCode Transaction::abort() {
         return StatusCode::ERR_UNKNOWN;
     }
     is_active_ = false;
-    last_call_status_ = res;
+    last_call_status(res);
     return rc;
 }
 
@@ -337,8 +337,8 @@ std::shared_ptr<TransactionInfo> Transaction::info() {
     return info_;
 }
 
-void Transaction::last_call_status(::shirakami::Status st) {
-    last_call_status_ = st;
+void Transaction::last_call_status(::shirakami::Status st) {  // NOLINT
+    (void) st;
 }
 
 }  // namespace sharksfin::shirakami
