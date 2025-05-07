@@ -17,7 +17,6 @@
 #define SHARKSFIN_SHIRAKAMI_TRANSACTION_H_
 
 #include <thread>
-#include <chrono>
 #include "glog/logging.h"
 #include "shirakami/interface.h"
 #include "shirakami/scheme.h"
@@ -28,7 +27,6 @@
 #include "sharksfin/StatusCode.h"
 #include "Database.h"
 #include "Session.h"
-#include "Error.h"
 #include "handle_utils.h"
 
 namespace sharksfin::shirakami {
@@ -47,8 +45,8 @@ public:
 
     Transaction(Transaction const& other) = delete;
     Transaction& operator=(Transaction const& other) = delete;
-    Transaction(Transaction&& other) noexcept = default;
-    Transaction& operator=(Transaction&& other) noexcept = default;
+    Transaction(Transaction&& other) noexcept = delete;
+    Transaction& operator=(Transaction&& other) noexcept = delete;
 
     /**
      * @brief destructor - abort active transaction in case
@@ -181,7 +179,7 @@ private:
     std::vector<Storage*> read_areas_exclusive_{};
     ::shirakami::TxStateHandle state_handle_{::shirakami::undefined_handle};
     std::shared_ptr<CallResult> result_info_{};
-    ::shirakami::Status last_call_status_{};
+    std::atomic<::shirakami::Status> last_call_status_{};
     std::shared_ptr<TransactionInfo> info_{};
 
     Transaction(

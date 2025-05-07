@@ -16,7 +16,6 @@
 #include "Transaction.h"
 
 #include <thread>
-#include <chrono>
 #include "glog/logging.h"
 #include <xmmintrin.h>
 
@@ -163,7 +162,7 @@ bool Transaction::commit(commit_callback_type callback) {
             } else {
                 // TODO handle pre-condition failure
             }
-            last_call_status_ = st;
+            last_call_status(st);
             cb(res, error, static_cast<durability_marker_type>(marker));
         }
     );
@@ -182,7 +181,7 @@ StatusCode Transaction::abort() {
         return StatusCode::ERR_UNKNOWN;
     }
     is_active_ = false;
-    last_call_status_ = res;
+    last_call_status(res);
     return rc;
 }
 
@@ -338,7 +337,12 @@ std::shared_ptr<TransactionInfo> Transaction::info() {
 }
 
 void Transaction::last_call_status(::shirakami::Status st) {
-    last_call_status_ = st;
+    if (::shirakami::Status::OK < st) {
+        // last_call_status_ is used to describe abort details.
+        // Remember only shirakami status codes that imply tx abort.
+        // Avoid updating last_call_status_ too frequently since it affect strand performance.
+        last_call_status_ = st;
+    }
 }
 
 }  // namespace sharksfin::shirakami
