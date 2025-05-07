@@ -337,8 +337,11 @@ std::shared_ptr<TransactionInfo> Transaction::info() {
     return info_;
 }
 
-void Transaction::last_call_status(::shirakami::Status st) {  // NOLINT
-    (void) st;
+void Transaction::last_call_status(::shirakami::Status st) {
+    if (st <= ::shirakami::Status::OK) {
+        return;  // skip update last_call_status
+    }
+    last_call_status_ = st;
 }
 
 }  // namespace sharksfin::shirakami

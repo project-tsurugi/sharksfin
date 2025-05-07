@@ -181,7 +181,7 @@ private:
     std::vector<Storage*> read_areas_exclusive_{};
     ::shirakami::TxStateHandle state_handle_{::shirakami::undefined_handle};
     std::shared_ptr<CallResult> result_info_{};
-    ::shirakami::Status last_call_status_{};
+    std::atomic<::shirakami::Status> last_call_status_{};
     std::shared_ptr<TransactionInfo> info_{};
 
     Transaction(
