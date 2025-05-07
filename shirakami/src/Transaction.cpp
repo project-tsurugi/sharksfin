@@ -316,24 +316,19 @@ std::shared_ptr<CallResult> Transaction::recent_call_result() {
         ss << " {" << *ri << "}";
     }
     auto [locator, ec] = create_locator(ri);
-    result_info_ = std::make_shared<CallResult>(
+    return std::make_shared<CallResult>(
         ec,
         std::move(locator),
         ss.str());
-    return result_info_;
 }
 
 std::shared_ptr<TransactionInfo> Transaction::info() {
-    if (info_) {
-        return info_;
-    }
     std::string tx_id{};
     if(auto res = api::get_tx_id(session_->id(), tx_id); res != ::shirakami::Status::OK) {
         VLOG(log_error) << "Failed to retrieve shirakami transaction id.";
         return {};
     }
-    info_ = std::make_shared<TransactionInfo>(tx_id);
-    return info_;
+    return std::make_shared<TransactionInfo>(tx_id);
 }
 
 void Transaction::last_call_status(::shirakami::Status st) {
