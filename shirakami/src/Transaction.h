@@ -172,13 +172,13 @@ private:
     Database* owner_{};
     std::unique_ptr<Session> session_{};
     std::string buffer_{};
-    bool is_active_{true};
     TransactionOptions::TransactionType type_{};
     std::vector<Storage*> write_preserves_{};
     std::vector<Storage*> read_areas_inclusive_{};
     std::vector<Storage*> read_areas_exclusive_{};
     ::shirakami::TxStateHandle state_handle_{::shirakami::undefined_handle};
     std::atomic<::shirakami::Status> last_call_status_{};
+    std::atomic_bool is_active_{true};
 
     Transaction(
         Database* owner,
