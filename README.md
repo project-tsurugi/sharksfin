@@ -43,6 +43,7 @@ available options:
 * `-DBUILD_SHIRAKAMI=OFF` - never build shirakami bridge
 * `-DBUILD_EXAMPLES=ON` - build example programs
 * `-DBUILD_DOCUMENTS=ON` - build documents by doxygen
+* `-DBUILD_STRICT=OFF` - don't treat compile warnings as build errors
 * `-DINSTALL_EXAMPLES=ON` - also install example programs (requires `BUILD_EXAMPLES` is enables)
 * `-DEXAMPLE_IMPLEMENTATION=...` - link the specified target-name implementation to example programs
   * `memory` - link to in-memory implementation
