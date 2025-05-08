@@ -26,6 +26,7 @@ option(BUILD_MEMORY "Build in-memory implementation" OFF)
 option(BUILD_SHIRAKAMI "Build transaction engine with shirakami" ON)
 option(BUILD_EXAMPLES "Build and test example programs" OFF)
 option(BUILD_DOCUMENTS "Build documents" OFF)
+option(BUILD_STRICT "build with option strictly determine of success" ON)
 option(INSTALL_EXAMPLES "Install example programs" OFF)
 
 option(ENABLE_SANITIZER "enable sanitizer on debug build" ON)
