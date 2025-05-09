@@ -432,7 +432,7 @@ StatusCode transaction_begin(
 StatusCode transaction_get_info(TransactionControlHandle handle, std::shared_ptr<TransactionInfo>& result);
 
 /**
- * @brief borrows the transaction handle associated with the control handle
+ * @brief borrows the (non-stranded) transaction handle associated with the control handle
  * Transaction handles are to manipulate data through content APIs, while transaction control handles are to
  * control transactions' lifetime such as beginning and ending.
  * The returned transaction handle must not be disposed. It will be invalidated and cannot be used after
@@ -451,6 +451,39 @@ StatusCode transaction_get_info(TransactionControlHandle handle, std::shared_ptr
 StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result);
+
+/**
+ * @brief acquire the transaction handle (aka strand handle) associated with the control handle
+ * Transaction handles are to manipulate data through content APIs, while transaction control handles are to
+ * control transactions' lifetime such as beginning and ending.
+ * The returned transaction handle is valid within the life-time of parent control handle and it must be released
+ * by transaction_release_handle() before the termination of control handle.
+ * It will be invalidated and cannot be used after transaction_commit() or transaction_abort() is requested for the associated control handle
+ * or the associated transaction was finished for other reasons (e.g. transaction engine possibly detects abort condition with
+ * content APIs, returns some error and then the transaction moves to finished state.)
+ * Contrary to transaction_borrow_handle(), this function can be used to acquire multiple handles for the same control handle.
+ * Use this function to run strands under the same transaction. Both strand handles acquired by this function and non-stranded
+ * transaction handle borrowed by transaction_borrow_handle() can be used to call content APIs as long as only one thread uses
+ * the same handle at a time.
+ * @param handle the transaction control handle to acquire the transaction handle
+ * @param result [OUT] the output target of transaction handle
+ * Any thread is allowed to pass the returned handle to call sharksfin APIs, but at most one call per transaction handle
+ * should be made at a time. API calls with same handle should not be made simultaneously from different threads.
+ * @return StatusCode::OK if the transaction handle was successfully borrowed
+ * @return otherwise if error was occurred
+ */
+StatusCode transaction_acquire_handle(
+        TransactionControlHandle handle,
+        TransactionHandle* result);
+
+/**
+ * @brief release the strand handle
+ * @param handle the target transaction handle retrieved with transaction_acquire_handle().
+ * @note this function is no-op if the transaction handle is borrowed by transaction_borrow_handle().
+ * @return StatusCode::OK if the handle is successfully released
+ * @return otherwise if error occurred
+ */
+StatusCode transaction_release_handle(TransactionHandle handle);
 
 /**
  * @brief commit transaction
