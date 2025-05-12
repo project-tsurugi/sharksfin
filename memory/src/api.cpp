@@ -259,6 +259,24 @@ StatusCode transaction_borrow_handle(
     return rc;
 }
 
+StatusCode transaction_acquire_handle(
+        TransactionControlHandle handle,
+        TransactionHandle* result) {
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_acquire_handle(handle, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
+}
+
+StatusCode transaction_release_handle(TransactionHandle handle) {
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::transaction_release_handle(handle);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
+}
+
 StatusCode transaction_commit(
         TransactionControlHandle handle,
         bool async) {

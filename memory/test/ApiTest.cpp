@@ -1592,4 +1592,81 @@ TEST_F(ApiTest, put_with_blobs) {
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 
+TEST_F(ApiTest, rtx_strand) {
+    // verify strand handles works
+    // currently only RTX can run multiple strands
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static bool prepare(DatabaseHandle db, S& s) {
+            HandleHolder<TransactionControlHandle> tch{};
+            TransactionOptions options{};
+            if (auto c = transaction_begin(db, options, &tch.get()); c != StatusCode::OK) {
+                return false;
+            }
+            TransactionHandle tx{};
+            if (auto c = transaction_borrow_handle(tch.get(), &tx); c != StatusCode::OK) {
+                return false;
+            }
+            if (content_put(tx, s.st, "a", "A") != StatusCode::OK) {
+                return false;
+            }
+            if (content_put(tx, s.st, "b", "B") != StatusCode::OK) {
+                return false;
+            }
+            return transaction_commit(tch.get(), true) == StatusCode::OK;
+        }
+        static bool run(DatabaseHandle db, S& s) {
+            HandleHolder<TransactionControlHandle> tch{};
+            TransactionOptions options{};
+            options.transaction_type(TransactionOptions::TransactionType::READ_ONLY);
+            if (auto c = transaction_begin(db, options, &tch.get()); c != StatusCode::OK) {
+                return false;
+            }
+            {
+                HandleHolder<TransactionHandle> s0{};
+                if (auto c = transaction_acquire_handle(tch.get(), &s0.get()); c != StatusCode::OK) {
+                    return false;
+                }
+                HandleHolder<TransactionHandle> s1{};
+                if (auto c = transaction_acquire_handle(tch.get(), &s1.get()); c != StatusCode::OK) {
+                    return false;
+                }
+
+                Slice v0;
+                if (content_get(s0.get(), s.st, "a", &v0) != StatusCode::OK) {
+                    return false;
+                }
+                if (v0 != "A") {
+                    return false;
+                }
+                Slice v1;
+                if (content_get(s1.get(), s.st, "b", &v1) != StatusCode::OK) {
+                    return false;
+                }
+                if (v1 != "B") {
+                    return false;
+                }
+                // verify slice for previous strand operation is not broken
+                if (v0 != "A") {
+                    return false;
+                }
+            }
+
+            return transaction_commit(tch.get(), true) == StatusCode::OK;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+    EXPECT_EQ(S::prepare(db, s), true);
+    // wait_epochs(10);
+    EXPECT_EQ(S::run(db, s), true);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
 }  // namespace sharksfin

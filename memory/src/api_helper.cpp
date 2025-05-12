@@ -310,6 +310,17 @@ StatusCode transaction_borrow_handle(
     return StatusCode::OK;
 }
 
+StatusCode transaction_acquire_handle(
+        TransactionControlHandle handle,
+        TransactionHandle* result) {
+    return impl::transaction_borrow_handle(handle, result);
+}
+
+StatusCode transaction_release_handle(TransactionHandle) {
+    // no-op
+    return StatusCode::OK;
+}
+
 StatusCode transaction_commit(
         TransactionControlHandle handle,
         [[maybe_unused]] bool async) { // async not supported

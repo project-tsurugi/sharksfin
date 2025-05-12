@@ -22,6 +22,7 @@
 #include "Transaction.h"
 #include "Iterator.h"
 #include "Storage.h"
+#include "Strand.h"
 #include "Error.h"
 
 namespace sharksfin {
@@ -38,7 +39,13 @@ static inline DatabaseHandle wrap(shirakami::Database* object) {
     return reinterpret_cast<TransactionHandle>(object);  // NOLINT
 }
 
-// TransactionContext* can be interpreted as TransactionControlHandle and TransactionHandle
+static constexpr std::uint64_t STRAND_BIT = 1UL;
+
+[[maybe_unused]] static inline TransactionHandle wrap(shirakami::Strand* object) {
+    return reinterpret_cast<TransactionHandle>(reinterpret_cast<std::uint64_t>(object) | STRAND_BIT);  // NOLINT
+}
+
+// Transaction* can be interpreted as TransactionControlHandle and TransactionHandle
 static inline TransactionControlHandle wrap_as_control_handle(shirakami::Transaction* object) {
     return reinterpret_cast<TransactionControlHandle>(object);  // NOLINT
 }
@@ -57,6 +64,14 @@ static inline shirakami::Storage* unwrap(StorageHandle handle) {
 
 static inline shirakami::Transaction* unwrap(TransactionHandle handle) {
     return reinterpret_cast<shirakami::Transaction*>(handle);  // NOLINT
+}
+
+static inline bool is_strand(TransactionHandle handle) {
+    return (reinterpret_cast<std::uint64_t>(handle) & STRAND_BIT) != 0;
+}
+
+static inline shirakami::Strand* unwrap_as_strand(TransactionHandle handle) {
+    return reinterpret_cast<shirakami::Strand*>(reinterpret_cast<std::uint64_t>(handle) & ~STRAND_BIT);  // NOLINT
 }
 
 static inline shirakami::Transaction* unwrap(TransactionControlHandle handle) {

@@ -21,6 +21,7 @@
 #include "Transaction.h"
 #include "Iterator.h"
 #include "Storage.h"
+#include "Strand.h"
 #include "Error.h"
 #include "handle_utils.h"
 #include "logging.h"
@@ -102,6 +103,7 @@ StatusCode storage_create(
     Slice key,
     StorageOptions const& options,
     StorageHandle *result) {
+    if (is_strand(handle)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto tx = unwrap(handle);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     (void) handle;
@@ -129,6 +131,7 @@ StatusCode storage_get(
     TransactionHandle handle,
     Slice key,
     StorageHandle *result) {
+    if (is_strand(handle)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto tx = unwrap(handle);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     (void) key;
@@ -145,6 +148,7 @@ StatusCode storage_delete(StorageHandle handle) {
 StatusCode storage_delete(
     TransactionHandle tx,
     StorageHandle handle) {
+    if (is_strand(tx)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto t = unwrap(tx);
     if (! t->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     (void) handle;
@@ -186,6 +190,7 @@ StatusCode storage_get_options(
     StorageHandle handle,
     StorageOptions& out
 ) {
+    if (is_strand(tx)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto t = unwrap(tx);
     if (! t->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto st = unwrap(handle);
@@ -205,6 +210,7 @@ StatusCode storage_set_options(
     StorageHandle handle,
     StorageOptions const& options
 ) {
+    if (is_strand(tx)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto t = unwrap(tx);
     if (! t->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto st = unwrap(handle);
@@ -279,6 +285,7 @@ StatusCode transaction_exec(
 StatusCode transaction_borrow_owner(
         TransactionHandle handle,
         DatabaseHandle* result) {
+    if (is_strand(handle)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto transaction = unwrap(handle);
     if (auto db = transaction->owner()) {
         *result = wrap(db);
@@ -317,6 +324,21 @@ StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result) {
     *result = wrap(unwrap(handle));
+    return StatusCode::OK;
+}
+
+StatusCode transaction_acquire_handle(
+        TransactionControlHandle handle,
+        TransactionHandle* result) {
+    auto* tx = unwrap(handle);
+    *result = wrap(new shirakami::Strand(tx));  //NOLINT(cppcoreguidelines-owning-memory)
+    return StatusCode::OK;
+}
+
+StatusCode transaction_release_handle(TransactionHandle handle) {
+    if (is_strand(handle)) {
+        delete unwrap_as_strand(handle);  //NOLINT(cppcoreguidelines-owning-memory)
+    }
     return StatusCode::OK;
 }
 
@@ -372,7 +394,13 @@ StatusCode content_check_exist(
     TransactionHandle transaction,
     StorageHandle storage,
     Slice key) {
-    auto tx = unwrap(transaction);
+    shirakami::Transaction* tx = nullptr;
+    if (is_strand(transaction)) {
+        auto* strand = unwrap_as_strand(transaction);
+        tx = strand->parent();
+    } else {
+        tx = unwrap(transaction);
+    }
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto stg = unwrap(storage);
     auto db = tx->owner();
@@ -387,14 +415,21 @@ StatusCode content_get(
         StorageHandle storage,
         Slice key,
         Slice* result) {
-    auto tx = unwrap(transaction);
+    shirakami::Transaction* tx = nullptr;
+    shirakami::Strand* strand = nullptr;
+    if (is_strand(transaction)) {
+        strand = unwrap_as_strand(transaction);
+        tx = strand->parent();
+    } else {
+        tx = unwrap(transaction);
+    }
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto stg = unwrap(storage);
     auto db = tx->owner();
     if (!db) {
         return StatusCode::ERR_INVALID_STATE;
     }
-    auto& buffer = tx->buffer();
+    auto& buffer = strand != nullptr ? strand->buffer() : tx->buffer();
     auto rc = stg->get(tx, key, buffer);
     if (rc == StatusCode::OK) {
         *result = buffer;
@@ -408,6 +443,7 @@ StatusCode content_put(
         Slice key,
         Slice value,
         PutOperation operation) {
+    if (is_strand(transaction)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto stg = unwrap(storage);
@@ -426,6 +462,7 @@ StatusCode content_put_with_blobs(
         blob_id_type const* blobs_data,
         std::size_t blobs_size,
         PutOperation operation) {
+    if (is_strand(transaction)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto stg = unwrap(storage);
@@ -440,6 +477,7 @@ StatusCode content_delete(
         TransactionHandle transaction,
         StorageHandle storage,
         Slice key) {
+    if (is_strand(transaction)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto stg = unwrap(storage);
@@ -485,7 +523,14 @@ StatusCode content_scan(
         IteratorHandle* result,
         std::size_t limit,
         bool reverse) {
-    auto tx = unwrap(transaction);
+    shirakami::Transaction* tx = nullptr;
+    if (is_strand(transaction)) {
+        // Strand object is not needed for scan because we have Iterators
+        auto* strand = unwrap_as_strand(transaction);
+        tx = strand->parent();
+    } else {
+        tx = unwrap(transaction);
+    }
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto stg = unwrap(storage);
     auto db = tx->owner();
@@ -540,6 +585,7 @@ extern "C" StatusCode sequence_put(
     SequenceId id,
     SequenceVersion version,
     SequenceValue value) {
+    if (is_strand(transaction)) return StatusCode::ERR_INVALID_ARGUMENT;
     auto tx = unwrap(transaction);
     if (! tx->active()) return StatusCode::ERR_INACTIVE_TRANSACTION;
     auto res = shirakami::api::update_sequence(tx->native_handle(), id, version, value);

@@ -109,6 +109,9 @@ private:
     static void dispose(TransactionControlHandle handle) {
         transaction_dispose(handle);
     }
+    static void dispose(TransactionHandle handle) {
+        transaction_release_handle(handle);
+    }
     static void dispose(IteratorHandle handle) {
         iterator_dispose(handle);
     }

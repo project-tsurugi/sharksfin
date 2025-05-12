@@ -83,7 +83,7 @@ using DatabaseHandle = std::add_pointer_t<DatabaseStub>;
 using StorageHandle = std::add_pointer_t<StorageStub>;
 
 /**
- * @brief a transaction handle type.
+ * @brief a transaction (or strand) handle type.
  */
 using TransactionHandle = std::add_pointer_t<TransactionStub>;
 
@@ -224,6 +224,7 @@ StatusCode storage_create(
  * @return StatusCode::OK if the target storage was successfully created
  * @return StatusCode::ALREADY_EXISTS if the target storage already exists on the target database
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle
  * @return otherwise if error was occurred
  * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
  */
@@ -260,6 +261,7 @@ StatusCode storage_get(
  * @return StatusCode::OK if the target storage space was successfully obtained
  * @return StatusCode::NOT_FOUND if the storage space does not exist
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle
  * @return otherwise if error was occurred
  * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
  */
@@ -286,6 +288,7 @@ StatusCode storage_delete(
  * @param handle the target of storage handle to delete
  * @return StatusCode::OK if the target storage space was successfully deleted
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle
  * @return otherwise if error was occurred
  * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
  */
@@ -345,6 +348,7 @@ StatusCode storage_get_options(
  * @param handle the target storage handle to get the options
  * @param out [OUT] the output parameter to store storage options
  * @return operation status
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle
  * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
  */
 StatusCode storage_get_options(
@@ -372,6 +376,7 @@ StatusCode storage_set_options(
  * @param handle the target storage handle to set the options
  * @param options the storage options to be set for the storage
  * @return operation status
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle
  * @warning transactional storage handling is under development. Not all processing are fully transactional yet.
  */
 StatusCode storage_set_options(
@@ -401,6 +406,7 @@ StatusCode transaction_exec(
  * @param handle the current transaction handle
  * @param result [OUT] the output target of database handle
  * @return StatusCode::OK if the database handle was successfully borrowed
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle
  * @return otherwise if error was occurred
  */
 StatusCode transaction_borrow_owner(
@@ -432,7 +438,7 @@ StatusCode transaction_begin(
 StatusCode transaction_get_info(TransactionControlHandle handle, std::shared_ptr<TransactionInfo>& result);
 
 /**
- * @brief borrows the transaction handle associated with the control handle
+ * @brief borrows the (non-stranded) transaction handle associated with the control handle
  * Transaction handles are to manipulate data through content APIs, while transaction control handles are to
  * control transactions' lifetime such as beginning and ending.
  * The returned transaction handle must not be disposed. It will be invalidated and cannot be used after
@@ -451,6 +457,39 @@ StatusCode transaction_get_info(TransactionControlHandle handle, std::shared_ptr
 StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result);
+
+/**
+ * @brief acquire the transaction handle (aka strand handle) associated with the control handle
+ * Transaction handles are to manipulate data through content APIs, while transaction control handles are to
+ * control transactions' lifetime such as beginning and ending.
+ * The returned transaction handle is valid within the life-time of parent control handle and it must be released
+ * by transaction_release_handle() before the termination of control handle.
+ * It will be invalidated and cannot be used after transaction_commit() or transaction_abort() is requested for the associated control handle
+ * or the associated transaction was finished for other reasons (e.g. transaction engine possibly detects abort condition with
+ * content APIs, returns some error and then the transaction moves to finished state.)
+ * Contrary to transaction_borrow_handle(), this function can be used to acquire multiple handles for the same control handle.
+ * Use this function to run strands under the same transaction. Both strand handles acquired by this function and non-stranded
+ * transaction handle borrowed by transaction_borrow_handle() can be used to call content APIs as long as only one thread uses
+ * the same handle at a time.
+ * @param handle the transaction control handle to acquire the transaction handle
+ * @param result [OUT] the output target of transaction handle
+ * Any thread is allowed to pass the returned handle to call sharksfin APIs, but at most one call per transaction handle
+ * should be made at a time. API calls with same handle should not be made simultaneously from different threads.
+ * @return StatusCode::OK if the transaction handle was successfully borrowed
+ * @return otherwise if error was occurred
+ */
+StatusCode transaction_acquire_handle(
+        TransactionControlHandle handle,
+        TransactionHandle* result);
+
+/**
+ * @brief release the strand handle
+ * @param handle the target transaction handle retrieved with transaction_acquire_handle().
+ * @note this function is no-op if the transaction handle is borrowed by transaction_borrow_handle().
+ * @return StatusCode::OK if the handle is successfully released
+ * @return otherwise if error occurred
+ */
+StatusCode transaction_release_handle(TransactionHandle handle);
 
 /**
  * @brief commit transaction
@@ -549,7 +588,7 @@ std::shared_ptr<CallResult> transaction_inspect_recent_call(
 
 /**
  * @brief query if a content on the target key exists.
- * @param transaction the current transaction handle
+ * @param transaction the current transaction (or strand) handle
  * @param storage the target storage
  * @param key the content key
  * @return StatusCode::OK if the target content exists
@@ -571,7 +610,7 @@ extern "C" StatusCode content_check_exist(
  * @brief obtains a content on the target key.
  * The result is available only if the returned status was StatusCode::OK.
  * The returned slice will be disposed after calling other API functions.
- * @param transaction the current transaction handle
+ * @param transaction the current transaction (or strand) handle
  * @param storage the target storage
  * @param key the content key
  * @param result [OUT] the slice of obtained content
@@ -650,6 +689,7 @@ inline std::ostream& operator<<(std::ostream& out, PutOperation value) {
  * operation complete, or doesn't exist any more.
  * @return StatusCode::ERR_ILLEGAL_OPERATION if the transaction is read-only
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle (strand is not supported for write)
  * @return warnings if the operation is not applicable to the entry. See PutOperation.
  * @return otherwise if error was occurred
  */
@@ -677,6 +717,7 @@ extern "C" StatusCode content_put(
  * operation complete, or doesn't exist any more.
  * @return StatusCode::ERR_ILLEGAL_OPERATION if the transaction is read-only
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle (strand is not supported for write)
  * @return warnings if the operation is not applicable to the entry. See PutOperation.
  * @return otherwise if error was occurred
  */
@@ -700,6 +741,7 @@ extern "C" StatusCode content_put_with_blobs(
  * @return StatusCode::PREMATURE if the transaction is not ready to accept request
  * @return StatusCode::ERR_ILLEGAL_OPERATION if the transaction is read-only
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle (strand is not supported for write)
  * @return otherwise if error was occurred
  */
 extern "C" StatusCode content_delete(
@@ -712,7 +754,7 @@ extern "C" StatusCode content_delete(
  * The content of prefix key must not be changed while using the returned iterator.
  * The created handle must be disposed by iterator_dispose().
  * The returned iterator is still available even if database content was changed.
- * @param transaction the current transaction handle
+ * @param transaction the current transaction (or strand) handle
  * @param storage the target storage
  * @param prefix_key the content key prefix
  * @param result [OUT] an iterator handle over the key prefix range
@@ -734,7 +776,7 @@ extern "C" StatusCode content_scan_prefix(
  * The content of begin/end keys must not be changed while using the returned iterator.
  * The created handle must be disposed by iterator_dispose().
  * The returned iterator is still available even if database content was changed.
- * @param transaction the current transaction handle
+ * @param transaction the current transaction (or strand) handle
  * @param storage the target storage
  * @param begin_key the content key of beginning position
  * @param begin_exclusive whether or not beginning position is exclusive
@@ -816,7 +858,7 @@ inline std::ostream& operator<<(std::ostream& out, EndPointKind value) {
  * The content of begin/end keys must not be changed while using the returned iterator.
  * The created handle must be disposed by iterator_dispose().
  * The returned iterator is still available even if database content was changed.
- * @param transaction the current transaction handle
+ * @param transaction the current transaction (or strand) handle
  * @param storage the target storage
  * @param begin_key the content key of beginning position
  * @param begin_kind end-point kind of the beginning position
@@ -946,6 +988,7 @@ extern "C" StatusCode sequence_create(
  * @param value the new sequence value
  * @return StatusCode::OK if the put operation is successful
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return StatusCode::ERR_INVALID_ARGS if input TransactionHandle is strand handle (strand is not supported for write)
  * @return otherwise if any error occurs
  * @warning multiple put calls to a sequence with same version number cause undefined behavior.
  */

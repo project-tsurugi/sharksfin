@@ -116,6 +116,12 @@ StatusCode transaction_borrow_handle(
         TransactionControlHandle handle,
         TransactionHandle* result);
 
+StatusCode transaction_acquire_handle(
+        TransactionControlHandle handle,
+        TransactionHandle* result);
+
+StatusCode transaction_release_handle(TransactionHandle handle);
+
 StatusCode transaction_commit(
         TransactionControlHandle handle,
         [[maybe_unused]] bool async);
