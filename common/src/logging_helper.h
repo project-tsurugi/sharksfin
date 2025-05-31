@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,6 +92,13 @@ constexpr auto location_prefix(const char (&prettyname)[N], const char (&funcnam
     return location_prefix<std::max(N, M)>(sv);
 }
 
+template<size_t N, size_t M>
+constexpr auto shrink_array(std::array<char, M> arr) {
+    std::array<char, N> buf{};
+    for (size_t i = 0; i < N; i++) { buf.at(i) = arr.at(i); }
+    return buf;
+}
+
 // To force compile-time evaluation of constexpr location_prefix in C++17,
 // the result is once stored to the temporary constexpr variable.
 
@@ -105,13 +112,15 @@ constexpr auto location_prefix(const char (&prettyname)[N], const char (&funcnam
 
 // N.B. use consteval in C++20
 
-// NOLINTNEXTLINE
-#define _LOCATION_PREFIX_TO_STREAM(stream)  if (constexpr auto __tmplp = common::location_prefix(__PRETTY_FUNCTION__, __FUNCTION__); false) {} else stream << __tmplp.data()
-// NOLINTNEXTLINE
+// NOLINTBEGIN
+#define _LOCATION_PREFIX_TO_STREAM(stream)  \
+    if (constexpr auto __tmplp = sharksfin::common::location_prefix(__PRETTY_FUNCTION__, __FUNCTION__); false) {} else \
+    if (constexpr auto __tmplplen = std::string_view{__tmplp.data()}.length(); false) {} else \
+    if (static constexpr auto __tmplptrim = sharksfin::common::shrink_array<__tmplplen>(__tmplp); false) {} else \
+    stream << std::string_view{__tmplptrim.data(), __tmplplen}
 #define LOG_LP(x)   _LOCATION_PREFIX_TO_STREAM(LOG(x))
-// NOLINTNEXTLINE
 #define VLOG_LP(x)  _LOCATION_PREFIX_TO_STREAM(VLOG(x))
-// NOLINTNEXTLINE
 #define DVLOG_LP(x) _LOCATION_PREFIX_TO_STREAM(DVLOG(x))
+// NOLINTEND
 
 } // namespace
