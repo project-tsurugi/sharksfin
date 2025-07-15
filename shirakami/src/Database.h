@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ static constexpr std::string_view KEY_LOCATION { "location" };
 static constexpr std::string_view KEY_EPOCH_DURATION{ "epoch_duration" };
 static constexpr std::string_view KEY_WAITING_RESOLVER_THREADS{ "waiting_resolver_threads" };
 static constexpr std::string_view KEY_RECOVER_MAX_PARALLELISM{ "recover_max_parallelism" };
+static constexpr std::string_view KEY_INDEX_RESTORE_THREADS{ "index_restore_threads" };
 static constexpr std::string_view KEY_STARTUP_MODE{ "startup_mode" };
 /**
  * @brief a shirakami wrapper.
