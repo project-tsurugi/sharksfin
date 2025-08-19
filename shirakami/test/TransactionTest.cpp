@@ -24,6 +24,7 @@
 
 #include "Database.h"
 #include "Iterator.h"
+#include "handle_utils.h"
 
 namespace sharksfin::shirakami {
 

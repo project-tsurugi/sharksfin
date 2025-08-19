@@ -19,6 +19,7 @@
 #include "glog/logging.h"
 #include <xmmintrin.h>
 
+#include "handle_utils.h"
 #include "sharksfin/api.h"
 #include "shirakami_api_helper.h"
 #include "Database.h"
@@ -69,7 +70,7 @@ Transaction::Transaction(
 }
 
 template <class T>
-std::vector<Storage*> create_storages(T const& tas) {
+static std::vector<Storage*> create_storages(T const& tas) {
     std::vector<Storage*> ret{};
     ret.reserve(tas.size());
     for(auto&& e : tas) {
@@ -89,7 +90,7 @@ Transaction::Transaction(Database* owner, TransactionOptions const& opts) :
     )
 {}
 
-void release_tx_handle(::shirakami::TxStateHandle& state_handle) {
+static void release_tx_handle(::shirakami::TxStateHandle& state_handle) {
     if(state_handle != ::shirakami::undefined_handle) {
         if(auto res = api::release_tx_state_handle(state_handle); res != ::shirakami::Status::OK) {
             // internal error, fix if this actually happens
@@ -107,7 +108,7 @@ Transaction::~Transaction() noexcept {
     release_tx_handle(state_handle_);
 }
 
-StatusCode resolve_commit_code(::shirakami::Status st) {
+static StatusCode resolve_commit_code(::shirakami::Status st) {
     // Commit errors are grouped into two categories 1. request submission error, and 2. commit execution error
     // Category 1 errors are returned by Transaction::commit(), while 2 are recent_call_result().
     // This is because commit result can be delayed (i.e. WAIT_FOR_OTHER_TRANSACTION), and then only the channel to
@@ -138,7 +139,7 @@ StatusCode Transaction::commit() {
     return ret;
 }
 
-ErrorCode from(::shirakami::reason_code reason, ErrorLocatorKind& kind, bool& impl_provides_locator);
+static ErrorCode from(::shirakami::reason_code reason, ErrorLocatorKind& kind, bool& impl_provides_locator);
 
 bool Transaction::commit(commit_callback_type callback) {
     if(!is_active_) {
@@ -235,7 +236,7 @@ TransactionState Transaction::check_state() {
     return from_state(state);
 }
 
-::shirakami::transaction_options::transaction_type from(TransactionOptions::TransactionType type) {
+static ::shirakami::transaction_options::transaction_type from(TransactionOptions::TransactionType type) {
     using transaction_type = ::shirakami::transaction_options::transaction_type;
     switch(type) {
         case TransactionOptions::TransactionType::SHORT: return transaction_type::SHORT;
@@ -295,7 +296,7 @@ ErrorCode from(::shirakami::reason_code reason, ErrorLocatorKind& kind, bool& im
     return rc;
 }
 
-std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_ptr<::shirakami::result_info> const& ri) {
+static std::pair<std::shared_ptr<ErrorLocator>, ErrorCode> create_locator(std::shared_ptr<::shirakami::result_info> const& ri) {
     ErrorLocatorKind kind{ErrorLocatorKind::unknown};
     bool impl_provides_locator = true; // whether implementation provides locator as ErrorCode expects
     auto rc = from(ri->get_reason_code(), kind, impl_provides_locator);

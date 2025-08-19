@@ -26,7 +26,7 @@
 
 namespace sharksfin::shirakami {
 
-::shirakami::database_options from(DatabaseOptions const& options) {
+static ::shirakami::database_options from(DatabaseOptions const& options) {
     using open_mode = ::shirakami::database_options::open_mode;
     open_mode mode{};
     switch(options.open_mode()) {

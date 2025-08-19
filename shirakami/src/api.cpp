@@ -509,9 +509,9 @@ StatusCode content_scan_range(
         IteratorHandle* result) {
     return content_scan(transaction, storage,
             begin_key,
-            begin_key.empty() ? EndPointKind::UNBOUND : (begin_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE),
+            begin_key.empty() ? EndPointKind::UNBOUND : (begin_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE),  //NOLINT(readability-avoid-nested-conditional-operator)
             end_key,
-            end_key.empty() ? EndPointKind::UNBOUND : (end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE),
+            end_key.empty() ? EndPointKind::UNBOUND : (end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE),  //NOLINT(readability-avoid-nested-conditional-operator)
             result);
 }
 

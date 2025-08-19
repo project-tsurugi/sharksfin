@@ -67,7 +67,7 @@ StatusCode storage_create(DatabaseHandle handle, Slice key, StorageHandle *resul
     log_entry << fn_name << " handle:" << handle << binstring(key);
     auto rc = impl::storage_create(handle, key, result);
     log_rc(rc, fn_name);
-    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    log_exit << fn_name << " rc:" << rc << " result:" << static_cast<void*>(result);
     return rc;
 }
 
@@ -79,7 +79,7 @@ StatusCode storage_create(
     log_entry << fn_name << " handle:" << handle << binstring(key);
     auto rc = impl::storage_create(handle, key, options, result);
     log_rc(rc, fn_name);
-    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    log_exit << fn_name << " rc:" << rc << " result:" << static_cast<void*>(result);
     return rc;
 }
 
@@ -91,7 +91,7 @@ StatusCode storage_create(
     log_entry << fn_name << " handle:" << handle << binstring(key);
     auto rc = impl::storage_create(handle, key, options, result);
     log_rc(rc, fn_name);
-    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    log_exit << fn_name << " rc:" << rc << " result:" << static_cast<void*>(result);
     return rc;
 }
 
@@ -99,7 +99,7 @@ StatusCode storage_get(DatabaseHandle handle, Slice key, StorageHandle *result) 
     log_entry << fn_name << " handle:" << handle << binstring(key);
     auto rc = impl::storage_get(handle, key, result);
     log_rc(rc, fn_name);
-    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    log_exit << fn_name << " rc:" << rc << " result:" << static_cast<void*>(result);
     return rc;
 }
 
@@ -110,7 +110,7 @@ StatusCode storage_get(
     log_entry << fn_name << " handle:" << handle << binstring(key);
     auto rc = impl::storage_get(handle, key, result);
     log_rc(rc, fn_name);
-    log_exit << fn_name << " rc:" << rc << " result:" << result;
+    log_exit << fn_name << " rc:" << rc << " result:" << static_cast<void*>(result);
     return rc;
 }
 
