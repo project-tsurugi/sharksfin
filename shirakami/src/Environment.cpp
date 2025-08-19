@@ -49,8 +49,8 @@ void Environment::Impl::initialize() {
 
 Environment::Impl::~Impl() = default;
 
-void Environment::initialize() {
-    impl_->initialize();
+void Environment::initialize() {  // NOLINT(readability-convert-member-functions-to-static)
+    Impl::initialize();
 }
 
 } // namespace sharksfin

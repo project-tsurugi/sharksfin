@@ -78,7 +78,7 @@ StatusCode Storage::scan(Transaction* tx,
     return StatusCode::OK;
 }
 
-::shirakami::storage_option from(StorageOptions const& opt) {
+static ::shirakami::storage_option from(StorageOptions const& opt) {
     auto ret = ::shirakami::storage_option{};
     ret.id(opt.storage_id());
     ret.payload(opt.payload());

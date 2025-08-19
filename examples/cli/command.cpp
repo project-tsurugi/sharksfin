@@ -32,7 +32,7 @@ std::vector<CommandSpec> const command_list {  // NOLINT
 };
 
 [[noreturn]] static void raise(StatusCode code) {
-    throw std::runtime_error(to_string_view(code).data());
+    throw std::runtime_error(std::string{to_string_view(code)});
 }
 
 static void check(StatusCode code) {

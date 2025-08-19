@@ -46,8 +46,8 @@ Environment::Environment() : impl_(std::make_unique<Impl>()) {}
 
 Environment::~Environment() = default;
 
-void Environment::initialize() {
-    impl_->initialize();
+void Environment::initialize() {  // NOLINT(readability-convert-member-functions-to-static)
+    Impl::initialize();
 }
 
 } // namespace sharksfin

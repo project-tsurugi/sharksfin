@@ -126,8 +126,8 @@ StatusCode Iterator::next_cursor() {
  * @return the next sibling entry key slice
  * @return empty slice if there is no next neighbor (i.e. input key is '0xFFFF....', or empty slice)
  */
-Slice next_neighbor(Slice key) {
-    thread_local std::string buffer {};
+static Slice next_neighbor(Slice key) {
+    thread_local std::string buffer{};  //NOLINT(misc-use-internal-linkage)
     buffer = key.to_string_view();
     bool found = false;
     for (char *iter = (buffer.data() + buffer.size() - 1), *end = buffer.data(); iter >= end; --iter) { // NOLINT

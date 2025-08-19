@@ -27,7 +27,6 @@
 #include "sharksfin/StatusCode.h"
 #include "Database.h"
 #include "Session.h"
-#include "handle_utils.h"
 
 namespace sharksfin::shirakami {
 

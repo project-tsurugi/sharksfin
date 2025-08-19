@@ -42,7 +42,7 @@ namespace api {
 
 namespace details {
 
-Status sanitize_rc(Status rc) {
+static Status sanitize_rc(Status rc) {
     if(rc >= Status::INTERNAL_BEGIN) {
         ABORT();
     }

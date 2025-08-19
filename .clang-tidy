@@ -7,6 +7,7 @@ bugprone-*,\
 -bugprone-easily-swappable-parameters,\
 cert-*,\
 cppcoreguidelines-*,\
+-cppcoreguidelines-avoid-do-while,\
 -cppcoreguidelines-pro-type-const-cast,\
 fuchsia-*,\
 -fuchsia-default-arguments,\
@@ -32,9 +33,11 @@ misc-*,\
 -misc-const-correctness,\
 -misc-include-cleaner,\
 -misc-unused-parameters,\
+-misc-use-anonymous-namespace,\
 modernize-*,\
 -modernize-use-trailing-return-type,\
 performance-*,\
+-performance-avoid-endl,\
 -performance-enum-size,\
 readability-*,\
 -readability-braces-around-statements,\

@@ -504,7 +504,7 @@ StatusCode content_scan_range(
         begin_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE,
         end_key,
         end_key.empty() ? EndPointKind::UNBOUND
-                        : end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE,
+                        : (end_exclusive ? EndPointKind::EXCLUSIVE : EndPointKind::INCLUSIVE), //NOLINT(readability-avoid-nested-conditional-operator)
         false); // this api is deprecated and reverse is not supported
     *result = wrap(iterator.release());
     return StatusCode::OK;
