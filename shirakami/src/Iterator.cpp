@@ -37,16 +37,17 @@ Iterator::Iterator(
     Slice end_key,
     EndPointKind end_kind,
     std::size_t limit,
-    bool reverse) :
+    bool reverse
+) :
     owner_(owner),
-    state_(State::INIT),
     tx_(tx),
     begin_key_(begin_kind == EndPointKind::UNBOUND ? std::string_view{} : begin_key.to_string_view()),
     begin_kind_(begin_kind),
     end_key_(end_kind == EndPointKind::UNBOUND ? std::string_view{} : end_key.to_string_view()),
     end_kind_(end_kind),
     limit_(limit),
-    reverse_(reverse) {}
+    reverse_(reverse)
+{}
 
 Iterator::~Iterator() {
     if(need_scan_close_) {
