@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ Status delete_storage(::shirakami::Storage storage);
 
 Status delete_record(Token token, ::shirakami::Storage storage, std::string_view key);
 
-Status init(::shirakami::database_options options);
+Status init(::shirakami::database_options options, void* datastore);
 
 Status close_scan(Token token, ScanHandle handle);
 

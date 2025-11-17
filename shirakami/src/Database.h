@@ -54,7 +54,7 @@ public:
     /**
      * @brief setup shirakami engine and return Database.
      */
-    static StatusCode open(DatabaseOptions const& options, std::unique_ptr<Database>* result);
+    static StatusCode open(DatabaseOptions const& options, void* datastore, std::unique_ptr<Database>* result);
 
     /**
      * @brief constructs a new object.

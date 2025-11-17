@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ TEST_F(ShirakamiTransactionTest, empty_tx_option) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());
-    Database::open(options, &db);
+    Database::open(options, nullptr, &db);
     std::unique_ptr<Storage> st{};
     {
         // prepare storage
@@ -65,7 +65,7 @@ TEST_F(ShirakamiTransactionTest, readonly) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());
-    Database::open(options, &db);
+    Database::open(options, nullptr, &db);
     std::unique_ptr<Storage> st{};
     {
         // prepare storage
@@ -100,7 +100,7 @@ TEST_F(ShirakamiTransactionTest, long_tx) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());
-    Database::open(options, &db);
+    Database::open(options, nullptr, &db);
     std::unique_ptr<Storage> st{};
     {
         // prepare storage
@@ -135,7 +135,7 @@ TEST_F(ShirakamiTransactionTest, check_tx_status) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());
-    Database::open(options, &db);
+    Database::open(options, nullptr, &db);
     std::unique_ptr<Storage> st{};
     {
         // prepare storage
@@ -173,7 +173,7 @@ TEST_F(ShirakamiTransactionTest, create_too_many_transactions) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());
-    Database::open(options, &db);
+    Database::open(options, nullptr, &db);
     std::unique_ptr<Storage> st{};
 
     static constexpr std::size_t trial = 1024;

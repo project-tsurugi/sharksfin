@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public:
     DatabaseHolder(std::string path) {
         DatabaseOptions options{};
         options.attribute(KEY_LOCATION, path);
-        Database::open(options, &db_);
+        Database::open(options, nullptr, &db_);
     }
     ~DatabaseHolder() {
         db_->close();

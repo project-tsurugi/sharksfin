@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ TEST_F(ShirakamiLongTxTest, long_tx_build_test) {
     std::unique_ptr<Database> db{};
     DatabaseOptions options{};
     options.attribute(KEY_LOCATION, path());
-    Database::open(options, &db);
+    Database::open(options, nullptr, &db);
     std::unique_ptr<Storage> st{};
     TransactionOptions ops{};
     ASSERT_EQ(db->create_storage("S", st), StatusCode::OK);

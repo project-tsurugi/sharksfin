@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ TEST_F(ShirakamiApiTest, simple) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -87,7 +87,7 @@ TEST_F(ShirakamiApiTest, database_restore) {
         DatabaseOptions options;
         options.attribute(KEY_LOCATION, path());
         DatabaseHandle db;
-        ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+        ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
         HandleHolder dbh { db };
 
         struct S {
@@ -113,7 +113,7 @@ TEST_F(ShirakamiApiTest, database_restore) {
         options.attribute(KEY_LOCATION, path());
         DatabaseHandle db;
         options.open_mode(DatabaseOptions::OpenMode::RESTORE);
-        ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+        ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
         HandleHolder dbh { db };
 
         struct S {
@@ -146,7 +146,7 @@ TEST_F(ShirakamiApiTest, DISABLED_database_not_found) {
     options.open_mode(DatabaseOptions::OpenMode::RESTORE);
 
     DatabaseHandle db = nullptr;
-    EXPECT_NE(database_open(options, &db), StatusCode::OK);
+    EXPECT_NE(database_open(options, nullptr, &db), StatusCode::OK);
     if (db != nullptr) {
         database_dispose(db);
     }
@@ -157,7 +157,7 @@ TEST_F(ShirakamiApiTest, storage_create) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -206,7 +206,7 @@ TEST_F(ShirakamiApiTest, storage_create_exists) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -240,7 +240,7 @@ TEST_F(ShirakamiApiTest, storage_get) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -289,7 +289,7 @@ TEST_F(ShirakamiApiTest, storage_get_missing) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -318,7 +318,7 @@ TEST_F(ShirakamiApiTest, storage_delete) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -385,7 +385,7 @@ TEST_F(ShirakamiApiTest, DISABLED_transaction_wait) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -450,7 +450,7 @@ TEST_F(ShirakamiApiTest, transaction_retry) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -536,7 +536,7 @@ TEST_F(ShirakamiApiTest, transaction_failed) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -558,7 +558,7 @@ TEST_F(ShirakamiApiTest, transaction_borrow_owner) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -612,7 +612,7 @@ TEST_F(ShirakamiApiTest, contents) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -704,7 +704,7 @@ TEST_F(ShirakamiApiTest, put_operations) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -803,7 +803,7 @@ TEST_F(ShirakamiApiTest, scan_prefix) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -873,7 +873,7 @@ TEST_F(ShirakamiApiTest, scan_range) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -942,7 +942,7 @@ TEST_F(ShirakamiApiTest, scan) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1031,7 +1031,7 @@ TEST_F(ShirakamiApiTest, scan_with_limit) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1109,7 +1109,7 @@ TEST_F(ShirakamiApiTest, reverse_scan) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1173,7 +1173,7 @@ TEST_F(ShirakamiApiTest, scan_empty_prefix) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1237,7 +1237,7 @@ TEST_F(ShirakamiApiTest, scan_empty_table) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1280,7 +1280,7 @@ TEST_F(ShirakamiApiTest, scan_range_to_end) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1360,7 +1360,7 @@ TEST_F(ShirakamiApiTest, scan_data_variation) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1430,7 +1430,7 @@ TEST_F(ShirakamiApiTest, long_data) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1468,7 +1468,7 @@ TEST_F(ShirakamiApiTest, scan_join) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1551,7 +1551,7 @@ TEST_F(ShirakamiApiTest, tracking) {
     options.attribute(KEY_PERFORMANCE_TRACKING, "1");
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1592,7 +1592,7 @@ TEST_F(ShirakamiApiTest, transaction_begin_and_commit) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1680,7 +1680,7 @@ TEST_F(ShirakamiApiTest, transaction_begin_and_abort) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1705,7 +1705,7 @@ TEST_F(ShirakamiApiTest, readonly_transaction) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1741,7 +1741,7 @@ TEST_F(ShirakamiApiTest, sequence) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     SequenceId id0;
@@ -1777,7 +1777,7 @@ TEST_F(ShirakamiApiTest, long_transaction) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1811,7 +1811,7 @@ TEST_F(ShirakamiApiTest, long_transaction) {
 TEST_F(ShirakamiApiTest, inactive_tx) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     HandleHolder<TransactionControlHandle> tch{};
@@ -1851,7 +1851,7 @@ TEST_F(ShirakamiApiTest, inactive_tx) {
 TEST_F(ShirakamiApiTest, storage_options) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     StorageHandle st{};
@@ -1888,7 +1888,7 @@ TEST_F(ShirakamiApiTest, storage_options) {
 TEST_F(ShirakamiApiTest, list_storages) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     StorageHandle st0{};
@@ -1915,7 +1915,7 @@ TEST_F(ShirakamiApiTest, transaction_info) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1959,7 +1959,7 @@ TEST_F(ShirakamiApiTest, durable_callback) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     std::atomic_size_t call_count = 0;
@@ -1988,7 +1988,7 @@ TEST_F(ShirakamiApiTest, precommit_callback_occ) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     std::atomic_size_t durability_marker{};
@@ -2031,7 +2031,7 @@ TEST_F(ShirakamiApiTest, precommit_callback_ltx) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     std::atomic_size_t durability_marker{};
@@ -2092,7 +2092,7 @@ TEST_F(ShirakamiApiTest, premature_requests) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     StorageHandle st;
@@ -2132,7 +2132,7 @@ TEST_F(ShirakamiApiTest, write_by_readonly_transaction) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     StorageHandle st;
@@ -2179,7 +2179,7 @@ TEST_F(ShirakamiApiTest, get_data_store) {
         options.attribute(KEY_LOCATION, path());
 
         DatabaseHandle db;
-        ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+        ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
         HandleHolder dbh{db};
         std::any result{};
         ASSERT_EQ(implementation_get_datastore(db, &result), StatusCode::OK);
@@ -2193,7 +2193,7 @@ TEST_F(ShirakamiApiTest, get_data_store) {
         options.attribute(KEY_STARTUP_MODE, "maintenance");
 
         DatabaseHandle db;
-        ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+        ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
         HandleHolder dbh{db};
         std::any result{};
         ASSERT_EQ(implementation_get_datastore(db, &result), StatusCode::OK);
@@ -2208,7 +2208,7 @@ TEST_F(ShirakamiApiTest, put_with_blobs) {
     options.attribute(KEY_LOCATION, path());
 
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -2248,7 +2248,7 @@ TEST_F(ShirakamiApiTest, rtx_strand) {
     DatabaseOptions options;
     options.attribute(KEY_LOCATION, path());
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {

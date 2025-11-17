@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ public:
         TestRoot::SetUp();
         DatabaseOptions options{};
         options.attribute(KEY_LOCATION, path());
-        Database::open(options, &database_);
+        Database::open(options, nullptr, &database_);
         std::unique_ptr<Transaction> tx{};
         Transaction::construct(tx, database_.get(), {});
         tx_ = std::move(tx);

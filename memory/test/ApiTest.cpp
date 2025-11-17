@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ static StorageHandle extract(void* args) {
 TEST_F(ApiTest, simple) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -75,7 +75,7 @@ TEST_F(ApiTest, simple) {
 TEST_F(ApiTest, storage_create) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -122,7 +122,7 @@ TEST_F(ApiTest, storage_create) {
 TEST_F(ApiTest, storage_create_exists) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -154,7 +154,7 @@ TEST_F(ApiTest, storage_create_exists) {
 TEST_F(ApiTest, storage_get) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -201,7 +201,7 @@ TEST_F(ApiTest, storage_get) {
 TEST_F(ApiTest, storage_get_missing) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -228,7 +228,7 @@ TEST_F(ApiTest, storage_get_missing) {
 TEST_F(ApiTest, storage_delete) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -292,7 +292,7 @@ TEST_F(ApiTest, storage_delete) {
 TEST_F(ApiTest, transaction_wait) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -354,7 +354,7 @@ TEST_F(ApiTest, transaction_wait) {
 TEST_F(ApiTest, transaction_failed) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -374,7 +374,7 @@ TEST_F(ApiTest, transaction_failed) {
 TEST_F(ApiTest, transaction_borrow_owner) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -426,7 +426,7 @@ TEST_F(ApiTest, transaction_borrow_owner) {
 TEST_F(ApiTest, contents) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -515,7 +515,7 @@ TEST_F(ApiTest, contents) {
 TEST_F(ApiTest, put_operations) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -614,7 +614,7 @@ TEST_F(ApiTest, put_operations) {
 TEST_F(ApiTest, scan_prefix) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -682,7 +682,7 @@ TEST_F(ApiTest, scan_prefix) {
 TEST_F(ApiTest, scan_range) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -750,7 +750,7 @@ TEST_F(ApiTest, scan_range) {
 TEST_F(ApiTest, scan) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -838,7 +838,7 @@ TEST_F(ApiTest, scan) {
 TEST_F(ApiTest, scan_empty_prefix) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -899,7 +899,7 @@ TEST_F(ApiTest, scan_empty_prefix) {
 TEST_F(ApiTest, scan_empty_table) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -940,7 +940,7 @@ TEST_F(ApiTest, scan_empty_table) {
 TEST_F(ApiTest, scan_range_to_end) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1019,7 +1019,7 @@ TEST_F(ApiTest, scan_data_variation) {
     using namespace std::literals::string_view_literals;
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1087,7 +1087,7 @@ TEST_F(ApiTest, scan_data_variation) {
 TEST_F(ApiTest, long_data) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1123,7 +1123,7 @@ TEST_F(ApiTest, long_data) {
 TEST_F(ApiTest, scan_join) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1203,7 +1203,7 @@ TEST_F(ApiTest, scan_join) {
 TEST_F(ApiTest, transaction_begin_and_commit) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1274,7 +1274,7 @@ TEST_F(ApiTest, transaction_begin_and_commit) {
 TEST_F(ApiTest, transaction_begin_and_abort) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1298,7 +1298,7 @@ TEST_F(ApiTest, transaction_begin_and_abort) {
 TEST_F(ApiTest, readonly_transaction) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1333,7 +1333,7 @@ TEST_F(ApiTest, readonly_transaction) {
 TEST_F(ApiTest, sequence) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     SequenceId id0;
@@ -1370,7 +1370,7 @@ TEST_F(ApiTest, implementation_id) {
 TEST_F(ApiTest, inactive_tx) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     HandleHolder<TransactionControlHandle> tch{};
@@ -1410,7 +1410,7 @@ TEST_F(ApiTest, inactive_tx) {
 TEST_F(ApiTest, storage_options) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     StorageHandle st{};
@@ -1447,7 +1447,7 @@ TEST_F(ApiTest, storage_options) {
 TEST_F(ApiTest, list_storages) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     StorageHandle st0{};
@@ -1473,7 +1473,7 @@ TEST_F(ApiTest, list_storages) {
 TEST_F(ApiTest, transaction_info) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1514,7 +1514,7 @@ TEST_F(ApiTest, print_diag) {
 TEST_F(ApiTest, write_by_readonly_transaction) {
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     StorageHandle st;
@@ -1558,7 +1558,7 @@ TEST_F(ApiTest, put_with_blobs) {
     // currently test just calling content_put_with_blobs
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
@@ -1597,7 +1597,7 @@ TEST_F(ApiTest, rtx_strand) {
     // currently only RTX can run multiple strands
     DatabaseOptions options;
     DatabaseHandle db;
-    ASSERT_EQ(database_open(options, &db), StatusCode::OK);
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
     HandleHolder dbh { db };
 
     struct S {
