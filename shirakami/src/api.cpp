@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,10 +38,11 @@ static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLIN
 
 StatusCode database_open(
         DatabaseOptions const& options,
+        void* datastore,
         DatabaseHandle* result) {
     VLOG_LP(log_info) << "database_options " << options;
     std::unique_ptr<shirakami::Database> db{};
-    auto rc = shirakami::Database::open(options, &db);
+    auto rc = shirakami::Database::open(options, datastore, &db);
     if (rc == StatusCode::OK) {
         bool tracking = false;
         if (auto option = options.attribute(KEY_PERFORMANCE_TRACKING); option.has_value()) {
