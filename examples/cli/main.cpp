@@ -33,7 +33,7 @@ static int run(std::vector<char*> const& args) {
     }
 
     DatabaseHandle db{};
-    if (auto s = database_open(options.database, &db); s != StatusCode::OK) {
+    if (auto s = database_open(options.database, nullptr, &db); s != StatusCode::OK) {
         std::cerr << "cannot open database: " << s << std::endl;
         return EXIT_FAILURE;
     }
