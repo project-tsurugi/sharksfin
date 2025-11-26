@@ -37,7 +37,7 @@ runs:
       with:
         repository: project-tsurugi/shirakami
         path: ${{ inputs.path }}/shirakami
-        ref: master
+        ref: borrow-limestone-datastore
 
     - name: Install_Limestone
       run: |
