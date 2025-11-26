@@ -109,6 +109,8 @@ Status delete_storage(::shirakami::Storage storage);
 
 Status delete_record(Token token, ::shirakami::Storage storage, std::string_view key);
 
+Status init(::shirakami::database_options options);
+
 Status init(::shirakami::database_options options, void* datastore);
 
 Status close_scan(Token token, ScanHandle handle);

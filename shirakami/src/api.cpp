@@ -38,6 +38,12 @@ static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLIN
 
 StatusCode database_open(
         DatabaseOptions const& options,
+        DatabaseHandle* result) {
+    return database_open(options, nullptr, result);
+}
+
+StatusCode database_open(
+        DatabaseOptions const& options,
         void* datastore,
         DatabaseHandle* result) {
     VLOG_LP(log_info) << "database_options " << options;

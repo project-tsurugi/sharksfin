@@ -249,7 +249,15 @@ Status delete_record(Token token, ::shirakami::Storage storage, std::string_view
     return rc;
 }
 
-  Status init(database_options options, void* datastore) {
+Status init(database_options options) {
+    log_entry << options;
+    auto rc = details::sanitize_rc(::shirakami::init(std::move(options)));
+    log_rc(rc);
+    log_exit << "rc:" << rc;
+    return rc;
+}
+
+Status init(database_options options, void* datastore) {
     log_entry << options;
     auto rc = details::sanitize_rc(::shirakami::init(std::move(options), datastore));
     log_rc(rc);

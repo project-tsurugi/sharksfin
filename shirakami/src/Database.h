@@ -53,6 +53,12 @@ public:
 
     /**
      * @brief setup shirakami engine and return Database.
+     * @deprecated kept for compatibility. Use open(DatabaseOptions, void*, std::unique_ptr<Database>*) instead.
+     */
+    static StatusCode open(DatabaseOptions const& options, std::unique_ptr<Database>* result);
+
+    /**
+     * @brief setup shirakami engine and return Database.
      */
     static StatusCode open(DatabaseOptions const& options, void* datastore, std::unique_ptr<Database>* result);
 

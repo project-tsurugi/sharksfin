@@ -31,9 +31,17 @@
 
 namespace sharksfin {
 
-StatusCode database_open(DatabaseOptions const& options, void *, DatabaseHandle* result) {
+StatusCode database_open(DatabaseOptions const& options, DatabaseHandle* result) {
     log_entry << fn_name;
     auto rc = impl::database_open(options, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
+}
+
+StatusCode database_open(DatabaseOptions const& options, void* datastore, DatabaseHandle* result) {
+    log_entry << fn_name << " datastore:" << datastore;
+    auto rc = impl::database_open(options, result); // ignore datastore and call old method
     log_rc(rc, fn_name);
     log_exit << fn_name << " rc:" << rc << " result:" << *result;
     return rc;

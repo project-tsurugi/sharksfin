@@ -133,6 +133,20 @@ using blob_id_type = std::uint64_t;
  * @param result [OUT] the output target of database handle
  * @return StatusCode::OK if the target database is successfully opened
  * @return otherwise if error was occurred
+ * @deprecated kept for compatibility. Use database_open(DatabaseOptions, void*, DatabaseHandle*) instead.
+ */
+StatusCode database_open(
+    DatabaseOptions const& options,
+    DatabaseHandle* result);
+
+/**
+ * @brief opens a database and returns its handle.
+ * The created handle must be disposed by database_dispose().
+ * @param options the target database options
+ * @param datastore the limestone datastore object
+ * @param result [OUT] the output target of database handle
+ * @return StatusCode::OK if the target database is successfully opened
+ * @return otherwise if error was occurred
  */
 StatusCode database_open(
     DatabaseOptions const& options,

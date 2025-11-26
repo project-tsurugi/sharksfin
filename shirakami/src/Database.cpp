@@ -56,6 +56,15 @@ static ::shirakami::database_options from(DatabaseOptions const& options) {
     return ret;
 }
 
+StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
+    if(auto res = api::init(from(options)); res != Status::OK) {
+        LOG(ERROR) << "Shirakami Initialization failed with status code:" << res;
+        return StatusCode::ERR_IO_ERROR;
+    }
+    *result = std::make_unique<Database>();
+    return StatusCode::OK;
+}
+
 StatusCode Database::open(DatabaseOptions const& options, void* datastore, std::unique_ptr<Database> *result) {
     if(auto res = api::init(from(options), datastore); res != Status::OK) {
         LOG(ERROR) << "Shirakami Initialization failed with status code:" << res;
