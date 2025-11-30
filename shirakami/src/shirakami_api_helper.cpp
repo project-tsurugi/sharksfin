@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2025 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -249,9 +249,9 @@ Status delete_record(Token token, ::shirakami::Storage storage, std::string_view
     return rc;
 }
 
-Status init(database_options options) {
-    log_entry << options;
-    auto rc = details::sanitize_rc(::shirakami::init(std::move(options)));
+Status init(database_options options, void* datastore) {
+    log_entry << "options:" << options << " datastore:" << datastore;
+    auto rc = details::sanitize_rc(::shirakami::init(std::move(options), datastore));
     log_rc(rc);
     log_exit << "rc:" << rc;
     return rc;
