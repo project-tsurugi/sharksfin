@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Project Tsurugi.
+# Copyright 2018-2025 Project Tsurugi.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -59,7 +59,9 @@ else()
 endif()
 find_package(glog)
 find_package(numa)
-find_package(shirakami)
+if(BUILD_SHIRAKAMI)
+    find_package(shirakami)
+endif()
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
