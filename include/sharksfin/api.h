@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 Project Tsurugi.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,19 +125,6 @@ using durability_callback_type = std::function<void(durability_marker_type)>;
  * @details the reference type for BLOB data. This must be same as one defined by datastore.
  */
 using blob_id_type = std::uint64_t;
-
-/**
- * @brief opens a database and returns its handle.
- * The created handle must be disposed by database_dispose().
- * @param options the target database options
- * @param result [OUT] the output target of database handle
- * @return StatusCode::OK if the target database is successfully opened
- * @return otherwise if error was occurred
- * @deprecated kept for compatibility. Use database_open(DatabaseOptions, void*, DatabaseHandle*) instead.
- */
-StatusCode database_open(
-    DatabaseOptions const& options,
-    DatabaseHandle* result);
 
 /**
  * @brief opens a database and returns its handle.

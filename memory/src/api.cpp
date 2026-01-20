@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 Project Tsurugi.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,14 +30,6 @@
 #include "log_utils.h"
 
 namespace sharksfin {
-
-StatusCode database_open(DatabaseOptions const& options, DatabaseHandle* result) {
-    log_entry << fn_name;
-    auto rc = impl::database_open(options, result);
-    log_rc(rc, fn_name);
-    log_exit << fn_name << " rc:" << rc << " result:" << *result;
-    return rc;
-}
 
 StatusCode database_open(DatabaseOptions const& options, void* datastore, DatabaseHandle* result) {
     log_entry << fn_name << " datastore:" << datastore;

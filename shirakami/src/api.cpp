@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 Project Tsurugi.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,12 +35,6 @@ namespace sharksfin {
  * @brief the attribute key of whether or not performance tracking feature is enabled.
  */
 static constexpr std::string_view KEY_PERFORMANCE_TRACKING { "perf" };  // NOLINT
-
-StatusCode database_open(
-        DatabaseOptions const& options,
-        DatabaseHandle* result) {
-    return database_open(options, nullptr, result);
-}
 
 StatusCode database_open(
         DatabaseOptions const& options,

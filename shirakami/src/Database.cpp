@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 Project Tsurugi.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,10 +54,6 @@ static ::shirakami::database_options from(DatabaseOptions const& options) {
         ret.set_index_restore_threads(std::stoul(*sz));
     }
     return ret;
-}
-
-StatusCode Database::open(DatabaseOptions const& options, std::unique_ptr<Database> *result) {
-    return open(options, nullptr, result);
 }
 
 StatusCode Database::open(DatabaseOptions const& options, void* datastore, std::unique_ptr<Database> *result) {
