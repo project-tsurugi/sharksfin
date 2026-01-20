@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Project Tsurugi.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ static int run(std::vector<char*> const& args) {
     }
 
     DatabaseHandle db{};
-    if (auto s = database_open(options.database, &db); s != StatusCode::OK) {
+    if (auto s = database_open(options.database, nullptr, &db); s != StatusCode::OK) {
         std::cerr << "cannot open database: " << s << std::endl;
         return EXIT_FAILURE;
     }
