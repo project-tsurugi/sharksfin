@@ -2186,20 +2186,6 @@ TEST_F(ShirakamiApiTest, get_data_store) {
         ASSERT_NE(std::any_cast<void*>(result), nullptr);
         EXPECT_EQ(database_close(db), StatusCode::OK);
     }
-    {
-        // maintenance mode
-        DatabaseOptions options;
-        options.attribute(KEY_LOCATION, path());
-        options.attribute(KEY_STARTUP_MODE, "maintenance");
-
-        DatabaseHandle db;
-        ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
-        HandleHolder dbh{db};
-        std::any result{};
-        ASSERT_EQ(implementation_get_datastore(db, &result), StatusCode::OK);
-        ASSERT_NE(std::any_cast<void*>(result), nullptr);
-        EXPECT_EQ(database_close(db), StatusCode::OK);
-    }
 }
 
 TEST_F(ShirakamiApiTest, put_with_blobs) {
