@@ -573,6 +573,21 @@ StatusCode iterator_get_value(
     return iter->value(*result);
 }
 
+StatusCode iterator_get_key_value(
+        IteratorHandle handle,
+        Slice* key,
+        Slice* value) {
+    auto iter = unwrap(handle);
+    return iter->key_value(*key, *value);
+}
+
+StatusCode iterator_scannable_total_index_size(
+        IteratorHandle handle,
+        std::size_t* result) {
+    auto iter = unwrap(handle);
+    return iter->scannable_total_index_size(*result);
+}
+
 StatusCode iterator_dispose(
         IteratorHandle handle) {
     auto iter = unwrap(handle);

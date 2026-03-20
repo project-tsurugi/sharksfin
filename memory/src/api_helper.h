@@ -195,6 +195,10 @@ StatusCode iterator_get_key(IteratorHandle handle, Slice* result);
 
 StatusCode iterator_get_value(IteratorHandle handle, Slice* result);
 
+StatusCode iterator_get_key_value(IteratorHandle handle, Slice* key, Slice* value);
+
+StatusCode iterator_scannable_total_index_size(IteratorHandle handle, std::size_t* result);
+
 StatusCode iterator_dispose(IteratorHandle handle);
 
 StatusCode sequence_create(

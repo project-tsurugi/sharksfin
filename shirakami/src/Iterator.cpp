@@ -113,6 +113,34 @@ StatusCode Iterator::value(Slice& s) {
     return resolve_scan_errors(res);
 }
 
+StatusCode Iterator::key_value(Slice& k, Slice& v) {
+    if (! key_value_readable_) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto res_k = api::read_key_from_scan(*tx_, handle_, buffer_key_);
+    tx_->last_call_status(res_k);
+    correct_transaction_state(*tx_, res_k);
+    if (res_k != Status::OK) {
+        k = buffer_key_;
+        return resolve_scan_errors(res_k);
+    }
+    auto res_v = api::read_value_from_scan(*tx_, handle_, buffer_value_);
+    tx_->last_call_status(res_v);
+    k = buffer_key_;
+    v = buffer_value_;
+    correct_transaction_state(*tx_, res_v);
+    return resolve_scan_errors(res_v);
+}
+
+StatusCode Iterator::scannable_total_index_size(std::size_t& size) {
+    if (!need_scan_close_) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    auto res = ::shirakami::scannable_total_index_size(tx_->native_handle(), handle_, size);
+    tx_->last_call_status(res);
+    return resolve(res);
+}
+
 StatusCode Iterator::next_cursor() {
     auto res = api::next(tx_->native_handle(), handle_);
     tx_->last_call_status(res);

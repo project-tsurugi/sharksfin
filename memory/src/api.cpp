@@ -484,6 +484,22 @@ StatusCode iterator_get_value(IteratorHandle handle, Slice* result) {
     return rc;
 }
 
+StatusCode iterator_get_key_value(IteratorHandle handle, Slice* key, Slice* value) {
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::iterator_get_key_value(handle, key, value);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
+}
+
+StatusCode iterator_scannable_total_index_size(IteratorHandle handle, std::size_t* result) {
+    log_entry << fn_name << " handle:" << handle;
+    auto rc = impl::iterator_scannable_total_index_size(handle, result);
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc;
+    return rc;
+}
+
 StatusCode iterator_dispose(IteratorHandle handle) {
     log_entry << fn_name << " handle:" << handle;
     auto rc = impl::iterator_dispose(handle);
