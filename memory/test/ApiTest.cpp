@@ -15,6 +15,7 @@
  */
 #include "sharksfin/api.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <future>
