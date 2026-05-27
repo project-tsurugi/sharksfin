@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 Project Tsurugi.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,9 @@ static ::shirakami::database_options from(DatabaseOptions const& options) {
     }
     if (auto sz = options.attribute(KEY_INDEX_RESTORE_THREADS); sz) {
         ret.set_index_restore_threads(std::stoul(*sz));
+    }
+    if (auto b = options.attribute(KEY_ITERATOR_BASED_SCAN); b) {
+        ret.set_iterator_based_scan(b == "true");
     }
     return ret;
 }
