@@ -19,6 +19,7 @@
 #include "glog/logging.h"
 #include "shirakami/scheme.h"
 #include "sharksfin/api.h"
+#include "cache_align.h"
 
 namespace sharksfin::shirakami {
 
@@ -93,9 +94,6 @@ public:
 private:
     Storage* owner_{};
     ::shirakami::ScanHandle handle_{};
-    State state_{};
-    std::string buffer_key_{};
-    std::string buffer_value_{};
     Transaction* tx_{};
     std::string begin_key_{};
     EndPointKind begin_kind_{};
@@ -103,13 +101,25 @@ private:
     EndPointKind end_kind_{};
     std::size_t limit_{};
     bool reverse_{};
-    bool key_value_readable_{false};
     bool need_scan_close_{false};
+
+    /**
+     * @brief cache-line aligned mutable data members
+     * @details frequently modified data members are separated from read-mostly ones and aligned to cache line
+     */
+    struct cache_align {
+        std::string buffer_key_{};
+        std::string buffer_value_{};
+        State state_{State::INIT};
+        bool key_value_readable_{false};
+    } mutables{};
 
     StatusCode next_cursor();
     StatusCode open_cursor();
     StatusCode resolve_scan_errors(::shirakami::Status res);
+
 };
+
 
 }  // namespace sharksfin::shirakami
 
