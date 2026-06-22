@@ -90,6 +90,24 @@ public:
      */
     StatusCode value(Slice& s);
 
+    /**
+     * @brief retrieve both key and value in a single call
+     * @param k [out] key on the current position
+     * @param v [out] value on the current position
+     * @return StatusCode::OK if entry exists
+     * @return StatusCode::NOT_FOUND if entry does not exist
+     * @return StatusCode::ERR_ABORTED_RETRYABLE when shirakami scans uncommitted record
+     */
+    StatusCode key_value(Slice& k, Slice& v);
+
+    /**
+     * @brief get total number of entries in the scan range
+     * @param size [out] total entry count
+     * @return StatusCode::OK if successful
+     * @return StatusCode::ERR_INVALID_STATE if not in valid state
+     */
+    StatusCode scannable_total_index_size(std::size_t& size);
+
 private:
     Storage* owner_{};
     ::shirakami::ScanHandle handle_{};

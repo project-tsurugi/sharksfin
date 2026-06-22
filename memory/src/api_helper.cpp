@@ -557,6 +557,23 @@ StatusCode iterator_get_value(IteratorHandle handle, Slice* result) {
     return StatusCode::OK;
 }
 
+StatusCode iterator_get_key_value(IteratorHandle handle, Slice* key, Slice* value) {
+    auto iterator = unwrap(handle);
+    if (!iterator->is_valid()) {
+        return StatusCode::ERR_INVALID_STATE;
+    }
+    *key = iterator->key();
+    *value = iterator->payload();
+    return StatusCode::OK;
+}
+
+StatusCode iterator_scannable_total_index_size(IteratorHandle handle, std::size_t* result) {
+    // Memory backend does not track total scan size; return ERR_UNSUPPORTED
+    (void)handle;
+    (void)result;
+    return StatusCode::ERR_UNSUPPORTED;
+}
+
 StatusCode iterator_dispose(IteratorHandle handle) {
     auto iterator = unwrap(handle);
     delete iterator;  // NOLINT

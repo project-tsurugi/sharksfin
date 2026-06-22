@@ -952,6 +952,40 @@ extern "C" StatusCode iterator_get_value(
         Slice* result);
 
 /**
+ * @brief returns both key and value on the current iterator position in a single call.
+ * This operation is only available if the target iterator position is valid by iterator_next().
+ * The returned slices will be disabled after the iterator state was changed.
+ * This never changes the iterator state.
+ * @param handle the target iterator handle
+ * @param key [OUT] the current key
+ * @param value [OUT] the current value
+ * @return StatusCode::OK if the key and value were successfully obtained
+ * @return StatusCode::NOT_FOUND if the pointing entry doesn't exist
+ * @return StatusCode::CONCURRENT_OPERATION if other concurrent operation is observed
+ * @return otherwise if error was occurred
+ * @return undefined if the iterator position is not valid
+ */
+extern "C" StatusCode iterator_get_key_value(
+        IteratorHandle handle,
+        Slice* key,
+        Slice* value);
+
+/**
+ * @brief returns the total number of entries in the scan range.
+ * This is available after the iterator has been created by content_scan().
+ * The size may include entries not yet visited. Useful for query planning
+ * and memory pre-allocation.
+ * @param handle the target iterator handle
+ * @param result [OUT] the total number of entries
+ * @return StatusCode::OK if the size was successfully obtained
+ * @return StatusCode::ERR_INVALID_STATE if the iterator is in an invalid state
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode iterator_scannable_total_index_size(
+        IteratorHandle handle,
+        std::size_t* result);
+
+/**
  * @brief disposes the iterator handle.
  * This will change the iterator state.
  * @param handle the target iterator handle
