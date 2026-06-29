@@ -19,11 +19,11 @@
 #include <cstdint>
 
 #include <atomic>
-#include <xmmintrin.h>
 #include <glog/logging.h>
 
 #include "logging.h"
 #include "log_utils.h"
+#include "spin_wait_hint.h"
 
 namespace sharksfin::memory {
 
@@ -48,7 +48,7 @@ public:
     void lock() noexcept {
         log_entry << fn_name;
         while(! try_lock()) {
-            _mm_pause();
+            spin_wait_hint();
         }
         log_exit << fn_name;
     }
@@ -71,7 +71,7 @@ public:
      */
     void lock_shared() noexcept {
         while(! try_lock_shared()) {
-            _mm_pause();
+            spin_wait_hint();
         }
     }
 

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#include <xmmintrin.h>
-
+#include "spin_wait_hint.h"
 #include "Transaction.h"
 
 #include <future>
@@ -255,7 +254,7 @@ TEST_F(ShirakamiTransactionTest, recent_call_result_ltx) {
             ASSERT_TRUE(ri);
         }
         ASSERT_EQ(tx0->commit(), StatusCode::OK);
-        while (!called) { _mm_pause(); }
+        while (!called) { spin_wait_hint(); }
         ASSERT_EQ(st2, StatusCode::ERR_ABORTED_RETRYABLE);
         {
             auto ri = tx1->recent_call_result();

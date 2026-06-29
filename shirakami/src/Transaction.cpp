@@ -17,10 +17,10 @@
 
 #include <thread>
 #include "glog/logging.h"
-#include <xmmintrin.h>
 
 #include "handle_utils.h"
 #include "sharksfin/api.h"
+#include "spin_wait_hint.h"
 #include "shirakami_api_helper.h"
 #include "Database.h"
 #include "Session.h"
@@ -133,7 +133,7 @@ StatusCode Transaction::commit() {
     });
     if(! b) {
         while(! called) {
-            _mm_pause();
+            spin_wait_hint();
         }
     }
     return ret;

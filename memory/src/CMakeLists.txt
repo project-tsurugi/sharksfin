@@ -27,7 +27,6 @@ set_target_properties(memory
 
 target_include_directories(memory
     PRIVATE .
-    PRIVATE ../../common/src
 )
 
 target_link_libraries(memory
@@ -44,4 +43,8 @@ add_library(memory-impl INTERFACE)
 
 target_include_directories(memory-impl
     INTERFACE .
+)
+
+target_link_libraries(memory-impl
+    INTERFACE common
 )
