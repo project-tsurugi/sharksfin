@@ -31,6 +31,7 @@
 #include "TransactionInfo.h"
 #include "CallResult.h"
 #include "StorageOptions.h"
+#include "ScanOptions.h"
 
 /**
  * @brief sharksfin interface definition
@@ -888,6 +889,9 @@ inline std::ostream& operator<<(std::ostream& out, EndPointKind value) {
  * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
  * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
  * @return otherwise if error was occurred
+ * @note this is equivalent to content_scan_with_options() with ScanOptions whose limit and reverse are set to
+ * the given arguments, and legacy_scan is true.
+ * @deprecated limit and reverse parameters are kept for compatibility. Use content_scan_with_options() instead.
  */
 extern "C" StatusCode content_scan(
         TransactionHandle transaction,
@@ -897,6 +901,33 @@ extern "C" StatusCode content_scan(
         IteratorHandle* result,
         std::size_t limit = 0,
         bool reverse = false);
+
+/**
+ * @brief obtains iterator between begin and end keys range with scan options.
+ * The content of begin/end keys must not be changed while using the returned iterator.
+ * The created handle must be disposed by iterator_dispose().
+ * The returned iterator is still available even if database content was changed.
+ * @param transaction the current transaction (or strand) handle
+ * @param storage the target storage
+ * @param begin_key the content key of beginning position
+ * @param begin_kind end-point kind of the beginning position
+ * @param end_key the content key of ending position
+ * @param end_kind end-point kind of the ending position
+ * @param options the scan options (e.g. limit, reverse, legacy_scan). See ScanOptions.
+ * Note that limit is effective only if legacy_scan is true.
+ * @param result [OUT] an iterator handle over the key range
+ * @return StatusCode::OK if the iterator was successfully prepared
+ * @return StatusCode::ERR_INACTIVE_TRANSACTION if the transaction is inactive and the request is rejected
+ * @return StatusCode::ERR_INVALID_KEY_LENGTH if the key length is invalid (e.g. too long) to be handled by transaction engine
+ * @return otherwise if error was occurred
+ */
+extern "C" StatusCode content_scan_with_options(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice begin_key, EndPointKind begin_kind,
+        Slice end_key, EndPointKind end_kind,
+        ScanOptions const& options,
+        IteratorHandle* result);
 
 /**
  * @brief advances the given iterator.
