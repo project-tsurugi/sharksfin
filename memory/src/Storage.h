@@ -131,6 +131,34 @@ public:
     }
 
     /**
+     * @brief finds for the previous entry of the given key.
+     * @param key the search key
+     * @param exclusive true to exclude an entry whose key is equivalent to the given key
+     * @return the previous entry of key slice and payload buffer pair
+     * @return a pair of search key and null pointer if there is no such the entry
+     */
+    std::pair<Slice, Buffer*> prev(Slice key, bool exclusive = true) {
+        auto it = exclusive ? entries_.lower_bound(key) : entries_.upper_bound(key);
+        if (it != entries_.begin()) {
+            --it;
+            return { it->first.to_slice(), &it->second };
+        }
+        return { key, {} };
+    }
+
+    /**
+     * @brief finds for the last entry.
+     * @return the last entry of key slice and payload buffer pair
+     * @return a pair of empty slice and null pointer if there is no entry
+     */
+    std::pair<Slice, Buffer*> last() {
+        if (auto it = entries_.rbegin(); it != entries_.rend()) {
+            return { it->first.to_slice(), &it->second };
+        }
+        return { {}, {} };
+    }
+
+    /**
      * @brief finds for the next sibling or its smallest child entry of the given key.
      * @param key the search key
      * @return the next neighbor entry of key slice and payload buffer pair

@@ -97,6 +97,19 @@ Status open_scan(Token token, ::shirakami::Storage storage, std::string_view l_k
     return rc;
 }
 
+Status open_iscan(Token token, ::shirakami::Storage storage, std::string_view l_key, scan_endpoint l_end,
+    std::string_view r_key, scan_endpoint r_end, bool right_to_left, ScanHandle& handle) {
+    log_entry <<
+        "token:" << token << " storage:" << storage <<
+        binstring(l_key) << " (" << l_end << ")" <<
+        binstring(r_key) << " (" << r_end << ")" <<
+        " right_to_left:" << right_to_left;
+    auto rc = details::sanitize_rc(::shirakami::open_iscan(token, storage, l_key, l_end, r_key, r_end, right_to_left, handle));
+    log_rc(rc);
+    log_exit << "rc:" << rc << " token:" << token << " handle:" << handle;
+    return rc;
+}
+
 Status read_key_from_scan(Transaction& tx, ScanHandle handle, std::string& key) {
     log_entry << "token:" << tx.native_handle() << " handle:" << handle;
     auto rc = details::sanitize_rc(::shirakami::read_key_from_scan(tx.native_handle(), handle, key));

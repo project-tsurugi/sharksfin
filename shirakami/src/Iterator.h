@@ -48,6 +48,8 @@ public:
      * If end_key is not empty and end kind UNBOUND, the end_kind is reduced to PREFIXED_INCLUSIVE
      * @param limit the max number of entries to be fetched. 0 indicates no limit.
      * @param reverse whether or not the iterator scans in reverse order (from end to begin)
+     * @param legacy_scan true to use legacy scan (open_scan), false to use iterator based scan (open_iscan).
+     * limit is effective only if this is true.
      */
     Iterator( // NOLINT(performance-unnecessary-value-param)
         Storage* owner,
@@ -55,7 +57,8 @@ public:
         Slice begin_key, EndPointKind begin_kind,
         Slice end_key, EndPointKind end_kind,
         std::size_t limit = 0,
-        bool reverse = false
+        bool reverse = false,
+        bool legacy_scan = true
     );
 
     /**
@@ -103,6 +106,7 @@ private:
     EndPointKind end_kind_{};
     std::size_t limit_{};
     bool reverse_{};
+    bool legacy_scan_{true};
     bool key_value_readable_{false};
     bool need_scan_close_{false};
 
