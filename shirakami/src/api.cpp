@@ -530,6 +530,20 @@ StatusCode content_scan(
         IteratorHandle* result,
         std::size_t limit,
         bool reverse) {
+    return content_scan_with_options(transaction, storage,
+            begin_key, begin_kind,
+            end_key, end_kind,
+            ScanOptions{}.limit(limit).reverse(reverse),
+            result);
+}
+
+StatusCode content_scan_with_options(
+        TransactionHandle transaction,
+        StorageHandle storage,
+        Slice begin_key, EndPointKind begin_kind,
+        Slice end_key, EndPointKind end_kind,
+        ScanOptions const& options,
+        IteratorHandle* result) {
     shirakami::Transaction* tx = nullptr;
     if (is_strand(transaction)) {
         // Strand object is not needed for scan because we have Iterators
@@ -545,7 +559,8 @@ StatusCode content_scan(
         return StatusCode::ERR_INVALID_STATE;
     }
     std::unique_ptr<shirakami::Iterator> iter{};
-    auto rc = stg->scan(tx, begin_key, begin_kind, end_key, end_kind, iter, limit, reverse);
+    auto rc = stg->scan(tx, begin_key, begin_kind, end_key, end_kind, iter,
+            options.limit(), options.reverse(), options.legacy_scan());
     if(rc != StatusCode::OK) {
         return rc;
     }

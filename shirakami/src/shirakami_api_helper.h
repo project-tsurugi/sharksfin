@@ -72,6 +72,14 @@ Status open_scan(
     std::size_t max_size = 0,
     bool right_to_left = false);
 
+Status open_iscan(
+    Token token,
+    ::shirakami::Storage storage,
+    std::string_view l_key, scan_endpoint l_end,
+    std::string_view r_key, scan_endpoint r_end,
+    bool right_to_left,
+    ScanHandle& handle);
+
 Status read_key_from_scan(
     Transaction& tx,
     ScanHandle handle,

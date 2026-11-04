@@ -460,6 +460,30 @@ StatusCode content_scan(
     return rc;
 }
 
+StatusCode content_scan_with_options(
+    TransactionHandle transaction,
+    StorageHandle storage,
+    Slice begin_key, EndPointKind begin_kind,
+    Slice end_key, EndPointKind end_kind,
+    ScanOptions const& options,
+    IteratorHandle* result) {
+    log_entry << fn_name << " transaction:" << transaction << " storage:" << storage <<
+        binstring(begin_key) << " begin_kind:" << begin_kind <<
+        binstring(end_key) << " end_kind:" << end_kind <<
+        " options:" << options;
+    // memory implementation has only one scan implementation, but limit is effective only for legacy scan
+    // as the api specification says
+    auto rc = impl::content_scan(
+        transaction,
+        storage,
+        begin_key, begin_kind,
+        end_key, end_kind,
+        result, options.legacy_scan() ? options.limit() : 0, options.reverse());
+    log_rc(rc, fn_name);
+    log_exit << fn_name << " rc:" << rc << " result:" << *result;
+    return rc;
+}
+
 StatusCode iterator_next(IteratorHandle handle) {
     log_entry << fn_name << " handle:" << handle;
     auto rc = impl::iterator_next(handle);

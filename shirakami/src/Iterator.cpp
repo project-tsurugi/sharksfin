@@ -37,7 +37,8 @@ Iterator::Iterator(
     Slice end_key,
     EndPointKind end_kind,
     std::size_t limit,
-    bool reverse) :
+    bool reverse,
+    bool legacy_scan) :
     owner_(owner),
     state_(State::INIT),
     tx_(tx),
@@ -46,7 +47,8 @@ Iterator::Iterator(
     end_key_(end_kind == EndPointKind::UNBOUND ? std::string_view{} : end_key.to_string_view()),
     end_kind_(end_kind),
     limit_(limit),
-    reverse_(reverse) {}
+    reverse_(reverse),
+    legacy_scan_(legacy_scan) {}
 
 Iterator::~Iterator() {
     if(need_scan_close_) {
@@ -203,10 +205,15 @@ StatusCode Iterator::open_cursor() {
             break;
     }
 
-    auto res = api::open_scan(tx_->native_handle(),
-        owner_->handle(),
-        begin_key_, begin_endpoint,
-        end_key_, end_endpoint, handle_, limit_, reverse_);
+    auto res = legacy_scan_ ?
+        api::open_scan(tx_->native_handle(),
+            owner_->handle(),
+            begin_key_, begin_endpoint,
+            end_key_, end_endpoint, handle_, limit_, reverse_) :
+        api::open_iscan(tx_->native_handle(),
+            owner_->handle(),
+            begin_key_, begin_endpoint,
+            end_key_, end_endpoint, reverse_, handle_);
     tx_->last_call_status(res);
     correct_transaction_state(*tx_, res);
     if(res == Status::WARN_NOT_FOUND) {

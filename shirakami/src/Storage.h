@@ -111,6 +111,8 @@ public:
      * @param out [OUT] the created iterator
      * @param limit the max number of entries to be fetched. 0 indicates no limit.
      * @param reverse whether or not the scan in reverse order (from end to begin)
+     * @param legacy_scan true to use legacy scan (open_scan), false to use iterator based scan (open_iscan).
+     * limit is effective only if this is true.
      * @return the operation status
      */
     StatusCode scan(Transaction* tx,
@@ -118,7 +120,8 @@ public:
             Slice end_key, EndPointKind end_kind,
             std::unique_ptr<Iterator>& out,
             std::size_t limit = 0,
-            bool reverse = false
+            bool reverse = false,
+            bool legacy_scan = true
     );
 
     [[nodiscard]] Database* owner() const {

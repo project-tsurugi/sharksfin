@@ -23,6 +23,8 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <utility>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -833,6 +835,407 @@ TEST_F(ApiTest, scan) {
 
     EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
     EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, scan_with_limit) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "a1", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "b", "B") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "c", "C") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "d", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            IteratorHandle iter;
+            if (content_scan(
+                    tx, st,
+                    "b", EndPointKind::PREFIXED_INCLUSIVE,
+                    "", EndPointKind::UNBOUND,
+                    &iter,
+                    2) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder closer { iter };
+
+            Slice s;
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "b") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "B") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "c") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "C") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, reverse_scan) {
+    // currently reverse scan can fetch only one entry with unbonded end point
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+
+    struct S {
+        static TransactionOperation prepare(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            if (content_put(tx, st, "a", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "a1", "NG") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (content_put(tx, st, "b", "B") != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        static TransactionOperation test(TransactionHandle tx, void* args) {
+            auto st = extract<S>(args);
+            IteratorHandle iter;
+            if (content_scan(
+                    tx, st,
+                    "a", EndPointKind::PREFIXED_INCLUSIVE,
+                    "", EndPointKind::UNBOUND,
+                    &iter,
+                    1,  // reverse scan must have limit 1
+                    true // reverse scan
+                    ) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            HandleHolder closer { iter };
+
+            Slice s;
+            if (iterator_next(iter) != StatusCode::OK) {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_key(iter, &s) != StatusCode::OK || s != "b") {
+                return TransactionOperation::ERROR;
+            }
+            if (iterator_get_value(iter, &s) != StatusCode::OK || s != "B") {
+                return TransactionOperation::ERROR;
+            }
+
+            if (iterator_next(iter) != StatusCode::NOT_FOUND) {
+                return TransactionOperation::ERROR;
+            }
+            return TransactionOperation::COMMIT;
+        }
+        StorageHandle st;
+    };
+    S s;
+    ASSERT_EQ(storage_create(db, "s", &s.st), StatusCode::OK);
+    HandleHolder sth { s.st };
+
+    EXPECT_EQ(transaction_exec(db, {}, &S::prepare, &s), StatusCode::OK);
+    EXPECT_EQ(transaction_exec(db, {}, &S::test, &s), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+namespace {
+
+class Transaction {
+public:
+    explicit Transaction(DatabaseHandle db) {
+        EXPECT_EQ(transaction_begin(db, {}, &tch_.get()), StatusCode::OK);
+        EXPECT_EQ(transaction_borrow_handle(tch_.get(), &tx_), StatusCode::OK);
+    }
+    [[nodiscard]] TransactionHandle handle() const noexcept {
+        return tx_;
+    }
+    StatusCode commit() {
+        return transaction_commit(tch_.get(), true);
+    }
+private:
+    HandleHolder<TransactionControlHandle> tch_{};
+    TransactionHandle tx_{};
+};
+
+void prepare_scan_with_options_data(DatabaseHandle db, StorageHandle st) {
+    auto tx = Transaction{db};
+    ASSERT_EQ(content_put(tx.handle(), st, "a", "A"), StatusCode::OK);
+    ASSERT_EQ(content_put(tx.handle(), st, "b", "B"), StatusCode::OK);
+    ASSERT_EQ(content_put(tx.handle(), st, "c", "C"), StatusCode::OK);
+    ASSERT_EQ(content_put(tx.handle(), st, "c1", "C1"), StatusCode::OK);
+    ASSERT_EQ(content_put(tx.handle(), st, "d", "D"), StatusCode::OK);
+    ASSERT_EQ(tx.commit(), StatusCode::OK);
+}
+
+using kv_list = std::vector<std::pair<std::string, std::string>>;
+
+kv_list read_all(IteratorHandle iter) {
+    kv_list ret{};
+    while (true) {
+        auto rc = iterator_next(iter);
+        if (rc == StatusCode::NOT_FOUND) {
+            break;
+        }
+        EXPECT_EQ(rc, StatusCode::OK);
+        if (rc != StatusCode::OK) {
+            break;
+        }
+        Slice k{};
+        Slice v{};
+        EXPECT_EQ(iterator_get_key(iter, &k), StatusCode::OK);
+        EXPECT_EQ(iterator_get_value(iter, &v), StatusCode::OK);
+        ret.emplace_back(k.to_string(), v.to_string());
+    }
+    return ret;
+}
+
+}  // namespace
+
+TEST_F(ApiTest, scan_with_options_legacy) {
+    // legacy_scan is true by default
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+    prepare_scan_with_options_data(db, st);
+
+    auto tx = Transaction{db};
+    IteratorHandle iter{};
+    ASSERT_EQ(content_scan_with_options(
+        tx.handle(), st,
+        "a", EndPointKind::PREFIXED_EXCLUSIVE,
+        "c", EndPointKind::PREFIXED_INCLUSIVE,
+        ScanOptions{},
+        &iter), StatusCode::OK);
+    HandleHolder closer { iter };
+    EXPECT_EQ(read_all(iter), (kv_list{{"b", "B"}, {"c", "C"}, {"c1", "C1"}}));
+    ASSERT_EQ(tx.commit(), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, scan_with_options_limit) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+    prepare_scan_with_options_data(db, st);
+
+    auto tx = Transaction{db};
+    IteratorHandle iter{};
+    ASSERT_EQ(content_scan_with_options(
+        tx.handle(), st,
+        "b", EndPointKind::INCLUSIVE,
+        "", EndPointKind::UNBOUND,
+        ScanOptions{}.limit(2),
+        &iter), StatusCode::OK);
+    HandleHolder closer { iter };
+    EXPECT_EQ(read_all(iter), (kv_list{{"b", "B"}, {"c", "C"}}));
+    ASSERT_EQ(tx.commit(), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, scan_with_options_reverse_limit) {
+    // legacy scan supports reverse scan only with unbound end point and limit 1
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+    prepare_scan_with_options_data(db, st);
+
+    auto tx = Transaction{db};
+    IteratorHandle iter{};
+    ASSERT_EQ(content_scan_with_options(
+        tx.handle(), st,
+        "a", EndPointKind::PREFIXED_INCLUSIVE,
+        "", EndPointKind::UNBOUND,
+        ScanOptions{}.limit(1).reverse(true),
+        &iter), StatusCode::OK);
+    HandleHolder closer { iter };
+    EXPECT_EQ(read_all(iter), (kv_list{{"d", "D"}}));
+    ASSERT_EQ(tx.commit(), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, scan_with_options_iscan) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+    prepare_scan_with_options_data(db, st);
+
+    auto tx = Transaction{db};
+    IteratorHandle iter{};
+    ASSERT_EQ(content_scan_with_options(
+        tx.handle(), st,
+        "a", EndPointKind::PREFIXED_EXCLUSIVE,
+        "c", EndPointKind::PREFIXED_INCLUSIVE,
+        ScanOptions{}.legacy_scan(false),
+        &iter), StatusCode::OK);
+    HandleHolder closer { iter };
+    EXPECT_EQ(read_all(iter), (kv_list{{"b", "B"}, {"c", "C"}, {"c1", "C1"}}));
+    ASSERT_EQ(tx.commit(), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, scan_with_options_iscan_ignores_limit) {
+    // limit is effective only if legacy_scan is true
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+    prepare_scan_with_options_data(db, st);
+
+    auto tx = Transaction{db};
+    IteratorHandle iter{};
+    ASSERT_EQ(content_scan_with_options(
+        tx.handle(), st,
+        "b", EndPointKind::INCLUSIVE,
+        "", EndPointKind::UNBOUND,
+        ScanOptions{}.limit(1).legacy_scan(false),
+        &iter), StatusCode::OK);
+    HandleHolder closer { iter };
+    EXPECT_EQ(read_all(iter), (kv_list{{"b", "B"}, {"c", "C"}, {"c1", "C1"}, {"d", "D"}}));
+    ASSERT_EQ(tx.commit(), StatusCode::OK);
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, scan_with_options_iscan_reverse) {
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+    prepare_scan_with_options_data(db, st);
+
+    struct Case {
+        std::string_view begin_key;
+        EndPointKind begin_kind;
+        std::string_view end_key;
+        EndPointKind end_kind;
+        kv_list expected;
+    };
+    std::vector<Case> cases{
+        {"", EndPointKind::UNBOUND, "", EndPointKind::UNBOUND,
+            {{"d", "D"}, {"c1", "C1"}, {"c", "C"}, {"b", "B"}, {"a", "A"}}},
+        {"b", EndPointKind::INCLUSIVE, "", EndPointKind::UNBOUND,
+            {{"d", "D"}, {"c1", "C1"}, {"c", "C"}, {"b", "B"}}},
+        {"b", EndPointKind::INCLUSIVE, "c1", EndPointKind::INCLUSIVE,
+            {{"c1", "C1"}, {"c", "C"}, {"b", "B"}}},
+        {"b", EndPointKind::EXCLUSIVE, "c1", EndPointKind::EXCLUSIVE,
+            {{"c", "C"}}},
+        {"a", EndPointKind::PREFIXED_EXCLUSIVE, "c", EndPointKind::PREFIXED_INCLUSIVE,
+            {{"c1", "C1"}, {"c", "C"}, {"b", "B"}}},
+        {"b", EndPointKind::PREFIXED_INCLUSIVE, "c", EndPointKind::PREFIXED_EXCLUSIVE,
+            {{"b", "B"}}},
+        {"c", EndPointKind::PREFIXED_INCLUSIVE, "c", EndPointKind::PREFIXED_INCLUSIVE,
+            {{"c1", "C1"}, {"c", "C"}}},
+        {"x", EndPointKind::INCLUSIVE, "", EndPointKind::UNBOUND,
+            {}},
+    };
+    for (auto&& c : cases) {
+        auto tx = Transaction{db};
+        IteratorHandle iter{};
+        ASSERT_EQ(content_scan_with_options(
+            tx.handle(), st,
+            c.begin_key, c.begin_kind,
+            c.end_key, c.end_kind,
+            ScanOptions{}.reverse(true).legacy_scan(false),
+            &iter), StatusCode::OK);
+        HandleHolder closer { iter };
+        EXPECT_EQ(read_all(iter), c.expected)
+            << c.begin_key << " " << c.begin_kind << " " << c.end_key << " " << c.end_kind;
+        ASSERT_EQ(tx.commit(), StatusCode::OK);
+    }
+    EXPECT_EQ(database_close(db), StatusCode::OK);
+}
+
+TEST_F(ApiTest, scan_with_options_mix_legacy_and_iscan) {
+    // legacy scan and iscan can be used in the same transaction
+    DatabaseOptions options;
+    DatabaseHandle db;
+    ASSERT_EQ(database_open(options, nullptr, &db), StatusCode::OK);
+    HandleHolder dbh { db };
+    StorageHandle st;
+    ASSERT_EQ(storage_create(db, "s", &st), StatusCode::OK);
+    HandleHolder sth { st };
+    prepare_scan_with_options_data(db, st);
+
+    auto tx = Transaction{db};
+    IteratorHandle legacy{};
+    ASSERT_EQ(content_scan_with_options(
+        tx.handle(), st,
+        "a", EndPointKind::INCLUSIVE,
+        "b", EndPointKind::INCLUSIVE,
+        ScanOptions{}.legacy_scan(true),
+        &legacy), StatusCode::OK);
+    HandleHolder legacy_closer { legacy };
+    IteratorHandle iscan{};
+    ASSERT_EQ(content_scan_with_options(
+        tx.handle(), st,
+        "c", EndPointKind::PREFIXED_INCLUSIVE,
+        "c", EndPointKind::PREFIXED_INCLUSIVE,
+        ScanOptions{}.legacy_scan(false),
+        &iscan), StatusCode::OK);
+    HandleHolder iscan_closer { iscan };
+    EXPECT_EQ(read_all(legacy), (kv_list{{"a", "A"}, {"b", "B"}}));
+    EXPECT_EQ(read_all(iscan), (kv_list{{"c", "C"}, {"c1", "C1"}}));
+    ASSERT_EQ(tx.commit(), StatusCode::OK);
     EXPECT_EQ(database_close(db), StatusCode::OK);
 }
 

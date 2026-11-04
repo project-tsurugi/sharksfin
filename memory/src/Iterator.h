@@ -16,6 +16,10 @@
 #ifndef SHARKSFIN_MEMORY_ITERATOR_H_
 #define SHARKSFIN_MEMORY_ITERATOR_H_
 
+#include <cstddef>
+#include <optional>
+#include <string>
+
 #include "sharksfin/api.h"
 #include "Storage.h"
 
@@ -47,7 +51,8 @@ public:
      * @param end_key the content key of ending position
      * @param end_kind end-point kind of the ending position
      * @param limit the max number of entries to be fetched. 0 indicates no limit.
-     * @param reverse whether or not the iterator scans in reverse order (from end to begin)
+     * @param reverse whether or not the iterator scans in reverse order (from end to begin).
+     * Contrary to shirakami, there is no limitation on the end-point kinds and limit for reverse scan.
      */
     Iterator(
             Storage* owner,
@@ -60,25 +65,24 @@ public:
         , state_(interpret_begin_kind(begin_kind))
         , limit_(limit)
         , reverse_(reverse)
-    {
-        (void) limit_;
-        (void) reverse_;
-    }
+        , begin_key_(next_key_)
+        , begin_kind_(begin_kind)
+        , end_kind_(end_kind)
+    {}
 
     bool next() {
-        switch (state_) {
-            case State::INIT_INCLUSIVE:
-                return advance(false);
-            case State::INIT_EXCLUSIVE:
-                return advance(true);
-            case State::INIT_PREFIXED_EXCLUSIVE:
-                return advance_to_next_neighbor();
-            case State::CONTINUE:
-                return advance(true);
-            case State::END:
-                return false;
+        if (state_ == State::END) {
+            return false;
         }
-        std::abort();
+        if (limit_ != 0 && fetched_ >= limit_) {
+            state_ = State::END;
+            return false;
+        }
+        bool found = reverse_ ? next_reverse() : next_forward();
+        if (found) {
+            ++fetched_;
+        }
+        return found;
     }
 
     /**
@@ -112,10 +116,96 @@ private:
     Buffer end_key_;
     End end_type_;
     State state_;
-    std::size_t limit_;  //NOLINT
-    bool reverse_;  //NOLINT
+    std::size_t limit_;
+    bool reverse_;
+    std::string begin_key_;
+    EndPointKind begin_kind_;
+    EndPointKind end_kind_;
+    std::size_t fetched_{};
 
     Slice payload_ {};
+
+    bool next_forward() {
+        switch (state_) {
+            case State::INIT_INCLUSIVE:
+                return advance(false);
+            case State::INIT_EXCLUSIVE:
+                return advance(true);
+            case State::INIT_PREFIXED_EXCLUSIVE:
+                return advance_to_next_neighbor();
+            case State::CONTINUE:
+                return advance(true);
+            case State::END:
+                return false;
+        }
+        std::abort();
+    }
+
+    bool next_reverse() {
+        if (state_ == State::CONTINUE) {
+            return retreat(owner_->prev(next_key_, true));
+        }
+        auto end_key = end_key_.to_slice();
+        switch (end_kind_) {
+            case EndPointKind::UNBOUND:
+                return retreat(owner_->last());
+            case EndPointKind::INCLUSIVE:
+                return retreat(owner_->prev(end_key, false));
+            case EndPointKind::EXCLUSIVE:
+            case EndPointKind::PREFIXED_EXCLUSIVE:
+                return retreat(owner_->prev(end_key, true));
+            case EndPointKind::PREFIXED_INCLUSIVE: {
+                if (auto n = next_neighbor_key(end_key.to_string_view())) {
+                    return retreat(owner_->prev(*n, true));
+                }
+                // there is no neighbor - upper bound is unlimited
+                return retreat(owner_->last());
+            }
+        }
+        std::abort();
+    }
+
+    bool retreat(std::pair<Slice, Buffer*> entry) {
+        auto [key, value] = entry;
+        if (value && test_begin_key(key)) {
+            next_key_.assign(key.to_string_view());
+            payload_ = value->to_slice();
+            state_ = State::CONTINUE;
+            return true;
+        }
+        state_ = State::END;
+        return false;
+    }
+
+    bool test_begin_key(Slice key) {
+        Slice begin_key{begin_key_};
+        switch (begin_kind_) {
+            case EndPointKind::UNBOUND: return true;
+            case EndPointKind::INCLUSIVE:
+            case EndPointKind::PREFIXED_INCLUSIVE: return begin_key <= key;
+            case EndPointKind::EXCLUSIVE: return begin_key < key;
+            case EndPointKind::PREFIXED_EXCLUSIVE: return begin_key < key && ! key.starts_with(begin_key);
+        }
+        std::abort();
+    }
+
+    /**
+     * @brief returns the smallest key which is greater than all keys starting with the given prefix.
+     * @param prefix the key prefix
+     * @return the next neighbor key, or empty if there is no such the key
+     */
+    static std::optional<std::string> next_neighbor_key(std::string_view prefix) {
+        std::string ret{prefix};
+        while (! ret.empty()) {
+            auto& c = ret.back();
+            if (static_cast<unsigned char>(c) != 0xffU) {
+                c = static_cast<char>(static_cast<unsigned char>(c) + 1U);
+                return ret;
+            }
+            ret.pop_back();
+        }
+        return std::nullopt;
+    }
 
     bool advance(bool exclusive) {
         auto [key, value] = owner_->next(next_key_, exclusive);
